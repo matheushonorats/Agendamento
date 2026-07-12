@@ -1,0 +1,5 @@
+.agents/
+.gemini/
+node_modules/
+*.tmp
+~$*
