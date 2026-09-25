@@ -13,6 +13,12 @@
 3. Crie uma **implantação de teste** do aplicativo da Web e use apenas o endereço dessa implantação. Não altere ainda o endereço usado na página de turismo. Ao autorizar o script, confira especialmente a nova permissão de envio de e-mail usada pelo código de confirmação.
 4. Na aba de monitores da cópia de teste, use pelo menos dois cadastros de teste com CPFs válidos e e-mails sob seu controle. Não use o e-mail de um monitor real para os testes de código e recuperação. Deixe um cadastro sem senha e outro com senha para exercitar os dois caminhos.
 
+### Criar a primeira conta administrativa na cópia de teste
+
+1. No projeto de Apps Script da **cópia de teste**, abra **Configurações do projeto → Propriedades do script**. Crie `ADMIN_INICIAL_CPF`, `ADMIN_INICIAL_EMAIL`, `ADMIN_INICIAL_NOME` e `ADMIN_INICIAL_SENHA`. Use CPF válido, e-mail ao qual você tenha acesso e senha temporária com ao menos 12 caracteres, letras e números. Não reutilize a senha de outro serviço.
+2. Execute `configurarAdministradorInicial` pelo editor e autorize o acesso. Confira a nova aba `Administradores`: a coluna `Senha Hash` deve conter apenas o resumo hexadecimal, nunca a senha digitada. Confira também que as quatro propriedades temporárias foram removidas. Não compartilhe a planilha com pessoas que não devam ver hashes, dados pessoais e logs.
+3. Acesse a implantação de teste com esse CPF/e-mail e senha. O painel administrativo deve abrir. Se já existir administrador na aba, a rotina inicial bloqueia nova criação; não a execute uma segunda vez. Outras contas são criadas pelo gestor no próprio painel, sem senha inicial; cada uma usa **Meu Primeiro Acesso** e código recebido por e-mail.
+
 ## Conferências funcionais
 
 Marque cada item somente depois de observar o resultado no portal de teste e na **planilha de teste**.
@@ -22,7 +28,7 @@ Marque cada item somente depois de observar o resultado no portal de teste e na 
 | Login com senha já existente | Abre o painel e mostra o histórico, sem exigir novo cadastro. |
 | Primeiro acesso com CPF do cadastro de teste | Exibe apenas o e-mail mascarado; envia código ao e-mail cadastrado. Código incorreto não abre os dados pessoais. Código correto permite criar senha e entrar. |
 | Recuperação de senha | CPF e e-mail cadastrado enviam código; sem código válido a senha não muda. Após confirmar e salvar, a nova senha funciona. |
-| Data no calendário | Hoje e amanhã não são selecionáveis; uma data a partir de dois dias fica disponível se não houver bloqueio. |
+| Data no calendário | Hoje não é selecionável; amanhã fica disponível se não houver bloqueio ou lotação. |
 | Horário | Horário após 14h é rejeitado com explicação sobre o fechamento às 18h. |
 | Grupo de até 15 pessoas | Pode ser enviado sem auxiliar; aparece como `Pendente`. |
 | Grupo de 16 pessoas | Exige ao menos um auxiliar. O pedido aparece como `Aguardando Auxiliares` para o principal e como convite para o auxiliar. |
@@ -33,10 +39,33 @@ Marque cada item somente depois de observar o resultado no portal de teste e na 
 | Capacidade simultânea | Com dois monitores de teste, tente enviar grupos de 30 e 25 pessoas no mesmo período. Apenas um pedido deve ser aceito quando a soma ultrapassaria 50. |
 | Cancelamento | O principal consegue cancelar dentro do prazo; auxiliar não consegue. Pedido confirmado ou pendente cancelado libera vagas na consulta seguinte. |
 | Busca e detalhes | Histórico, filtros, detalhes e nomes de auxiliares permanecem legíveis. |
+| Sair da conta | Remove a sessão e volta ao login. Atualizar a página não deve reabrir o painel. |
+| Trocar senha logado | Sem código confirmado, a senha não muda. Envie e confirme o código pelo e-mail já cadastrado; depois salve a nova senha e entre novamente. |
+| Busca de auxiliares | Digite duas letras, selecione um nome, apague a busca e confirme que o selecionado continua visível. |
+| Origem do grupo | Digite parte de uma cidade, selecione uma sugestão e confirme o formato `Cidade/UF`. |
+
+## Conferências do painel administrativo
+
+Use somente contas e pedidos de teste. Crie um segundo administrador com permissões limitadas para verificar tanto as opções visíveis quanto o bloqueio no servidor.
+
+| Teste | Resultado esperado |
+| --- | --- |
+| Login comum e administrativo | O mesmo login leva o monitor ao seu painel e o administrador ao painel administrativo. |
+| Permissões | Uma conta sem determinada permissão não vê a aba/ação e recebe erro se tentar chamar a operação diretamente. Somente o gestor cria, altera permissões ou desativa administradores. |
+| Primeiro acesso administrativo | A conta criada pelo gestor está sem hash; confirma código enviado ao seu e-mail, cria a senha e consegue entrar. |
+| Solicitações | Busca e filtro por status mostram os pedidos corretos. Aprovar ou negar funciona apenas em `Pendente`; negar exige motivo. `Aguardando Auxiliares` não pode ser aprovado. |
+| Bloqueio de data | Bloqueie uma data com motivo, confira no calendário do monitor e depois desbloqueie. Uma data impossível, como 30/02, é rejeitada. Pedidos já existentes precisam de tratamento manual. |
+| Monitores | A busca encontra nome/CPF/cidade e mostra contato. O administrador sem permissão de agendar em nome não vê essa ação. |
+| Agendar em nome | Entre no espaço de um monitor de teste, envie um pedido e volte ao painel administrativo. O pedido deve aparecer no histórico quando o próprio monitor entrar, com o CPF dele na planilha e autoria administrativa no log. |
+| Auxiliares em agendamento delegado | O pedido fica `Aguardando Auxiliares`. Só passa a `Pendente` quando todos aceitarem pela própria conta. |
+| Redefinir acesso | O administrador apenas remove o hash; a sessão anterior do monitor deixa de funcionar. O monitor usa **Meu Primeiro Acesso** e código no seu e-mail para criar outra senha. |
+| Auditoria | Consulte o log após login, leitura, tentativa negada, agendamento, decisão, bloqueio e redefinição. Confira horário, ator, alvo e resultado. Confirme que não há senhas, códigos ou tokens. |
+| Relatório | Escolha um período com pedidos confirmados e outros status. Compare indicadores, gráficos e tabelas com a planilha: perfil soma visitantes confirmados, monitores contam visitas como principal. |
+| PDF/impressão | Clique em **Imprimir ou salvar em PDF**, escolha **Salvar como PDF** no diálogo e abra o arquivo. Confira cabeçalho, período, tabelas, gráficos, quebras de página e ausência de menus/botões; imprima uma página de teste se necessário. |
 
 ## Conferência visual
 
-Abra a implantação de teste no computador e em um celular, ou use janelas estreita e larga. Examine login, primeiro acesso, recuperação, painel, formulário, calendário e detalhes. Confirme que não há texto cortado, cartões apertados, botões sobrepostos ou rolagem interna desnecessária. Teste também zoom de 200% e navegação por teclado nos campos e nas orientações.
+Abra a implantação de teste no computador e em um celular, ou use janelas estreita e larga. Examine login, primeiro acesso, recuperação, painel do monitor, painel administrativo, relatório, formulário, calendário e detalhes. Confirme que não há texto cortado, cartões apertados, botões sobrepostos ou rolagem interna desnecessária. Teste também zoom de 200% e navegação por teclado nos campos e nas orientações.
 
 Para reproduzir a página de turismo, crie uma **página de teste** com o bloco de incorporação do [README](README.md#️-instruções-de-incorporação-do-iframe), usando o endereço da implantação de teste. No celular, deslize pelo meio do formulário, da lista de solicitações e dos resultados de busca: a página inteira deve descer com um único gesto, sem exigir tocar na borda direita do iframe. Passe de uma tela alta para uma curta e confira que não sobra uma grande área vazia. Abra um modal de detalhes e verifique sua rolagem própria. Teste também abrir a implantação diretamente, fora do iframe.
 
@@ -51,8 +80,8 @@ Para reproduzir a página de turismo, crie uma **página de teste** com o bloco 
 
 1. Compare o código da implantação atual com o backup. Se houve mudança de produção depois da cópia, incorpore-a antes de publicar.
 2. Faça **nova cópia da planilha de produção imediatamente antes da publicação**, pois a primeira cópia é uma fotografia de 25/09/2026 e novos pedidos podem ter chegado desde então. Preserve também o identificador da versão atual da implantação do Apps Script.
-3. Em horário de baixo uso, atualize o projeto de Apps Script de produção com os dois arquivos testados. Confira a prévia da migração de protocolos, execute a migração com a propriedade de autorização e remova a propriedade. Confirme que o total pendente voltou a zero.
-4. Crie uma nova versão da implantação usada pela página de turismo, preservando o mesmo endereço do aplicativo da Web. Atualize o trecho de incorporação da página de turismo com o bloco testado do README e preserve a versão anterior desse trecho para reversão. Verifique imediatamente login, histórico, nova solicitação, aceite e rolagem no celular em contas controladas pela SETUR. Observe os registros de execução do Apps Script e os novos registros da planilha.
+3. Em horário de baixo uso, atualize o projeto de Apps Script de produção com os dois arquivos testados. Configure o administrador inicial no projeto de produção pelo procedimento acima, usando os dados definitivos e conferindo a remoção das propriedades temporárias. Confira a prévia da migração de protocolos, execute a migração com a propriedade de autorização e remova a propriedade. Confirme que o total pendente voltou a zero.
+4. Crie uma nova versão da implantação usada pela página de turismo, preservando o mesmo endereço do aplicativo da Web. Atualize o trecho de incorporação da página de turismo com o bloco testado do README e preserve a versão anterior desse trecho para reversão. Verifique imediatamente login de monitor e administrador, histórico, nova solicitação, aceite e rolagem no celular em contas controladas pela SETUR. Observe os registros de execução do Apps Script e as abas `Log_Auditoria` e `Administradores`.
 5. Se login, histórico ou envio falharem, volte a implantação à versão anterior. Não restaure a planilha inteira por cima de pedidos recebidos após o backup. Corrija apenas os dados afetados, comparando com a cópia e com o histórico de versões.
 
 ## Verificação automática local

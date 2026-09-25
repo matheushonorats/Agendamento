@@ -1,8 +1,16 @@
-# Portal do Monitor — Sítio Arqueológico São Francisco
+# Espaço do Monitor — Sítio Arqueológico São Francisco
 
 Este repositório contém o código-fonte do **Portal do Monitor**, um sistema de agendamento de visitas guiadas para o Sítio Arqueológico São Francisco, desenvolvido para a **SETUR — Prefeitura de São Sebastião / SP**.
 
-O projeto é construído em uma arquitetura leve integrada ao ecossistema do Google Workspace, utilizando **Google Apps Script** no backend (`Código.gs`), integrado a uma planilha de dados, e um frontend moderno responsivo baseado em **HTML5/Vanilla CSS/JavaScript** (`index.html`) que é incorporado como um iframe no site estático principal.
+O projeto usa **Google Apps Script** no servidor (`Código.gs`), uma planilha de dados e HTML/CSS/JavaScript (`index.html`) incorporado à página de turismo.
+
+## Painel administrativo
+
+O mesmo formulário de login encaminha cada pessoa ao painel de monitor ou de administração conforme sua conta. Os administradores ficam na aba separada `Administradores`; o gestor inicial é criado por `configurarAdministradorInicial`, conforme o [roteiro de teste e implantação](PROCEDIMENTO_DE_TESTE.md). Apenas esse gestor pode criar, desativar e definir as permissões das outras contas. Uma opção sem permissão fica oculta no painel e a operação também é bloqueada no servidor.
+
+O painel permite consultar e decidir solicitações pendentes, bloquear datas, consultar monitores, redefinir o acesso de um monitor e agendar em nome dele. Esse agendamento pertence à conta do monitor, que o vê em seu histórico; monitores auxiliares ainda precisam aceitar o convite. Redefinir o acesso apaga o hash da senha e exige novo primeiro acesso com código enviado ao e-mail cadastrado. A senha em texto não é guardada na planilha.
+
+A aba `Relatórios` reúne agendamentos do período, indicadores, gráficos de perfil dos grupos confirmados e a relação de monitores. O botão de PDF/impressão abre o diálogo do navegador com um documento próprio em formato A4, incluindo tabelas, gráficos e quebras de página; no destino da impressão, escolha **Salvar como PDF**. A aba `Log_Auditoria` registra as ações do servidor, inclusive erros, com ator, alvo e resultado, sem senha, código ou token. Se a gravação do log falhar, a operação principal continua e a falha aparece nos registros de execução do Apps Script.
 
 ---
 
@@ -27,14 +35,14 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 * **Scroll Inteligente:** Quando ocorrem transições de tela ou modais são abertos, o portal envia um sinal `scrollToTop` para o site principal realizar a rolagem automática e suave do usuário para o início do iframe.
 * **Rolagem no celular:** A incorporação recomendada usa `scrolling="no"` e deixa a página externa rolar. Sem o trecho de incorporação abaixo, o navegador ainda poderá criar uma barra dentro do iframe.
 
-### 4. Grade de Seleção de Auxiliares e Pergunta Opcional
-* **Remoção de Scroll Local:** A lista de seleção de monitores foi transformada em um layout responsivo de grade CSS (`display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))`), eliminando a janela pequena rolável que prejudicava a experiência mobile.
+### 4. Busca de auxiliares e pergunta opcional
+* **Seleção por nome:** Ao digitar pelo menos duas letras, aparecem os monitores correspondentes. Os já selecionados permanecem visíveis ao limpar ou alterar a busca.
 * **Interruptor Tátil ("Sim" / "Não"):** Para grupos de até 15 pessoas (onde a indicação de auxiliar é opcional), uma pergunta é exibida: *"Algum monitor auxiliar irá acompanhar?"*. 
   * Por padrão, a opção é **"Não"** e a grade de seleção fica oculta para evitar cliques indesejados ao rolar a página em smartphones.
-  * Para grupos maiores (mínimo obrigatório), a pergunta é omitida e a lista de seleção é exibida obrigatoriamente.
+  * Para grupos maiores, a indicação de auxiliares é obrigatória e a seleção usa a mesma busca por nome.
 
 ### 5. Padronização e Validação do Formato de Cidade (`Cidade/UF`)
-* **IBGE Auto-Complete:** Integração automática com a API de Localidades do IBGE com cache em `sessionStorage` para sugerir e autocompletar nomes de municípios no formato correto `Cidade/UF` (ex: `São Sebastião/SP`) nos campos de Origem do Grupo, Cidade no Cadastro e Cidade no Perfil.
+* **IBGE Auto-Complete:** Integração com a API de Localidades do IBGE com cache em `sessionStorage` para sugerir nomes de municípios no formato `Cidade/UF` (ex: `São Sebastião/SP`). A origem do grupo usa uma lista visual consistente com os demais campos.
 * **Fuzzy Auto-Correction:** Caso o usuário digite o nome de uma cidade brasileira sem o estado (ex: apenas `São Sebastião`), o portal busca na lista de cidades e formata o input automaticamente antes de enviar. Países internacionais são reconhecidos e aceitos sem o estado.
 
 ### 6. Protocolos e compatibilidade com o histórico
@@ -42,7 +50,7 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 * **Registros antigos:** consultas não modificam mais a planilha. Protocolos existentes, inclusive os antigos em formato hexadecimal, permanecem válidos. Células vazias são preenchidas somente pela rotina manual `migrarProtocolosEmBranco`, após backup e conferência da prévia.
 
 ### 7. Acesso e publicação segura
-* Primeiro acesso e recuperação de senha exigem código enviado ao e-mail já cadastrado. O projeto de Apps Script precisa de autorização para envio por `MailApp`.
+* Primeiro acesso, recuperação e troca de senha no perfil exigem código enviado ao e-mail já cadastrado. O projeto de Apps Script precisa de autorização para envio por `MailApp`.
 * O aceite de auxiliares só pode alterar solicitações no estado `Aguardando Auxiliares`.
 * Novas solicitações verificam capacidade, duplicidade e protocolo dentro de um bloqueio do Apps Script.
 * O roteiro de testes, migração e retorno à versão anterior está em [PROCEDIMENTO_DE_TESTE.md](PROCEDIMENTO_DE_TESTE.md). A cópia de produção e a publicação não ocorrem automaticamente por mudanças neste repositório.

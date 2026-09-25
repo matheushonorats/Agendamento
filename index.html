@@ -5,7 +5,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <!-- ✏️ TÍTULO DA ABA DO NAVEGADOR — edite o texto abaixo -->
-<title>Espaço do Monitor — Sítio Arqueológico São Francisco</title>
+<title>Espaço do Monitor</title>
 <style>
 /* ═══════════════ RESET & TOKENS ═══════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -18,9 +18,9 @@
   --info:#1D4ED8;--info-bg:#EFF6FF;--info-bd:#BFDBFE;
   --lot:#EA580C;--lot-bg:#FFF7ED;--lot-bd:#FED7AA;
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  --r-sm:6px;--r:10px;--r-lg:16px;--r-xl:20px;
-  --sh-xs:0 1px 3px rgba(0,0,0,.07);--sh-s:0 2px 8px rgba(0,0,0,.09);
-  --sh-m:0 4px 20px rgba(0,0,0,.12);--sh-l:0 8px 40px rgba(0,0,0,.18);
+  --r-sm:5px;--r:8px;--r-lg:12px;--r-xl:14px;
+  --sh-xs:0 1px 2px rgba(0,0,0,.05);--sh-s:0 2px 6px rgba(0,0,0,.07);
+  --sh-m:0 3px 12px rgba(0,0,0,.09);--sh-l:0 6px 24px rgba(0,0,0,.12);
   --t:.18s ease;
 }
 body{font-family:var(--font);background:var(--white);color:var(--c0);min-height:100vh;display:flex;flex-direction:column;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;scrollbar-width:thin;scrollbar-color:var(--n4) var(--white);}
@@ -36,7 +36,7 @@ body::-webkit-scrollbar-thumb:hover{background:var(--n3);}
 /* ✏️ LOGO PEQUENO NO CABEÇALHO */
 .brand-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
 .brand-icon img{width:100%;height:100%;object-fit:contain;}
-.btn-logout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:var(--white);padding:5px 14px;border-radius:20px;font-size:.76rem;font-weight:600;cursor:pointer;transition:var(--t);display:none;font-family:var(--font);}
+.btn-logout{background:transparent;border:1px solid rgba(255,255,255,.55);color:var(--white);padding:8px 14px;border-radius:var(--r-sm);font-size:.82rem;font-weight:600;cursor:pointer;transition:var(--t);display:none;font-family:var(--font);}
 .btn-logout:hover{background:rgba(255,255,255,.22);}
 
 /* ✏️ FAIXA DE LOGO/IMAGEM DE CABEÇALHO */
@@ -70,13 +70,82 @@ body::-webkit-scrollbar-thumb:hover{background:var(--n3);}
 .field-hint{font-size:.76rem;color:var(--n2);margin-top:6px;line-height:1.4;}
 .g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:18px;row-gap:2px;}
 .g2 .span2{grid-column:span 2;}
+.autocomplete{position:relative;}
+.autocomplete input{padding-right:34px;}
+.autocomplete::after{content:'⌄';position:absolute;right:13px;top:8px;color:var(--n2);font-size:1.1rem;pointer-events:none;}
+.suggestions{display:none;position:absolute;top:calc(100% + 3px);left:0;right:0;z-index:450;background:var(--white);border:1px solid var(--n4);border-radius:var(--r-sm);box-shadow:var(--sh-s);max-height:224px;overflow-y:auto;}
+.suggestions.open{display:block;}
+.suggestions button{display:block;width:100%;min-height:40px;padding:9px 12px;text-align:left;border:0;border-bottom:1px solid var(--n5);background:var(--white);color:var(--c0);font:inherit;cursor:pointer;}
+.suggestions button:hover,.suggestions button:focus{background:var(--c7);outline:none;}
+.aux-search{margin-bottom:8px;}
+.aux-search-list{display:flex;flex-direction:column;gap:7px;}
+.aux-empty{font-size:.8rem;color:var(--n2);padding:8px 2px;}
+.dash-logout{width:auto;min-height:40px;padding:7px 12px;background:transparent;border:1px solid rgba(255,255,255,.7);border-radius:var(--r-sm);color:var(--white);font:inherit;font-size:.8rem;font-weight:600;cursor:pointer;}
+.admin-screen{width:100%;max-width:1000px;align-self:center;padding:24px 20px 48px;}
+.admin-head{border-bottom:2px solid var(--c1);padding-bottom:16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.admin-head h2{font-size:1.25rem;line-height:1.25;}
+.admin-head p{color:var(--n2);font-size:.82rem;margin-top:4px;}
+.admin-nav{display:flex;gap:4px;border-bottom:1px solid var(--n4);margin-bottom:18px;overflow-x:auto;}
+.admin-nav button{border:0;border-bottom:3px solid transparent;background:transparent;padding:11px 14px;color:var(--n1);font:inherit;font-size:.84rem;font-weight:600;white-space:nowrap;cursor:pointer;}
+.admin-nav button.active{border-bottom-color:var(--c2);color:var(--c1);}
+.admin-panel{display:none;}
+.admin-panel.active{display:block;}
+.admin-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;}
+.admin-toolbar input,.admin-toolbar select,.admin-toolbar button,.admin-form input{min-height:42px;padding:9px 11px;border:1px solid var(--n4);border-radius:var(--r-sm);font:inherit;}
+.admin-toolbar input{flex:1;min-width:0;}
+.admin-list{display:flex;flex-direction:column;gap:10px;}
+.admin-item{border:1px solid var(--n4);border-left:3px solid var(--c2);border-radius:var(--r-sm);padding:15px 16px;background:var(--white);}
+.admin-item-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+.admin-item h3{font-size:.94rem;line-height:1.35;}
+.admin-item p{font-size:.82rem;color:var(--n1);margin-top:5px;overflow-wrap:anywhere;}
+.admin-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.admin-actions button{width:auto;min-height:40px;}
+.admin-form{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px;}
+.admin-form input{flex:1;min-width:160px;}
+.admin-form button{width:auto;}
+.admin-perms{display:flex;gap:10px 16px;flex-wrap:wrap;}
+.admin-perms label{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer;}
+.admin-perms input{width:16px;height:16px;accent-color:var(--c2);}
+.report-doc{background:var(--white);border:1px solid var(--n4);padding:24px;margin-top:16px;color:var(--c0);}
+.report-doc h2{font-size:1.25rem;margin-bottom:4px;}
+.report-doc h3{font-size:.95rem;border-bottom:1px solid var(--n4);padding-bottom:6px;margin:24px 0 10px;}
+.report-meta{font-size:.8rem;color:var(--n2);}
+.report-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:16px;}
+.report-stat{border-top:3px solid var(--c2);background:var(--n5);padding:10px;}
+.report-stat strong{display:block;font-size:1.15rem;}
+.report-stat span{font-size:.73rem;color:var(--n1);}
+.report-table-wrap{overflow-x:auto;}
+.report-table{width:100%;border-collapse:collapse;font-size:.76rem;}
+.report-table th,.report-table td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--n4);vertical-align:top;}
+.report-table th{background:var(--n5);font-weight:700;}
+.report-chart{margin-bottom:16px;}
+.report-bar-row{display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(70px,2fr) 65px;align-items:center;gap:8px;margin:7px 0;font-size:.75rem;}
+.report-bar-row span{overflow-wrap:anywhere;}
+.report-track{height:12px;background:var(--n5);}
+.report-fill{height:12px;background:var(--c2);}
+#print-report{display:none;}
+@media print{
+  @page{size:A4;margin:15mm 12mm;}
+  body{display:block!important;background:#fff!important;color:#111!important;font-family:Arial,sans-serif!important;}
+  body > *:not(#print-report){display:none!important;}
+  #print-report{display:block!important;}
+  #print-report .report-doc{border:0;margin:0;padding:0;}
+  .report-stats{grid-template-columns:repeat(3,1fr);}
+  .report-table-wrap{overflow:visible;}
+  .report-table{font-size:8pt;}
+  .report-table th,.report-table td{padding:4px;border-color:#bbb;}
+  .report-chart,.report-stat,.report-table tr{break-inside:avoid;}
+  .report-doc h3{break-after:avoid;}
+  .report-fill,.report-stat{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+@media(max-width:600px){.admin-screen{padding:18px 14px 36px;}.admin-head{align-items:flex-start;}.admin-toolbar{flex-direction:column;align-items:stretch;}.admin-toolbar input,.admin-toolbar select{width:100%;}.admin-form{flex-direction:column;}.admin-form input,.admin-form button{width:100%;}}
 
 /* ═══════════════ BOTÕES ═══════════════ */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:10px 18px;border:none;border-radius:var(--r);font-size:.87rem;font-weight:700;cursor:pointer;width:100%;transition:transform var(--t),box-shadow var(--t),background var(--t);font-family:var(--font);position:relative;letter-spacing:.01em;}
 .btn:active:not(:disabled){transform:scale(.98);}
 .btn:disabled{opacity:.45;pointer-events:none;}
-.btn-p {background:var(--c2);color:var(--white);box-shadow:0 2px 8px rgba(45,106,79,.28);}
-.btn-p:hover{background:var(--c3);box-shadow:0 4px 14px rgba(45,106,79,.36);}
+.btn-p {background:var(--c2);color:var(--white);box-shadow:none;}
+.btn-p:hover{background:var(--c1);box-shadow:none;}
 .btn-o {background:transparent;color:var(--c2);border:1.5px solid var(--c2);}
 .btn-o:hover{background:rgba(45,106,79,.06);}
 .btn-ghost{background:transparent;color:var(--n2);font-weight:500;}
@@ -105,13 +174,14 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 /* ═══════════════ LOGIN ═══════════════ */
 #s-login{justify-content:center;align-items:center;padding:28px 16px 36px;}
 .login-card{width:100%;max-width:400px;background:var(--white);border-radius:var(--r-xl);box-shadow:var(--sh-l);overflow:hidden;}
-.login-hero{background:linear-gradient(145deg,var(--c1) 0%,var(--c2) 55%,var(--c3) 100%);padding:30px 26px 24px;text-align:center;color:var(--white);position:relative;}
+.login-hero{background:var(--c1);padding:30px 26px 24px;text-align:center;color:var(--white);position:relative;}
 .login-hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23fff' fill-opacity='.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");}
 .hero-logo-wrap{position:relative;margin-bottom:12px;}
 .hero-badge{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;margin:0 auto;}
 .hero-logo-img{max-height:64px;max-width:160px;object-fit:contain;border-radius:10px;}
 .login-hero h1{font-size:1rem;font-weight:800;margin-bottom:3px;position:relative;}
 .login-hero p {font-size:.77rem;opacity:.75;position:relative;}
+.login-hero::before{display:none;}
 .login-body{padding:28px 28px 30px;}
 .verification-intro{font-size:.87rem;color:var(--n1);line-height:1.6;margin-bottom:18px;}
 .pwd-strength{height:3px;border-radius:2px;background:var(--n4);margin-top:6px;overflow:hidden;display:none;}
@@ -122,7 +192,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 
 /* ═══════════════ DASHBOARD ═══════════════ */
 #s-dash{padding:24px 20px 48px;max-width:1000px;width:100%;align-self:center;}
-.welcome{background:linear-gradient(130deg,var(--c1) 0%,var(--c2) 50%,var(--c3) 100%);border-radius:var(--r-lg);padding:24px 26px;color:var(--white);display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:14px;}
+.welcome{background:var(--c1);border-radius:var(--r);padding:21px 24px;color:var(--white);display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:14px;}
 .w-text h2{font-size:1.02rem;font-weight:800;margin-bottom:2px;}
 .w-text p {font-size:.76rem;opacity:.75;}
 .avatar{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;flex-shrink:0;}
@@ -145,7 +215,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 .ag-list-wrap::-webkit-scrollbar-thumb:hover {background:var(--n3);}
 
 .ag-card{background:var(--white);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh-xs);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-left:3px solid transparent;transition:box-shadow var(--t),transform var(--t);cursor:pointer;min-width:0;}
-.ag-card:hover{box-shadow:var(--sh-s);transform:translateY(-1px);}
+.ag-card:hover{box-shadow:var(--sh-s);}
 .ag-card.s-confirmado{border-color:var(--ok);}
 .ag-card.s-pendente  {border-color:var(--warn);}
 .ag-card.s-cancelado,.ag-card.s-negado{border-color:var(--danger);}
@@ -582,7 +652,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
       <svg id="brand-icon-svg" width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
     </div>
     <!-- ✏️ NOME NO CABEÇALHO — aplicado via JavaScript -->
-    <span id="brand-name">Sítio Arqueológico São Francisco</span>
+    <span id="brand-name">Espaço do Monitor</span>
   </div>
   <button class="btn-logout" id="btnLogout" onclick="fazerLogout()">Sair</button>
 </header>
@@ -632,16 +702,16 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
       <!-- PRIMEIRO ACESSO: CRIAR SENHA -->
       <div id="v-pa-senha" style="display:none;">
         <p id="pa-bvindo" style="font-size:.88rem;font-weight:700;color:var(--c1);margin-bottom:13px;"></p>
-        
+
         <!-- Bloco de Dados Cadastrais -->
-        <div class="pa-cadastral-wrap">
+        <div class="pa-cadastral-wrap" id="pa-dados-cadastrais">
           <p style="font-size:.74rem;font-weight:800;color:var(--c1);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;border-bottom:1px solid var(--n4);padding-bottom:4px;">Confirme ou atualize seus dados</p>
-          
+
           <div class="fg">
             <label for="i-pa-nome">Nome Completo *</label>
             <input id="i-pa-nome" type="text" placeholder="Nome completo" />
           </div>
-          
+
           <div class="g2">
             <div class="fg">
               <label for="i-pa-cpf">CPF</label>
@@ -652,7 +722,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
               <input id="i-pa-rg" type="text" placeholder="Seu RG" />
             </div>
           </div>
-          
+
           <div class="g2">
             <div class="fg">
               <label for="i-pa-tel">Telefone *</label>
@@ -663,7 +733,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
               <input id="i-pa-email" type="email" placeholder="seu@email.com" />
             </div>
           </div>
-          
+
           <div class="g2">
             <div class="fg">
               <label for="i-pa-cidade">Cidade *</label>
@@ -710,23 +780,23 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
 <!-- ══════════ DASHBOARD ══════════ -->
 <main id="s-dash" class="screen">
   <div class="timeout-bar" id="timeout-bar"><span>⏱ Sessão expira em <strong id="timeout-cnt"></strong></span><button onclick="renovarSessao()">Permanecer conectado</button></div>
-  <div class="welcome"><div class="w-text"><h2 id="d-nome">Olá, Monitor!</h2><p>Gerencie seus agendamentos de visita</p></div><div class="avatar" id="d-avatar">M</div></div>
+  <div class="welcome"><div class="w-text"><h2 id="d-nome">Olá, Monitor!</h2><p id="d-subtitulo">Gerencie seus agendamentos de visita</p></div><button class="dash-logout" id="dash-sair" type="button" onclick="fazerLogout()">Sair da conta</button></div>
   <div class="info-grid">
     <div class="info-card"><div class="lbl">CPF</div><div class="val" id="d-cpf">—</div></div>
     <div class="info-card"><div class="lbl">Telefone</div><div class="val" id="d-tel">—</div></div>
     <div class="info-card info-card-wide"><div class="lbl">E-mail</div><div class="val" id="d-email">—</div></div>
   </div>
   <div class="dash-buttons-row">
-    <button class="btn btn-o btn-sm btn-dash-action" onclick="abrirPerfilModal()" style="font-size:.78rem;padding:10px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:6px;background:var(--white);margin:0;">👤 Editar Meus Dados</button>
-    <button class="btn btn-ghost btn-dash-action" id="btn-toggle-busca" onclick="toggleBusca()" style="font-size:.8rem;padding:10px;border:1px dashed var(--n3);border-radius:var(--r);background:var(--white);margin:0;">🔍 Clique aqui para buscar solicitações antigas</button>
+    <button class="btn btn-o btn-sm btn-dash-action" id="btn-editar-perfil" onclick="abrirPerfilModal()" style="font-size:.78rem;padding:10px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:6px;background:var(--white);margin:0;">Editar meus dados</button>
+    <button class="btn btn-ghost btn-dash-action" id="btn-toggle-busca" onclick="toggleBusca()" style="font-size:.8rem;padding:10px;border:1px solid var(--n4);border-radius:var(--r);background:var(--white);margin:0;">Buscar solicitações antigas</button>
   </div>
 
   <div id="busca-panel" class="busca-panel" style="display:none;margin-bottom:18px;">
     <p style="font-size:.78rem;color:var(--n2);margin-bottom:8px;">Pesquise por protocolo, data (ex: 15/06/2025), status, origem ou nome do monitor principal.</p>
     <div class="filtro-row">
-      <button class="btn-filtro active" id="flt-ambas"    onclick="setFiltro('ambas')">📂 Mostrar Todas</button>
-      <button class="btn-filtro"         id="flt-minhas"  onclick="setFiltro('minhas')">📋 Fui Monitor Principal</button>
-      <button class="btn-filtro"         id="flt-auxiliar" onclick="setFiltro('auxiliar')">🤝 Fui Monitor Auxiliar</button>
+      <button class="btn-filtro active" id="flt-ambas"    onclick="setFiltro('ambas')">Todas</button>
+      <button class="btn-filtro"         id="flt-minhas"  onclick="setFiltro('minhas')">Como principal</button>
+      <button class="btn-filtro"         id="flt-auxiliar" onclick="setFiltro('auxiliar')">Como auxiliar</button>
     </div>
     <div class="busca-row">
       <input id="busca-input" type="text" placeholder="Digite para filtrar… ou deixe vazio para listar tudo" onkeydown="if(event.key==='Enter')executarBusca()"/>
@@ -739,7 +809,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
 
   <div class="sec-hd"><h3>Minhas Solicitações</h3><button class="btn btn-p btn-sm" onclick="abrirForm()">+ Nova Solicitação</button></div>
   <p style="font-size:.72rem;color:var(--n3);margin-bottom:8px;">Clique em qualquer solicitação para ver os detalhes completos.</p>
-  
+
   <div class="ag-list-wrap" id="ag-list-wrap">
     <div id="ag-list"><div class="empty"><div class="empty-ico">⏳</div><p>Carregando…</p></div></div>
   </div>
@@ -749,6 +819,56 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
     <button class="pag-btn" id="pag-next" onclick="mudarPagina(1)">Próximas →</button>
   </div>
 </main>
+
+<!-- ══════════ ADMINISTRAÇÃO ══════════ -->
+<main id="s-admin" class="screen admin-screen">
+  <div class="admin-head">
+    <div><h2>Administração</h2><p id="admin-nome">Solicitações e operação do portal</p></div>
+    <button class="btn btn-o btn-sm" style="width:auto;" type="button" onclick="fazerLogout()">Sair da conta</button>
+  </div>
+  <div id="admin-alert" class="alert" role="alert"></div>
+  <nav class="admin-nav" aria-label="Áreas da administração">
+    <button type="button" id="admin-tab-solicitacoes" class="active" onclick="abrirAdminAba('solicitacoes')">Solicitações</button>
+    <button type="button" id="admin-tab-datas" onclick="abrirAdminAba('datas')">Datas bloqueadas</button>
+    <button type="button" id="admin-tab-monitores" onclick="abrirAdminAba('monitores')">Monitores</button>
+    <button type="button" id="admin-tab-relatorios" onclick="abrirAdminAba('relatorios')">Relatórios</button>
+    <button type="button" id="admin-tab-auditoria" onclick="abrirAdminAba('auditoria')">Auditoria</button>
+    <button type="button" id="admin-tab-admins" onclick="abrirAdminAba('admins')" style="display:none;">Administradores</button>
+  </nav>
+  <section id="admin-panel-solicitacoes" class="admin-panel active">
+    <div class="admin-toolbar">
+      <input id="admin-busca" type="search" placeholder="Buscar protocolo, monitor ou data" aria-label="Buscar solicitações" oninput="renderAdminSolicitacoes()"/>
+      <select id="admin-filtro" aria-label="Filtrar por status" onchange="renderAdminSolicitacoes()"><option value="">Todos os status</option><option value="Pendente">Pendente</option><option value="Aguardando Auxiliares">Aguardando auxiliares</option><option value="Confirmado">Confirmado</option><option value="Negado">Negado</option><option value="Cancelado">Cancelado</option></select>
+      <button type="button" onclick="carregarAdminSolicitacoes()">Atualizar</button>
+    </div>
+    <div id="admin-solicitacoes" class="admin-list"><p>Carregando solicitações…</p></div>
+  </section>
+  <section id="admin-panel-datas" class="admin-panel">
+    <p class="field-hint" style="margin-bottom:12px;">O bloqueio impede novas solicitações; agendamentos existentes precisam ser tratados separadamente.</p>
+    <div class="admin-form"><input id="admin-data" type="date" aria-label="Data a bloquear"/><input id="admin-motivo" type="text" placeholder="Motivo do bloqueio" aria-label="Motivo do bloqueio"/><button class="btn btn-p" type="button" onclick="bloquearDataAdmin()">Bloquear data</button></div>
+    <div id="admin-datas" class="admin-list"></div>
+  </section>
+  <section id="admin-panel-monitores" class="admin-panel">
+    <div class="admin-toolbar"><input id="admin-busca-monitor" type="search" placeholder="Buscar monitor, CPF ou cidade" aria-label="Buscar monitores" oninput="renderAdminMonitores()"/><button type="button" onclick="carregarAdminMonitores()">Atualizar</button></div>
+    <div id="admin-monitores" class="admin-list"></div>
+  </section>
+  <section id="admin-panel-relatorios" class="admin-panel">
+    <p class="field-hint">Consulte o perfil dos grupos e prepare um relatório para impressão ou PDF.</p>
+    <div class="admin-form" style="margin-top:12px;"><input id="rel-inicio" type="date" aria-label="Início do período"/><input id="rel-fim" type="date" aria-label="Fim do período"/><button class="btn btn-p" type="button" onclick="gerarRelatorioAdmin()">Gerar relatório</button></div>
+    <div id="relatorio-tela"></div>
+  </section>
+  <section id="admin-panel-auditoria" class="admin-panel"><p class="field-hint" style="margin-bottom:12px;">Operações do servidor, em ordem da mais recente. Senhas, códigos e tokens não são registrados.</p><div id="admin-logs" class="admin-list"></div></section>
+  <section id="admin-panel-admins" class="admin-panel">
+    <h3 style="font-size:1rem;margin-bottom:9px;">Novo administrador</h3>
+    <p class="field-hint" style="margin-bottom:12px;">A nova conta cria a própria senha pelo primeiro acesso e código por e-mail.</p>
+    <div class="admin-form"><input id="novo-admin-nome" type="text" placeholder="Nome" aria-label="Nome do novo administrador"/><input id="novo-admin-cpf" type="text" placeholder="CPF" aria-label="CPF do novo administrador"/><input id="novo-admin-email" type="email" placeholder="E-mail" aria-label="E-mail do novo administrador"/></div>
+    <div id="novo-admin-permissoes" class="admin-perms"></div>
+    <button class="btn btn-p btn-sm" type="button" onclick="criarAdmin()" style="width:auto;margin:12px 0 18px;">Criar conta</button>
+    <div id="admin-contas" class="admin-list"></div>
+  </section>
+</main>
+
+<div id="print-report" aria-hidden="true"></div>
 
 <!-- ══════════ FORMULÁRIO ══════════ -->
 <main id="s-form" class="screen">
@@ -765,7 +885,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
         <span class="arrow open" id="ori-arrow">▼</span>
       </div>
       <div class="orientacoes-body" id="orientacoes-content">
-        <p style="font-weight:700;color:var(--danger);margin-bottom:8px;">⚠️ Solicite com pelo menos 2 dias de antecedência.</p>
+        <p style="font-weight:700;color:var(--danger);margin-bottom:8px;">Solicite a visita até o dia anterior.</p>
         <ul>
           <li>Este formulário somente poderá ser preenchido por <strong>agências de turismo receptivo</strong> do município de São Sebastião e por <strong>monitores ambientais credenciados</strong> pelo Parque Estadual da Serra do Mar.</li>
           <li>Somente serão aceitos agendamentos com <strong>grupos de até 15 pessoas por monitor</strong>. Grupos maiores requerem monitores auxiliares.</li>
@@ -801,7 +921,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
           <div class="cal-popup" id="cal-popup">
             <div class="cal-hd"><button class="cal-nav" type="button" onclick="navMes(-1,event)">&#8249;</button><span class="cal-hd-lbl" id="cal-lbl"></span><button class="cal-nav" type="button" onclick="navMes(+1,event)">&#8250;</button></div>
             <div id="cal-inner"><div class="cal-loading">Carregando…</div></div>
-            
+
             <!-- LEGENDA MAIS CLARA -->
             <div class="cal-legend">
               <div class="cl"><div class="cl-dot" style="background:var(--c6);border:1.5px solid var(--n4);"></div> 🟢 Ambos períodos livres (Totalmente disponível)</div>
@@ -810,7 +930,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
               <div class="cl"><div class="cl-dot" style="background:var(--n4);border:1px solid var(--n4);"></div> ⚫ Bloqueado administrativamente</div>
               <div class="cl"><div class="cl-dot" style="background:var(--info);border:1px solid var(--info);"></div> 🔵 Seu agendamento nesta data</div>
             </div>
-            
+
           </div>
           <input type="hidden" id="f-data"/>
         </div>
@@ -834,16 +954,19 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
       <div class="fg"><label for="f-faixa">Faixa Etária predominante *</label><select id="f-faixa"><option value="">Selecione…</option><option>Até 10 anos</option><option>10 a 18 anos</option><option>19 a 29 anos</option><option>30 a 45 anos</option><option>45 a 65 anos</option><option>Mais de 65 anos</option><option>Mista</option></select><span class="field-err" id="e-faixa"></span></div>
       <!-- HOSPEDAGEM -->
       <div class="fg"><label for="f-hosp">Hospedagem</label><select id="f-hosp"><option value="">Não informado</option><option>Hotel/Pousada</option><option>Casa própria</option><option>Casa de Amigos / Familiares</option><option>Outro</option></select></div>
-      
+
       <!-- ORIGEM (DATALIST NATIVO) -->
       <div class="fg span2">
         <label for="f-origem">Origem do Grupo * <span style="font-weight:400;text-transform:none;font-size:.66rem;">(cidade/UF ou país)</span></label>
-        <input id="f-origem" type="text" list="lista-origens" placeholder="Comece a digitar para ver sugestões..." autocomplete="off"/>
+        <div class="autocomplete">
+          <input id="f-origem" type="text" placeholder="Digite cidade/UF ou país" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="origem-opcoes"/>
+          <div id="origem-opcoes" class="suggestions" role="listbox"></div>
+        </div>
         <datalist id="lista-origens"></datalist>
         <span class="field-err" id="e-origem"></span>
         <p style="font-size:.7rem;color:var(--n3);margin-top:4px;">Se a sua cidade/país não aparecer na lista, você pode simplesmente digitar o nome completo.</p>
       </div>
-      
+
       <!-- AGÊNCIA -->
       <div class="fg span2"><label for="f-agencia">Nome da Agência (se houver)</label><input id="f-agencia" type="text" placeholder="Deixe em branco se não aplicável"/></div>
       <!-- CNPJ CONDICIONAL -->
@@ -875,11 +998,11 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
         </div>
         <span class="field-err" id="e-dias-ss"></span>
       </div>
-      
+
       <!-- MONITORES AUXILIARES -->
       <div class="fg span2">
         <div id="aux-hint" class="aux-hint aux-hint-ok" style="display:none;"></div>
-        
+
         <!-- Toggle de Decisão (Apenas Visível se Opcional) -->
         <div id="aux-decisao-container" style="margin-bottom:12px;">
           <label>Algum monitor auxiliar irá acompanhar? <span id="aux-badge" style="font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--ok-bg);color:var(--ok);">Opcional</span></label>
@@ -891,12 +1014,13 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
 
         <!-- Wrapper da Lista de Monitores -->
         <div id="monitores-lista-wrapper" style="display:none;">
-          <label id="lbl-lista-monitores" style="display:none;margin-bottom:6px;font-size:.87rem;font-weight:600;color:var(--c0);">Selecione os monitores auxiliares:</label>
-          <div id="monitores-lista" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:8px;border:1.5px solid var(--n4);border-radius:var(--r);padding:12px;background:var(--white);">
-            <p style="grid-column:1 / -1;margin:0;font-size:.78rem;color:var(--n2);">Carregando monitores…</p>
+          <label id="lbl-lista-monitores" for="aux-busca" style="display:none;margin-bottom:6px;font-size:.87rem;font-weight:600;color:var(--c0);">Buscar monitor auxiliar</label>
+          <input id="aux-busca" class="aux-search" type="search" placeholder="Digite ao menos 2 letras do nome" autocomplete="off" oninput="filtrarMonitoresAux()"/>
+          <div id="monitores-lista" class="aux-search-list">
+            <p class="aux-empty">Carregando monitores…</p>
           </div>
           <span class="field-err" id="e-aux"></span>
-          <p style="font-size:.72rem;color:var(--n2);margin-top:6px;">Selecione monitores adicionais. Obrigatório para grupos acima de 15 pessoas.</p>
+          <p class="field-hint">Digite o nome e selecione os monitores. Os selecionados continuam visíveis abaixo da busca.</p>
         </div>
       </div>
     </div>
@@ -933,12 +1057,12 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
     </div>
     <div class="modal-detalhe-body">
       <div id="alerta-perfil" class="alert"></div>
-      
+
       <div class="fg">
         <label for="i-nome-perf">Nome Completo</label>
         <input id="i-nome-perf" type="text" placeholder="Nome Completo" />
       </div>
-      
+
       <div class="g2">
         <div class="fg">
           <label for="i-cpf-perf">CPF</label>
@@ -949,7 +1073,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
           <input id="i-rg-perf" type="text" placeholder="RG" />
         </div>
       </div>
-      
+
       <div class="g2">
         <div class="fg">
           <label for="i-tel-perf">Telefone</label>
@@ -960,7 +1084,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
           <input id="i-email-perf" type="email" placeholder="E-mail" />
         </div>
       </div>
-      
+
       <div class="g2">
         <div class="fg">
           <label for="i-cidade-perf">Cidade</label>
@@ -971,9 +1095,9 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
           <input id="i-bairro-perf" type="text" placeholder="Bairro" />
         </div>
       </div>
-      
+
       <div class="sec-title">Alterar Senha (Opcional)</div>
-      
+
       <div class="g2">
         <div class="fg">
           <label for="i-senha-perf">Nova Senha</label>
@@ -998,7 +1122,17 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
           </div>
         </div>
       </div>
-      
+      <div class="fg" id="confirmacao-senha-perfil" style="display:none;">
+        <p class="field-hint">Para trocar a senha, confirme o código enviado ao e-mail cadastrado.</p>
+        <button class="btn btn-o" type="button" id="btn-codigo-perfil" onclick="solicitarCodigoPerfil()">Enviar código por e-mail</button>
+        <div id="codigo-perfil-campos" style="display:none;margin-top:12px;">
+          <label for="i-codigo-perfil">Código de confirmação</label>
+          <input id="i-codigo-perfil" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6 dígitos"/>
+          <button class="btn btn-o" type="button" id="btn-confirmar-codigo-perfil" onclick="confirmarCodigoPerfil()" style="margin-top:8px;">Confirmar código</button>
+        </div>
+        <p id="codigo-perfil-status" class="field-hint" role="status"></p>
+      </div>
+
       <button class="btn btn-p" id="btn-salvar-perfil" onclick="salvarPerfil()" style="margin-top:12px">
         <span class="lbl">Salvar Alterações</span>
         <span class="spin"></span>
@@ -1014,7 +1148,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
 
 var P = {
   // ✏️ Textos exibidos no portal:
-  nomeSitio:    'Sítio Arqueológico São Francisco', // Appbar e boas-vindas
+  nomeSitio:    'Espaço do Monitor', // Appbar e boas-vindas
   nomePortal:   'Espaço do Monitor',               // Título da tela de login
   subtitulo:    'SETUR | Prefeitura de São Sebastião / SP', // Subtítulo do login
 
@@ -1062,6 +1196,35 @@ var ORIGENS_INT = [
 
 var TODAS_ORIGENS = [];
 
+function normalizarBusca(valor) {
+  return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+function mostrarOrigens() {
+  var input = document.getElementById('f-origem');
+  var lista = document.getElementById('origem-opcoes');
+  if (!input || !lista) return;
+  var termo = normalizarBusca(input.value.trim());
+  var itens = TODAS_ORIGENS.filter(function(item){ return !termo || normalizarBusca(item).indexOf(termo) !== -1; }).slice(0, 8);
+  lista.innerHTML = '';
+  itens.forEach(function(item){
+    var botao = document.createElement('button');
+    botao.type = 'button';
+    botao.setAttribute('role','option');
+    botao.textContent = item;
+    botao.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    botao.addEventListener('click', function(){ input.value = item; fecharOrigens(); input.focus(); });
+    lista.appendChild(botao);
+  });
+  lista.classList.toggle('open', itens.length > 0);
+  input.setAttribute('aria-expanded', String(itens.length > 0));
+}
+function fecharOrigens() {
+  var lista = document.getElementById('origem-opcoes');
+  var input = document.getElementById('f-origem');
+  if (lista) lista.classList.remove('open');
+  if (input) input.setAttribute('aria-expanded','false');
+}
+
 // Função auxiliar para renderizar opções no datalist de forma rápida
 function renderizarDatalist(lista) {
   var dl = document.getElementById('lista-origens');
@@ -1078,9 +1241,9 @@ function validarEFormatarOrigem() {
   if (!input) return false;
   var val = input.value.trim();
   if (!val) return false;
-  
+
   var lower = val.toLowerCase();
-  
+
   // 1. Se for país internacional, passa direto
   var ehPais = ORIGENS_INT.some(function(p) {
     return p.toLowerCase() === lower;
@@ -1094,7 +1257,7 @@ function validarEFormatarOrigem() {
     }
     return true;
   }
-  
+
   // 2. Se já estiver no formato Cidade/UF
   var reg = /^.+\/[A-Za-z]{2}$/;
   if (reg.test(val)) {
@@ -1103,7 +1266,7 @@ function validarEFormatarOrigem() {
     input.value = partes.join('/');
     return true;
   }
-  
+
   // 3. Tentar auto-completar a partir de TODAS_ORIGENS
   var prefixo = lower + '/';
   var correspondencias = [];
@@ -1113,12 +1276,12 @@ function validarEFormatarOrigem() {
       correspondencias.push(item);
     }
   }
-  
+
   if (correspondencias.length === 1) {
     input.value = correspondencias[0];
     return true;
   }
-  
+
   return false;
 }
 
@@ -1127,9 +1290,9 @@ function validarEFormatarCidadeMonitor(inputId) {
   if (!input) return false;
   var val = input.value.trim();
   if (!val) return false;
-  
+
   var lower = val.toLowerCase();
-  
+
   // 1. Se já estiver no formato Cidade/UF
   var reg = /^.+\/[A-Za-z]{2}$/;
   if (reg.test(val)) {
@@ -1138,7 +1301,7 @@ function validarEFormatarCidadeMonitor(inputId) {
     input.value = partes.join('/');
     return true;
   }
-  
+
   // 2. Tentar auto-completar a partir de TODAS_ORIGENS
   var prefixo = lower + '/';
   var correspondencias = [];
@@ -1148,12 +1311,12 @@ function validarEFormatarCidadeMonitor(inputId) {
       correspondencias.push(item);
     }
   }
-  
+
   if (correspondencias.length === 1) {
     input.value = correspondencias[0];
     return true;
   }
-  
+
   return false;
 }
 
@@ -1236,7 +1399,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  configurarDatalistInput('f-origem');
+  var origemInput = document.getElementById('f-origem');
+  origemInput.addEventListener('focus', mostrarOrigens);
+  origemInput.addEventListener('input', mostrarOrigens);
+  origemInput.addEventListener('blur', function(){ setTimeout(fecharOrigens, 150); });
+  origemInput.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') fecharOrigens();
+    if (e.key === 'ArrowDown') {
+      var primeira = document.querySelector('#origem-opcoes button');
+      if (primeira) { e.preventDefault(); primeira.focus(); }
+    }
+  });
   configurarDatalistInput('i-pa-cidade');
   configurarDatalistInput('i-cidade-perf');
 });
@@ -1249,10 +1422,12 @@ var S = {
   datasBlq: [], datasLotadas: [], datasMinhas: [],
   listaHistoricoCompleta: [], paginaAtual: 1, pageSize: 15,
   calPronto: false, calMes: null, dataSel: null,
-  cpfPA: '', ticketSenha: '', filtro: 'ambas',
+  cpfPA: '', ticketSenha: '', ticketSenhaPerfil: '', primeiroAdmin: false, filtro: 'ambas',
   tAtiv: null, tAviso: null,
   INATIVIDADE: 30*60*1000, AVISO_ANTES: 5*60*1000,
-  auxAcompanha: false
+  auxAcompanha: false,
+  papel: 'monitor', adminToken: null, admin: null, adminPermissoes: [],
+  adminSolicitacoes: [], adminMonitores: [], adminContas: []
 };
 var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -1263,7 +1438,7 @@ function aplicarBranding() {
   document.getElementById('brand-name').textContent = P.nomeSitio;
   document.getElementById('login-titulo').textContent = P.nomePortal;
   document.getElementById('login-subtitulo').textContent = P.subtitulo;
-  document.title = P.nomePortal + ' — ' + P.nomeSitio;
+  document.title = P.nomePortal === P.nomeSitio ? P.nomePortal : P.nomePortal + ' — ' + P.nomeSitio;
   if (P.logoUrl) {
     var wrap = document.getElementById('brand-icon-wrap');
     wrap.innerHTML = '<img src="'+P.logoUrl+'" alt="Logo" style="width:100%;height:100%;object-fit:contain;border-radius:6px;"/>';
@@ -1366,10 +1541,10 @@ function togglePasswordVisibility(inputId, btn) {
   if (!input) return;
   var isPwd = input.type === 'password';
   input.type = isPwd ? 'text' : 'password';
-  
+
   var eyeSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
   var eyeOffSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
-  
+
   btn.innerHTML = isPwd ? eyeOffSvg : eyeSvg;
   btn.setAttribute('aria-label', isPwd ? 'Ocultar senha' : 'Mostrar senha');
 }
@@ -1392,17 +1567,18 @@ function fazerLogin(){
   document.getElementById('i-cpf').classList.remove('err');
   if(!senha)return alerta('alerta-login','Informe a senha.');
   carregando('btn-login',true);
-  gs('login',{cpf:cpf,senha:senha}).then(function(r){carregando('btn-login',false);if(!r.ok)return alerta('alerta-login',r.erro);iniciarSessao(r.token,r.monitor);}).catch(function(){carregando('btn-login',false);alerta('alerta-login','Falha de comunicação.');});
+  gs('login',{cpf:cpf,senha:senha}).then(function(r){carregando('btn-login',false);if(!r.ok)return alerta('alerta-login',r.erro);if(r.papel==='admin')iniciarAdmin(r.token,r.admin);else iniciarSessao(r.token,r.monitor);}).catch(function(){carregando('btn-login',false);alerta('alerta-login','Falha de comunicação.');});
 }
-function iniciarSessao(token,mon){
+function iniciarSessao(token,mon,delegado){
+  S.papel=delegado?'delegado':'monitor';
   S.token=token;S.monitor=mon;S.datasBlq=[];S.datasLotadas=[];S.datasMinhas=[];S.calPronto=false;S.dataSel=null;S.calMes=new Date();
   var n=mon.nome.split(' ')[0];
   document.getElementById('d-nome').textContent='Olá, '+n+'!';
   var avatarEl = document.getElementById('d-avatar');
-  if (P.loginLogoUrl) {
+  if (avatarEl && P.loginLogoUrl) {
     avatarEl.classList.add('has-logo');
     avatarEl.innerHTML = '<img src="' + P.loginLogoUrl + '" alt="Logo"/>';
-  } else {
+  } else if (avatarEl) {
     avatarEl.classList.remove('has-logo');
     avatarEl.textContent = n.charAt(0).toUpperCase();
   }
@@ -1413,8 +1589,30 @@ function iniciarSessao(token,mon){
   document.getElementById('f-cpf').value=mon.cpf;
   document.getElementById('f-tel').value=mon.telefone||'';
   document.getElementById('f-email').value=mon.email||'';
+  document.getElementById('d-subtitulo').textContent=delegado?'Acesso administrativo em nome deste monitor':'Gerencie seus agendamentos de visita';
+  document.getElementById('dash-sair').textContent=delegado?'Voltar à administração':'Sair da conta';
+  document.getElementById('dash-sair').onclick=delegado?voltarAdmin:fazerLogout;
+  document.getElementById('btn-editar-perfil').style.display=delegado?'none':'';
   setCookie('pm_token',token,6);setCookie('pm_monitor',JSON.stringify(mon),6);
+  setCookie('pm_role',S.papel,6);
   tela('dash');carregarHistorico();buscarDatasBlq();iniciarTimerAtiv();carregarMonitoresAux();verificarNotificacoes();
+}
+function iniciarAdmin(token,admin){
+  S.papel='admin';S.token=token;S.adminToken=token;S.admin=admin;S.monitor=null;
+  S.adminPermissoes=admin.permissoes||[];
+  document.getElementById('admin-nome').textContent=admin.nome+' · Gestão do portal';
+  var hoje=new Date();document.getElementById('rel-inicio').value=hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0')+'-01';
+  document.getElementById('rel-fim').value=hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0')+'-'+String(new Date(hoje.getFullYear(),hoje.getMonth()+1,0).getDate()).padStart(2,'0');
+  setCookie('pm_token',token,6);setCookie('pm_admin_token',token,6);setCookie('pm_role','admin',6);setCookie('pm_admin',JSON.stringify(admin),6);
+  configurarAdminPermissoes();tela('admin');iniciarTimerAtiv();
+}
+function voltarAdmin(){
+  if(S.papel!=='delegado'||!S.adminToken)return fazerLogout();
+  var tokenDelegado=S.token;
+  gs('logout',{token:tokenDelegado}).catch(function(){});
+  S.token=S.adminToken;S.papel='admin';S.monitor=null;
+  setCookie('pm_token',S.adminToken,6);setCookie('pm_role','admin',6);delCookie('pm_monitor');
+  configurarAdminPermissoes();tela('admin');
 }
 function abrirPA(){limpaAlerta('alerta-login');S.ticketSenha='';['v-login','v-recuperar','v-recuperar-codigo','v-recuperar-nova','v-pa-codigo','v-pa-senha'].forEach(function(i){document.getElementById(i).style.display='none';});document.getElementById('v-pa').style.display='';document.getElementById('i-cpf-pa').value='';campoErr('e-cpf-pa','');}
 function fecharPA(){document.getElementById('v-login').style.display='';S.ticketSenha='';['v-pa','v-pa-codigo','v-pa-senha','v-recuperar','v-recuperar-codigo','v-recuperar-nova'].forEach(function(i){document.getElementById(i).style.display='none';});limpaAlerta('alerta-login');}
@@ -1437,17 +1635,26 @@ function confirmarCodigoPA(){
   carregando('btn-codigo-pa',true);
   gs('confirmarCodigo',{cpf:S.cpfPA,finalidade:'primeiro',codigo:codigo}).then(function(r){
     carregando('btn-codigo-pa',false);if(!r.ok)return alerta('alerta-login',r.erro);
-    S.ticketSenha=r.ticket;var mon=r.monitor;
-    document.getElementById('pa-bvindo').textContent='Bem-vindo(a), '+mon.nome.split(' ')[0]+'! Confirme seus dados e crie uma senha.';
-    ['nome','cpf','rg','tel','email','cidade','bairro'].forEach(function(campo){var chave=campo==='tel'?'telefone':campo;document.getElementById('i-pa-'+campo).value=mon[chave]||'';});
-    document.getElementById('i-pa-cpf').disabled=true;
-    document.getElementById('i-pa-rg').disabled=!!(mon.rg||'').trim();
+    S.ticketSenha=r.ticket;S.primeiroAdmin=r.papel==='admin';var mon=r.monitor||r.admin;
+    document.getElementById('pa-bvindo').textContent=S.primeiroAdmin?'Bem-vindo(a), '+mon.nome.split(' ')[0]+'! Crie sua senha administrativa.':'Bem-vindo(a), '+mon.nome.split(' ')[0]+'! Confirme seus dados e crie uma senha.';
+    document.getElementById('pa-dados-cadastrais').style.display=S.primeiroAdmin?'none':'';
+    if(!S.primeiroAdmin){
+      ['nome','cpf','rg','tel','email','cidade','bairro'].forEach(function(campo){var chave=campo==='tel'?'telefone':campo;document.getElementById('i-pa-'+campo).value=mon[chave]||'';});
+      document.getElementById('i-pa-cpf').disabled=true;
+      document.getElementById('i-pa-rg').disabled=!!(mon.rg||'').trim();
+    }
     document.getElementById('v-pa-codigo').style.display='none';document.getElementById('v-pa-senha').style.display='';
     document.getElementById('i-nova').value='';document.getElementById('i-conf').value='';
   }).catch(function(){carregando('btn-codigo-pa',false);alerta('alerta-login','Falha de comunicação.');});
 }
 function confirmarSenha(){
   limpaAlerta('alerta-login');var s1=document.getElementById('i-nova').value,s2=document.getElementById('i-conf').value;campoErr('e-conf','');
+  if(S.primeiroAdmin){
+    if(!s1||s1.length<8||!/[A-Za-z]/.test(s1)||!/[0-9]/.test(s1))return alerta('alerta-login','Use ao menos 8 caracteres, com letras e números.');
+    if(s1!==s2)return campoErr('e-conf','As senhas não coincidem.');
+    carregando('btn-criar',true);
+    return gs('criarSenha',{cpf:S.cpfPA,ticket:S.ticketSenha,senha:s1}).then(function(r){carregando('btn-criar',false);if(!r.ok)return alerta('alerta-login',r.erro);S.primeiroAdmin=false;fecharPA();alerta('alerta-login','Senha criada. Faça login.','ok');}).catch(function(){carregando('btn-criar',false);alerta('alerta-login','Falha de comunicação.');});
+  }
   var nome = document.getElementById('i-pa-nome').value.trim();
   var rg = document.getElementById('i-pa-rg').value.trim();
   var tel = document.getElementById('i-pa-tel').value.trim();
@@ -1500,21 +1707,167 @@ function salvarNovaSenha(){
 // ═══════════════════════════════════════════════════════════════
 // DASHBOARD — HISTÓRICO COM PAGINAÇÃO
 // ═══════════════════════════════════════════════════════════════
+var NOMES_PERMISSOES={verSolicitacoes:'Consultar solicitações',decidir:'Aprovar e negar',bloquearDatas:'Bloquear datas',verMonitores:'Consultar monitores',resetarSenha:'Redefinir acesso',agendarEmNome:'Agendar em nome de monitor',verRelatorios:'Ver relatórios',verAuditoria:'Ver auditoria'};
+function podeAdmin(permissao){return S.adminPermissoes.indexOf(permissao)!==-1;}
+function configurarAdminPermissoes(){
+  var abas={solicitacoes:'verSolicitacoes',datas:'bloquearDatas',monitores:'verMonitores',relatorios:'verRelatorios',auditoria:'verAuditoria',admins:'gerirAdmins'};
+  Object.keys(abas).forEach(function(a){
+    document.getElementById('admin-tab-'+a).style.display=(podeAdmin(abas[a])||(a==='solicitacoes'&&podeAdmin('decidir'))||(a==='monitores'&&(podeAdmin('agendarEmNome')||podeAdmin('resetarSenha'))))?'':'none';
+  });
+  var primeira=Object.keys(abas).filter(function(a){return document.getElementById('admin-tab-'+a).style.display!=='none';})[0];
+  if(primeira)abrirAdminAba(primeira);
+  else document.getElementById('admin-alert').textContent='Esta conta ainda não tem permissões de consulta.';
+}
+function abrirAdminAba(aba){
+  if(document.getElementById('admin-tab-'+aba).style.display==='none')return;
+  ['solicitacoes','datas','monitores','relatorios','auditoria','admins'].forEach(function(a){
+    document.getElementById('admin-tab-'+a).classList.toggle('active',a===aba);
+    document.getElementById('admin-panel-'+a).classList.toggle('active',a===aba);
+  });
+  if(aba==='solicitacoes')carregarAdminSolicitacoes();
+  if(aba==='datas')carregarAdminDatas();
+  if(aba==='monitores')carregarAdminMonitores();
+  if(aba==='auditoria')carregarAdminLogs();
+  if(aba==='admins')carregarAdminContas();
+}
+function adminErro(r){alerta('admin-alert',esc(r.erro||'Falha de comunicação.'));}
+function carregarAdminLogs(){
+  var el=document.getElementById('admin-logs');el.textContent='Carregando auditoria…';
+  gs('adminLogs',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);el.innerHTML=(r.lista||[]).length?r.lista.map(function(x){return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(x.acao)+' · '+esc(x.resultado)+'</h3><span class="report-meta">'+esc(x.data)+'</span></div><p>'+esc(x.papel)+' · '+esc(x.ator)+' · '+esc(x.alvo||'—')+'</p>'+(x.detalhes?'<p>'+esc(x.detalhes)+'</p>':'')+'</article>';}).join(''):'<p class="aux-empty">Nenhum evento registrado.</p>';}).catch(function(){adminErro({erro:'Falha ao carregar auditoria.'});});
+}
+function carregarAdminSolicitacoes(){
+  document.getElementById('admin-solicitacoes').textContent='Carregando solicitações…';
+  gs('adminSolicitacoes',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);S.adminSolicitacoes=r.lista||[];renderAdminSolicitacoes();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function renderAdminSolicitacoes(){
+  var q=normalizarBusca(document.getElementById('admin-busca').value),f=document.getElementById('admin-filtro').value;
+  var itens=S.adminSolicitacoes.map(function(v,i){return {v:v,i:i};}).filter(function(x){
+    return (!f||x.v.status===f)&&(!q||normalizarBusca([x.v.protocolo,x.v.monitor,x.v.data,x.v.origem].join(' ')).indexOf(q)!==-1);
+  });
+  var el=document.getElementById('admin-solicitacoes');
+  if(!itens.length){el.innerHTML='<p class="aux-empty">Nenhuma solicitação encontrada.</p>';return;}
+  el.innerHTML=itens.map(function(x){var a=x.v,i=x.i;
+    var botoes=a.status==='Pendente'&&a.protocolo&&podeAdmin('decidir')?'<div class="admin-actions"><button class="btn btn-p btn-sm" type="button" onclick="decidirAdmin('+i+',\'Confirmado\')">Aprovar</button><button class="btn btn-o btn-sm" type="button" onclick="decidirAdmin('+i+',\'Negado\')">Negar</button></div>':'';
+    return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(a.data||'Sem data')+' · '+esc(a.horario||'')+' · '+esc(a.monitor||'Monitor não informado')+'</h3><span class="badge">'+esc(a.status||'Sem status')+'</span></div>'+
+      '<p><strong>'+esc(a.protocolo||'Sem protocolo')+'</strong> · '+esc(String(a.grupo))+' pessoas · '+esc(a.tipo||'')+' · '+esc(a.origem||'')+'</p>'+
+      '<p>Contato: '+esc(a.telefone||'—')+' · '+esc(a.email||'—')+'</p>'+
+      (a.auxiliares?'<p>Auxiliares: '+esc(a.auxiliares)+'</p>':'')+(a.motivo?'<p>Motivo: '+esc(a.motivo)+'</p>':'')+botoes+'</article>';
+  }).join('');
+}
+function decidirAdmin(indice,decisao){
+  var a=S.adminSolicitacoes[indice];if(!a||!a.protocolo)return;
+  var motivo='';
+  if(decisao==='Negado'){motivo=prompt('Informe o motivo da negativa para '+a.protocolo+':')||'';if(!motivo.trim())return;}
+  else if(!confirm('Aprovar a solicitação '+a.protocolo+'?'))return;
+  gs('adminDecidir',{token:S.adminToken,protocolo:a.protocolo,decisao:decisao,motivo:motivo}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Solicitação '+esc(a.protocolo)+' atualizada.','ok');carregarAdminSolicitacoes();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function carregarAdminDatas(){
+  gs('adminDatas',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);var e=document.getElementById('admin-datas');e.innerHTML=(r.lista||[]).length?(r.lista||[]).map(function(d,i){return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(d.data)+'</h3><button class="btn btn-o btn-sm" style="width:auto" type="button" onclick="desbloquearDataAdmin(\''+esc(d.data)+'\')">Desbloquear</button></div><p>'+esc(d.motivo||'Sem motivo')+'</p></article>';}).join(''):'<p class="aux-empty">Nenhuma data bloqueada.</p>';}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function bloquearDataAdmin(){
+  var data=document.getElementById('admin-data').value,motivo=document.getElementById('admin-motivo').value.trim();
+  if(!data||!motivo)return adminErro({erro:'Informe a data e o motivo.'});
+  gs('adminBloquearData',{token:S.adminToken,data:data,motivo:motivo}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Data bloqueada.','ok');document.getElementById('admin-motivo').value='';carregarAdminDatas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function desbloquearDataAdmin(data){
+  if(!confirm('Desbloquear '+data+'?'))return;
+  gs('adminDesbloquearData',{token:S.adminToken,data:data}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Data desbloqueada.','ok');carregarAdminDatas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function carregarAdminMonitores(){
+  gs('adminMonitores',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);S.adminMonitores=r.lista||[];renderAdminMonitores();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function renderAdminMonitores(){
+  var q=normalizarBusca(document.getElementById('admin-busca-monitor').value);
+  var itens=S.adminMonitores.map(function(v,i){return {v:v,i:i};}).filter(function(x){return !q||normalizarBusca([x.v.nome,x.v.cpf,x.v.cidade].join(' ')).indexOf(q)!==-1;});
+  document.getElementById('admin-monitores').innerHTML=itens.length?itens.map(function(x){var m=x.v,i=x.i;
+    return '<article class="admin-item"><h3>'+esc(m.nome)+'</h3><p>'+esc(m.cpf)+' · '+esc(m.cidade||'—')+'</p><p>'+esc(m.telefone||'—')+' · '+esc(m.email||'—')+'</p><div class="admin-actions">'+
+      (podeAdmin('agendarEmNome')?'<button class="btn btn-p btn-sm" type="button" onclick="acessarMonitorAdmin('+i+')">Agendar em nome deste monitor</button>':'')+
+      (podeAdmin('resetarSenha')?'<button class="btn btn-o btn-sm" type="button" onclick="resetarSenhaMonitorAdmin('+i+')">Redefinir acesso</button>':'')+'</div></article>';
+  }).join(''):'<p class="aux-empty">Nenhum monitor encontrado.</p>';
+}
+function acessarMonitorAdmin(indice){
+  var m=S.adminMonitores[indice];if(!m)return;
+  gs('adminAcessarMonitor',{token:S.adminToken,cpf:m.cpf}).then(function(r){if(!r.ok)return adminErro(r);setCookie('pm_admin_token',S.adminToken,6);iniciarSessao(r.token,r.monitor,true);}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function resetarSenhaMonitorAdmin(indice){
+  var m=S.adminMonitores[indice];if(!m||!confirm('Redefinir o acesso de '+m.nome+'? A senha atual será removida e a pessoa criará outra pelo código enviado ao e-mail cadastrado.'))return;
+  gs('adminResetarSenha',{token:S.adminToken,cpf:m.cpf}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert',esc(r.msg),'ok');}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function permissoesAdminHtml(prefixo,selecionadas){
+  return Object.keys(NOMES_PERMISSOES).map(function(k){return '<label><input type="checkbox" name="'+prefixo+'" value="'+k+'"'+(selecionadas.indexOf(k)!==-1?' checked':'')+'/> '+NOMES_PERMISSOES[k]+'</label>';}).join('');
+}
+function lerPermissoesAdmin(prefixo){return Array.from(document.querySelectorAll('input[name="'+prefixo+'"]:checked')).map(function(e){return e.value;});}
+function carregarAdminContas(){
+  document.getElementById('novo-admin-permissoes').innerHTML=permissoesAdminHtml('novo-admin-perm',['verSolicitacoes','verMonitores']);
+  gs('adminListarAdmins',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);S.adminContas=r.lista||[];renderAdminContas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function renderAdminContas(){
+  document.getElementById('admin-contas').innerHTML=S.adminContas.map(function(a,i){
+    var gestor=a.permissoes.indexOf('gerirAdmins')!==-1;
+    return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(a.nome)+'</h3><span class="badge">'+(a.ativo?'Ativo':'Inativo')+(gestor?' · Gestor de acessos':'')+'</span></div><p>'+esc(a.cpf)+' · '+esc(a.email)+'</p>'+
+      (gestor?'':'<div class="admin-perms" style="margin-top:12px;">'+permissoesAdminHtml('admin-perm-'+i,a.permissoes)+'</div><div class="admin-actions"><button class="btn btn-p btn-sm" type="button" onclick="atualizarAdmin('+i+')">Salvar permissões</button>'+(a.ativo?'<button class="btn btn-o btn-sm" type="button" onclick="desativarAdmin('+i+')">Desativar</button>':'')+'</div>')+'</article>';
+  }).join('');
+}
+function criarAdmin(){
+  var nome=document.getElementById('novo-admin-nome').value.trim(),cpf=document.getElementById('novo-admin-cpf').value.trim(),email=document.getElementById('novo-admin-email').value.trim();
+  gs('adminCriarAdmin',{token:S.adminToken,nome:nome,cpf:cpf,email:email,permissoes:lerPermissoesAdmin('novo-admin-perm')}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert',esc(r.msg),'ok');['novo-admin-nome','novo-admin-cpf','novo-admin-email'].forEach(function(id){document.getElementById(id).value='';});carregarAdminContas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function atualizarAdmin(i){
+  var a=S.adminContas[i];if(!a)return;
+  gs('adminAtualizarAdmin',{token:S.adminToken,cpf:a.cpf,permissoes:lerPermissoesAdmin('admin-perm-'+i)}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Permissões salvas.','ok');carregarAdminContas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function desativarAdmin(i){
+  var a=S.adminContas[i];if(!a||!confirm('Desativar a conta de '+a.nome+'?'))return;
+  gs('adminDesativarAdmin',{token:S.adminToken,cpf:a.cpf}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Conta desativada.','ok');carregarAdminContas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function dataBr(iso){if(!iso)return '—';var p=iso.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:iso;}
+function graficoRelatorio(titulo,dados){
+  var itens=Object.keys(dados||{}).map(function(k){return {nome:k,valor:Number(dados[k])||0};}).sort(function(a,b){return b.valor-a.valor;});
+  if(itens.length>10){var demais=itens.slice(10).reduce(function(n,x){return n+x.valor;},0);itens=itens.slice(0,10);itens.push({nome:'Outros',valor:demais});}
+  var max=itens.length?itens[0].valor:1;
+  return '<section class="report-chart"><h3>'+esc(titulo)+'</h3>'+(itens.length?itens.map(function(x){return '<div class="report-bar-row"><span>'+esc(x.nome)+'</span><div class="report-track"><div class="report-fill" style="width:'+Math.max(2,Math.round(x.valor/max*100))+'%"></div></div><strong>'+x.valor.toLocaleString('pt-BR')+'</strong></div>';}).join(''):'<p class="report-meta">Sem dados confirmados no período.</p>')+'</section>';
+}
+function tabelaRelatorio(cabecalhos,linhas){
+  return '<div class="report-table-wrap"><table class="report-table"><thead><tr>'+cabecalhos.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'</tr></thead><tbody>'+linhas.join('')+'</tbody></table></div>';
+}
+function gerarRelatorioAdmin(){
+  var inicio=document.getElementById('rel-inicio').value,fim=document.getElementById('rel-fim').value;
+  if(!inicio||!fim||inicio>fim)return adminErro({erro:'Selecione um período válido.'});
+  document.getElementById('relatorio-tela').textContent='Preparando relatório…';
+  gs('adminRelatorio',{token:S.adminToken,inicio:inicio,fim:fim}).then(function(r){if(!r.ok)return adminErro(r);renderRelatorioAdmin(r);}).catch(function(){adminErro({erro:'Falha ao gerar relatório.'});});
+}
+function renderRelatorioAdmin(r){
+  var x=r.resumo;
+  var stat=function(n,v){return '<div class="report-stat"><strong>'+esc(String(v))+'</strong><span>'+esc(n)+'</span></div>';};
+  var linhasAg=(r.agendamentos||[]).map(function(a){return '<tr><td>'+esc(dataBr(a.data))+'</td><td>'+esc(a.horario)+'</td><td>'+esc(a.monitor)+'</td><td>'+esc(a.telefone)+'</td><td>'+esc(String(a.grupo))+'</td><td>'+esc(a.status)+'</td></tr>';});
+  var linhasMon=(r.monitores||[]).map(function(m){return '<tr><td>'+esc(m.nome)+'</td><td>'+esc(m.telefone)+'</td><td>'+esc(m.email)+'</td><td>'+esc(m.cidade)+'</td><td>'+esc(m.bairro)+'</td><td>'+esc(String(m.visitas))+'</td><td>'+esc(String(m.pessoas))+'</td></tr>';});
+  var doc='<article class="report-doc"><h2>Relatório de agendamentos</h2><p class="report-meta">Sítio Arqueológico São Francisco · '+esc(dataBr(r.inicio))+' a '+esc(dataBr(r.fim))+'</p>'+
+    '<div class="report-stats">'+stat('Solicitações no período',x.agendamentos)+stat('Visitas confirmadas',x.confirmados)+stat('Visitantes confirmados',x.pessoas)+stat('Pessoas por grupo',x.mediaGrupo.toFixed(1))+stat('Antecedência média (dias)',x.mediaAntecedencia.toFixed(1))+stat('Estadia média (dias)',x.mediaEstadia.toFixed(1))+'</div>'+
+    '<h3>Relação de agendamentos</h3>'+tabelaRelatorio(['Data','Hora','Monitor','Telefone','Grupo','Status'],linhasAg)+
+    '<h3>Perfil dos grupos confirmados</h3><p class="report-meta">Os gráficos somam visitantes dos agendamentos confirmados, agrupados pelos dados informados no pedido.</p>'+
+    graficoRelatorio('Origem dos visitantes',r.grupos.origem)+graficoRelatorio('Tipo do grupo',r.grupos.tipo)+graficoRelatorio('Faixa etária',r.grupos.faixa)+graficoRelatorio('Hospedagem',r.grupos.hospedagem)+
+    '<h3>Relação de monitores</h3><p class="report-meta">Visitas e pessoas referem-se às solicitações confirmadas como monitor principal no período.</p>'+
+    tabelaRelatorio(['Nome','Telefone','E-mail','Cidade','Bairro','Visitas','Pessoas'],linhasMon)+
+    '<p class="report-meta" style="margin-top:18px;">Gerado em '+new Date().toLocaleString('pt-BR')+'. Fonte: planilha de agendamentos e monitores credenciados.</p></article>';
+  document.getElementById('relatorio-tela').innerHTML='<div class="admin-actions"><button class="btn btn-p btn-sm" type="button" onclick="imprimirRelatorioAdmin()">Imprimir ou salvar em PDF</button></div>'+doc;
+  document.getElementById('print-report').innerHTML=doc;
+}
+function imprimirRelatorioAdmin(){if(!document.getElementById('print-report').innerHTML)return;window.print();}
 function carregarHistorico(){
   var el=document.getElementById('ag-list');
   el.innerHTML='<div class="empty"><div class="empty-ico">⏳</div><p>Carregando…</p></div>';
   document.getElementById('pag-controls').style.display = 'none';
-  
+
   gs('historico',{token:S.token}).then(function(r){
     if(!r.ok){if(r.code==='UNAUTHORIZED')return sessaoExpirada();el.innerHTML='<div class="empty"><p>Erro ao carregar.</p></div>';return;}
-    
+
     // Armazena as datas do monitor para bloqueio no calendário
     S.datasMinhas=(r.lista||[]).filter(function(a){
       var s=(a.status||'').toLowerCase();return a.isPrincipal&&s!=='cancelado'&&s!=='negado';
     }).map(function(a){
       if(!a.data||a.data==='—')return null;var p=a.data.split('/');return p.length===3?p[2]+'-'+p[1]+'-'+p[0]:null;
     }).filter(Boolean);
-    
+
     var tempLista = r.lista || [];
     tempLista.sort(function(a, b) {
       if (a.convitePendente && !b.convitePendente) return -1;
@@ -1530,22 +1883,22 @@ function carregarHistorico(){
 function renderPaginaHistorico() {
   var el = document.getElementById('ag-list');
   var ctrl = document.getElementById('pag-controls');
-  
+
   if(!S.listaHistoricoCompleta || !S.listaHistoricoCompleta.length){
     el.innerHTML='<div class="empty"><div class="empty-ico">📋</div><p>Nenhuma solicitação encontrada.<br>Clique em <strong>+ Nova Solicitação</strong> para começar.</p></div>';
     ctrl.style.display = 'none';
     return;
   }
-  
+
   var total = S.listaHistoricoCompleta.length;
   var totalPags = Math.ceil(total / S.pageSize);
   var ini = (S.paginaAtual - 1) * S.pageSize;
   var fim = ini + S.pageSize;
   var listaExibida = S.listaHistoricoCompleta.slice(ini, fim);
-  
+
   el.innerHTML = listaExibida.map(function(a){return renderCard(a,true);}).join('');
   document.getElementById('ag-list-wrap').scrollTop = 0; // Volta scroll pro topo
-  
+
   if (totalPags > 1) {
     ctrl.style.display = 'flex';
     document.getElementById('pag-info').textContent = 'Página ' + S.paginaAtual + ' de ' + totalPags;
@@ -1570,13 +1923,13 @@ function podeCancelar(dataStr, horaStr) {
   var p = dataStr.split('/');
   if (p.length !== 3) return false;
   var isoData = p[2] + '-' + p[1] + '-' + p[0]; // yyyy-MM-dd
-  
+
   var hhmm = '00:00';
   if (horaStr && horaStr !== '—') {
     var m = String(horaStr).match(/(\d{2}):(\d{2})/);
     if (m) hhmm = m[1] + ':' + m[2];
   }
-  
+
   var dataVisita = new Date(isoData + 'T' + hhmm + ':00');
   var agora = new Date();
   var diffMs = dataVisita.getTime() - agora.getTime();
@@ -1587,7 +1940,7 @@ function podeCancelar(dataStr, horaStr) {
 function renderCard(a,mostrarCancelar){
   var sl=(a.status||'pendente').toLowerCase().replace(/\s/g,'');
   var bc='ag-card s-'+sl;
-  if (a.convitePendente) {
+  if (a.convitePendente && S.papel!=='delegado') {
     bc += ' has-invite';
   }
   var motivoHtml='';
@@ -1596,13 +1949,13 @@ function renderCard(a,mostrarCancelar){
   }
   var auxInfo=a.nomePrincipal?('<div style="font-size:.72rem;color:var(--info);margin-top:2px;">Monitor principal: '+esc(a.nomePrincipal)+'</div>'):'';
   var inviteHtml = '';
-  if (a.convitePendente) {
+  if (a.convitePendente && S.papel!=='delegado') {
     inviteHtml = '<div style="margin-top:8px; display:flex; gap:8px;" onclick="event.stopPropagation()">' +
       '<button class="btn btn-p btn-sm" onclick="responderConvite(\''+esc(a.protocolo)+'\', \'Aceito\')" style="width:auto;background:var(--ok);">✓ Aceitar</button>' +
       '<button class="btn btn-danger btn-sm" onclick="responderConvite(\''+esc(a.protocolo)+'\', \'Recusado\')" style="width:auto;">✕ Recusar</button>' +
       '</div>';
   }
-  var cancelBtn=(mostrarCancelar&&(sl==='pendente'||sl==='confirmado')&&a.isPrincipal && podeCancelar(a.data, a.horario))
+  var cancelBtn=(S.papel!=='delegado'&&mostrarCancelar&&(sl==='pendente'||sl==='confirmado')&&a.isPrincipal && podeCancelar(a.data, a.horario))
     ?'<div style="margin-top:6px;"><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();cancelarSolicitacao(\''+esc(a.protocolo||'')+'\')" style="width:auto;font-size:.71rem;">Cancelar</button></div>'
     :'';
   var badgePapel=a.isAuxiliar?'<span class="badge b-auxiliar">🤝 Auxiliar</span>':'<span class="badge b-principal">📋 Principal</span>';
@@ -1629,7 +1982,7 @@ function cancelarSolicitacao(protocolo){
 function responderConvite(protocolo, resposta) {
   var acaoNome = resposta === 'Aceito' ? 'aceitar' : 'recusar';
   if (!confirm('Tem certeza que deseja ' + acaoNome + ' a indicação como monitor auxiliar para a solicitação ' + protocolo + '?')) return;
-  
+
   gs('responderConvite', { token: S.token, protocolo: protocolo, resposta: resposta }).then(function(r) {
     if (!r.ok) {
       alerta('d-alert', r.erro, 'err');
@@ -1648,7 +2001,7 @@ function responderConvite(protocolo, resposta) {
 // ═══════════════════════════════════════════════════════════════
 function abrirPerfilModal() {
   limpaAlerta('alerta-perfil');
-  
+
   var nameInput = document.getElementById('i-nome-perf');
   var cpfInput = document.getElementById('i-cpf-perf');
   var rgInput = document.getElementById('i-rg-perf');
@@ -1656,7 +2009,7 @@ function abrirPerfilModal() {
   var emailInput = document.getElementById('i-email-perf');
   var cityInput = document.getElementById('i-cidade-perf');
   var neighborhoodInput = document.getElementById('i-bairro-perf');
-  
+
   nameInput.value = S.monitor.nome || '';
   cpfInput.value = S.monitor.cpf || '';
   rgInput.value = S.monitor.rg || '';
@@ -1664,23 +2017,28 @@ function abrirPerfilModal() {
   emailInput.value = S.monitor.email || '';
   cityInput.value = S.monitor.cidade || '';
   neighborhoodInput.value = S.monitor.bairro || '';
-  
+
   // Disable CPF/RG if they are already populated (so they can only add if blank)
   var currentCpfDigits = (S.monitor.cpf || '').replace(/\D/g, '');
   var currentRgTrimmed = (S.monitor.rg || '').trim();
-  
+
   cpfInput.disabled = !!currentCpfDigits;
   rgInput.disabled = !!currentRgTrimmed;
-  
+
   // Limpar os campos de senha
   document.getElementById('i-senha-perf').value = '';
   document.getElementById('i-conf-perf').value = '';
-  
+  document.getElementById('i-codigo-perfil').value = '';
+  document.getElementById('confirmacao-senha-perfil').style.display = 'none';
+  document.getElementById('codigo-perfil-campos').style.display = 'none';
+  document.getElementById('codigo-perfil-status').textContent = '';
+  S.ticketSenhaPerfil = '';
+
   var bar = document.getElementById('pwd-bar-perf');
   var lbl = document.getElementById('pwd-lbl-perf');
   if (bar) bar.classList.remove('show');
   if (lbl) lbl.classList.remove('show');
-  
+
   try{window.parent.postMessage({type:'scrollToTop'},'*');}catch(e){}
   document.getElementById('modal-perfil').classList.add('open');
 }
@@ -1690,9 +2048,36 @@ function fecharPerfil(e) {
   document.getElementById('modal-perfil').classList.remove('open');
 }
 
+document.getElementById('i-senha-perf').addEventListener('input', function(){
+  document.getElementById('confirmacao-senha-perfil').style.display = this.value ? '' : 'none';
+});
+function solicitarCodigoPerfil() {
+  if (!document.getElementById('i-senha-perf').value) return alerta('alerta-perfil','Digite a nova senha primeiro.');
+  carregando('btn-codigo-perfil',true);
+  gs('solicitarCodigoPerfil',{token:S.token}).then(function(r){
+    carregando('btn-codigo-perfil',false);
+    if(!r.ok)return alerta('alerta-perfil',r.erro);
+    S.ticketSenhaPerfil='';
+    document.getElementById('codigo-perfil-campos').style.display='';
+    document.getElementById('codigo-perfil-status').textContent='Código enviado para '+r.emailMascarado+'. Validade: 10 minutos.';
+  }).catch(function(){carregando('btn-codigo-perfil',false);alerta('alerta-perfil','Falha ao enviar o código.');});
+}
+function confirmarCodigoPerfil() {
+  var codigo=document.getElementById('i-codigo-perfil').value.trim();
+  if(!/^\d{6}$/.test(codigo))return alerta('alerta-perfil','Digite o código de 6 dígitos.');
+  carregando('btn-confirmar-codigo-perfil',true);
+  gs('confirmarCodigo',{token:S.token,cpf:S.monitor.cpf,finalidade:'perfil',codigo:codigo}).then(function(r){
+    carregando('btn-confirmar-codigo-perfil',false);
+    if(!r.ok)return alerta('alerta-perfil',r.erro);
+    S.ticketSenhaPerfil=r.ticket;
+    document.getElementById('codigo-perfil-status').textContent='Código confirmado. Salve as alterações para concluir a troca.';
+    document.getElementById('codigo-perfil-campos').style.display='none';
+  }).catch(function(){carregando('btn-confirmar-codigo-perfil',false);alerta('alerta-perfil','Falha ao confirmar o código.');});
+}
+
 function salvarPerfil() {
   limpaAlerta('alerta-perfil');
-  
+
   var nome = document.getElementById('i-nome-perf').value.trim();
   var cpf = document.getElementById('i-cpf-perf').value.trim();
   var rg = document.getElementById('i-rg-perf').value.trim();
@@ -1702,7 +2087,7 @@ function salvarPerfil() {
   var bairro = document.getElementById('i-bairro-perf').value.trim();
   var senha = document.getElementById('i-senha-perf').value;
   var conf = document.getElementById('i-conf-perf').value;
-  
+
   if (!nome) return alerta('alerta-perfil', 'Nome é obrigatório.');
   if (cpf.replace(/\D/g,'').length !== 11) return alerta('alerta-perfil', 'CPF deve conter 11 dígitos.');
   if (!rg) return alerta('alerta-perfil', 'RG é obrigatório.');
@@ -1714,15 +2099,16 @@ function salvarPerfil() {
   }
   cidade = document.getElementById('i-cidade-perf').value.trim();
   if (!bairro) return alerta('alerta-perfil', 'Bairro é obrigatório.');
-  
+
   if (senha) {
     if (senha.length < 8) return alerta('alerta-perfil', 'A nova senha deve ter no mínimo 8 caracteres.');
     if (!/[A-Za-z]/.test(senha) || !/[0-9]/.test(senha)) return alerta('alerta-perfil', 'A nova senha deve conter letras e números.');
     if (senha !== conf) return alerta('alerta-perfil', 'As senhas não coincidem.');
+    if (!S.ticketSenhaPerfil) return alerta('alerta-perfil', 'Confirme o código enviado ao e-mail antes de salvar a nova senha.');
   }
-  
+
   carregando('btn-salvar-perfil', true);
-  
+
   gs('atualizarPerfil', {
     token: S.token,
     nome: nome,
@@ -1732,44 +2118,46 @@ function salvarPerfil() {
     email: email,
     cidade: cidade,
     bairro: bairro,
-    senha: senha || undefined
+    senha: senha || undefined,
+    ticketSenha: senha ? S.ticketSenhaPerfil : undefined
   }).then(function(r) {
     carregando('btn-salvar-perfil', false);
     if (!r.ok) return alerta('alerta-perfil', r.erro);
-    
+    S.ticketSenhaPerfil='';
+
     // Atualizar o estado local
     S.monitor = r.monitor;
-    
+
     // Atualizar os campos exibidos no painel
     var n = r.monitor.nome.split(' ')[0];
     document.getElementById('d-nome').textContent = 'Olá, ' + n + '!';
     var avatarEl = document.getElementById('d-avatar');
-    if (P.loginLogoUrl) {
+    if (avatarEl && P.loginLogoUrl) {
       avatarEl.classList.add('has-logo');
       avatarEl.innerHTML = '<img src="' + P.loginLogoUrl + '" alt="Logo"/>';
-    } else {
+    } else if (avatarEl) {
       avatarEl.classList.remove('has-logo');
       avatarEl.textContent = n.charAt(0).toUpperCase();
     }
     document.getElementById('d-cpf').textContent = r.monitor.cpf;
     document.getElementById('d-tel').textContent = r.monitor.telefone || '—';
     document.getElementById('d-email').textContent = r.monitor.email || '—';
-    
+
     // Atualizar os campos padrão do formulário de solicitação
     document.getElementById('f-nome').value = r.monitor.nome;
     document.getElementById('f-cpf').value = r.monitor.cpf;
     document.getElementById('f-tel').value = r.monitor.telefone || '';
     document.getElementById('f-email').value = r.monitor.email || '';
-    
+
     // Atualizar cookies
     setCookie('pm_monitor', JSON.stringify(r.monitor), 6);
-    
+
     // Notificar sucesso na tela e fechar o modal depois de 1.5 segundos
     alerta('alerta-perfil', 'Dados atualizados com sucesso!', 'ok');
     setTimeout(function() {
       document.getElementById('modal-perfil').classList.remove('open');
     }, 1500);
-    
+
   }).catch(function(e) {
     carregando('btn-salvar-perfil', false);
     alerta('alerta-perfil', 'Falha de comunicação com o servidor.');
@@ -1799,7 +2187,7 @@ function renderDetalhe(sol){
   var diasSel=sol.diasSS&&sol.diasSS!=='—'?sol.diasSS+' dia(s)':'—';
   var motivoHtml=((sl==='negado'||sl==='cancelado')&&sol.motivo)?('<div class="detalhe-motivo">'+esc(sol.motivo)+'</div>'):'';
   var agenciesHtml=(sol.nomeAgencia)?('<div class="detalhe-item full"><div class="dl">Agência</div><div class="dv">'+esc(sol.nomeAgencia)+(sol.cnpjAgencia?' · CNPJ: '+esc(sol.cnpjAgencia):'')+'</div></div>'):'';
-  
+
   // Extrair horário no formato HH:MM de forma robusta e resiliente
   var hor = sol.horario || '—';
   if (hor && hor !== '—') {
@@ -1832,7 +2220,7 @@ function renderDetalhe(sol){
 
   // Botões de Aceite/Recusa pendente para auxiliar logado
   var inviteButtonsHtml = '';
-  if (sol.isAuxiliar && sl === 'aguardandoauxiliares') {
+  if (S.papel!=='delegado' && sol.isAuxiliar && sl === 'aguardandoauxiliares') {
     var meuNome = S.monitor.nome;
     if (meuNome && sol.aceites && sol.aceites[meuNome] === 'Pendente') {
       inviteButtonsHtml = '<div style="margin-top:12px;background:var(--warn-bg);border:1.5px solid var(--warn-bd);border-radius:var(--r);padding:12px;text-align:center;">' +
@@ -1847,7 +2235,7 @@ function renderDetalhe(sol){
 
   // Botão de cancelamento opcional dentro do modal de detalhes (somente para o principal)
   var cancelBtnHtml = '';
-  if ((sl === 'pendente' || sl === 'confirmado' || sl === 'aguardandoauxiliares') && sol.isPrincipal && podeCancelar(sol.data, sol.horario)) {
+  if (S.papel!=='delegado' && (sl === 'pendente' || sl === 'confirmado' || sl === 'aguardandoauxiliares') && sol.isPrincipal && podeCancelar(sol.data, sol.horario)) {
     cancelBtnHtml = '<div style="margin-top:12px;">' +
       '<button class="btn btn-danger btn-sm" onclick="cancelarSolicitacao(\''+esc(sol.protocolo)+'\')" style="width:auto;font-size:.78rem;padding:6px 16px;margin:0 !important;">Cancelar Agendamento</button>' +
       '</div>';
@@ -1940,18 +2328,35 @@ function toggleOrientacoes(){var c=document.getElementById('orientacoes-content'
 function carregarMonitoresAux(){
   gs('listarMonitores',{token:S.token}).then(function(r){
     var cont=document.getElementById('monitores-lista');if(!cont)return;
-    if(!r.ok||!r.monitores||!r.monitores.length){cont.innerHTML='<p style="grid-column:1 / -1;margin:0;font-size:.78rem;color:var(--n2);">Nenhum outro monitor disponível.</p>';return;}
+    if(!r.ok||!r.monitores||!r.monitores.length){cont.innerHTML='<p class="aux-empty">Nenhum outro monitor disponível.</p>';return;}
     var cpfAtual=S.monitor&&S.monitor.cpf?S.monitor.cpf.replace(/\D/g,''):'';
     var filtrados=r.monitores.filter(function(m){return m.cpf!==cpfAtual;});
-    if(!filtrados.length){cont.innerHTML='<p style="grid-column:1 / -1;margin:0;font-size:.78rem;color:var(--n2);">Nenhum outro monitor disponível.</p>';return;}
+    if(!filtrados.length){cont.innerHTML='<p class="aux-empty">Nenhum outro monitor disponível.</p>';return;}
     cont.innerHTML=filtrados.map(function(m){
       return '<label class="aux-label" id="lbl-aux-'+esc(m.cpf)+'">' +
         '<input type="checkbox" value="'+esc(m.cpf)+'" onchange="toggleAuxStyle(this, \''+esc(m.cpf)+'\')"/> ' +
         '<span class="custom-chk"></span>' +
         '<span>'+esc(m.nome)+'</span>' +
         '</label>';
-    }).join('');
-  }).catch(function(){var c=document.getElementById('monitores-lista');if(c)c.innerHTML='<p style="grid-column:1 / -1;margin:0;font-size:.78rem;color:var(--n2);">Não foi possível carregar.</p>';});
+    }).join('')+'<p class="aux-empty" id="aux-vazio"></p>';
+    filtrarMonitoresAux();
+  }).catch(function(){var c=document.getElementById('monitores-lista');if(c)c.innerHTML='<p class="aux-empty">Não foi possível carregar.</p>';});
+}
+
+function filtrarMonitoresAux() {
+  var campo=document.getElementById('aux-busca');
+  var cont=document.getElementById('monitores-lista');
+  if(!campo||!cont)return;
+  var termo=normalizarBusca(campo.value.trim());
+  var visiveis=0;
+  cont.querySelectorAll('.aux-label').forEach(function(lbl){
+    var selecionado=lbl.querySelector('input[type=checkbox]').checked;
+    var corresponde=termo.length>=2 && normalizarBusca(lbl.textContent).indexOf(termo)!==-1;
+    lbl.style.display=(selecionado||corresponde)?'':'none';
+    if(selecionado||corresponde)visiveis++;
+  });
+  var vazio=document.getElementById('aux-vazio');
+  if(vazio){vazio.style.display=visiveis?'none':'';vazio.textContent=termo.length<2?'Digite ao menos 2 letras para encontrar um monitor.':'Nenhum monitor encontrado com esse nome.';}
 }
 
 function toggleAuxStyle(cb, cpf) {
@@ -1959,6 +2364,7 @@ function toggleAuxStyle(cb, cpf) {
   if (lbl) {
     lbl.classList.toggle('checked', cb.checked);
   }
+  filtrarMonitoresAux();
   onAuxChange();
 }
 
@@ -1971,15 +2377,15 @@ function onGrupoChange(){
   var badge=document.getElementById('aux-badge');
   campoErr('e-aux','');
   campoErr('e-grupo','');
-  
+
   if (grupo > 50) {
     campoErr('e-grupo', 'Máximo 50 pessoas por grupo.');
     document.getElementById('f-grupo').value = 50;
     grupo = 50;
   }
-  
+
   var minAux=Math.max(0,Math.ceil(grupo/15)-1);
-  
+
   if(grupo<=0){
     hint.style.display='none';
     if(badge){badge.textContent='Opcional';badge.style.background='var(--ok-bg)';badge.style.color='var(--ok)';}
@@ -2013,7 +2419,7 @@ function atualizarVisibilidadeAuxiliares(minAux) {
   var decisaoCont = document.getElementById('aux-decisao-container');
   var wrapper = document.getElementById('monitores-lista-wrapper');
   var lblLista = document.getElementById('lbl-lista-monitores');
-  
+
   if (minAux > 0) {
     if (decisaoCont) decisaoCont.style.display = 'none';
     if (wrapper) wrapper.style.display = '';
@@ -2032,17 +2438,19 @@ function atualizarVisibilidadeAuxiliares(minAux) {
 }
 
 function desmarcarTodosAuxiliares() {
+  var busca=document.getElementById('aux-busca');if(busca)busca.value='';
   document.querySelectorAll('#monitores-lista .aux-label').forEach(function(lbl) {
     lbl.classList.remove('checked');
     var cb = lbl.querySelector('input[type=checkbox]');
     if (cb) cb.checked = false;
   });
+  filtrarMonitoresAux();
   onAuxChange();
 }
 
 function setAuxAcompanha(acompanha) {
   S.auxAcompanha = acompanha;
-  
+
   var btnNao = document.getElementById('btn-aux-nao');
   var btnSim = document.getElementById('btn-aux-sim');
   if (btnNao && btnSim) {
@@ -2054,11 +2462,11 @@ function setAuxAcompanha(acompanha) {
       btnSim.classList.remove('active');
     }
   }
-  
+
   var grupoStr = document.getElementById('f-grupo').value;
   var grupo = Number(grupoStr) || 0;
   var minAux = Math.max(0, Math.ceil(grupo/15) - 1);
-  
+
   atualizarVisibilidadeAuxiliares(minAux);
 }
 
@@ -2092,7 +2500,7 @@ function navMes(d,e){if(e)e.stopPropagation();S.calMes=new Date(S.calMes.getFull
 function renderCal(){
   var pop=document.getElementById('cal-popup');if(!pop.classList.contains('open'))return;
   var hoje=new Date();hoje.setHours(0,0,0,0);
-  var minDt=new Date(hoje);minDt.setDate(hoje.getDate()+2);
+  var minDt=new Date(hoje);minDt.setDate(hoje.getDate()+1);
   var maxDt=new Date(hoje);maxDt.setDate(hoje.getDate()+120);
   var ano=S.calMes.getFullYear(),mes=S.calMes.getMonth();
   document.getElementById('cal-lbl').textContent=MESES[mes]+' '+ano;
@@ -2142,15 +2550,15 @@ function _parseHoraMinuto(val) {
   if (!val) return { hora: 0, minuto: 0 };
   if (val instanceof Date) return { hora: val.getHours(), minuto: val.getMinutes() };
   var s = String(val).trim();
-  
+
   // Se for uma string de data longa que inclui hora, ex: "Sat Dec 30 1899 08:00:00 GMT-0300"
   var mDate = s.match(/\b(\d{2}):(\d{2}):(\d{2})\b/);
   if (mDate) return { hora: parseInt(mDate[1], 10), minuto: parseInt(mDate[2], 10) };
-  
+
   // Se for formato simples "HH:mm" ou "H:mm"
   var m = s.match(/\b(\d{1,2}):(\d{2})\b/);
   if (m) return { hora: parseInt(m[1], 10), minuto: parseInt(m[2], 10) };
-  
+
   return { hora: 0, minuto: 0 };
 }
 
@@ -2172,11 +2580,11 @@ function verificarPeriodo(){
   if(hora && !/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) {campoErr('e-hora','Informe um horário válido.');return false;}
   if(hora && _parseHoraMinuto(hora).hora*60+_parseHoraMinuto(hora).minuto>14*60){campoErr('e-hora','Escolha um horário até 14h.');return false;}
   if(!data||!hora){limpaAlerta('f-alert');return true;}
-  
+
   var periodosNovos = _getPeriodosDeVisita(hora);
   var lotInfo=null;
   for(var i=0;i<S.datasLotadas.length;i++){if(S.datasLotadas[i].data===data){lotInfo=S.datasLotadas[i];break;}}
-  
+
   if (lotInfo) {
     for (var iP = 0; iP < periodosNovos.length; iP++) {
       var per = periodosNovos[iP];
@@ -2192,7 +2600,7 @@ function verificarPeriodo(){
       }
     }
   }
-  
+
   if(document.getElementById('f-alert').classList.contains('alert-lot')){limpaAlerta('f-alert');}
   campoErr('e-hora','');
   return true;
@@ -2207,7 +2615,7 @@ function abrirForm(){
   document.getElementById('f-hora').value='09:00';
   document.getElementById('f-data').value='';
   document.getElementById('f-origem').value='';
-  
+
   // Recuperar última agência e CNPJ preenchidos para facilitar a usabilidade do monitor
   var lastAgencia = '';
   var lastCnpj = '';
@@ -2215,7 +2623,7 @@ function abrirForm(){
     lastAgencia = localStorage.getItem('pm_last_agencia') || '';
     lastCnpj = localStorage.getItem('pm_last_cnpj') || '';
   } catch(e) {}
-  
+
   document.getElementById('f-agencia').value = lastAgencia;
   document.getElementById('f-cnpj').value = lastCnpj;
   document.getElementById('wrap-cnpj').style.display = lastAgencia ? '' : 'none';
@@ -2291,7 +2699,7 @@ function salvarForm(){
       else{alerta('f-alert',r.erro);}
       return;
     }
-    
+
     // Salvar no localStorage os dados da agência para facilitar preenchimentos futuros
     try {
       localStorage.setItem('pm_last_agencia', agenc);
@@ -2299,7 +2707,7 @@ function salvarForm(){
     } catch(e) {}
 
     document.getElementById('modal-proto').textContent=r.protocolo;
-    
+
     // Customizar mensagens do modal de sucesso de acordo com monitores auxiliares
     var paragraphs = document.querySelectorAll('#modal p');
     var mTitle = document.querySelector('#modal h3');
@@ -2312,7 +2720,7 @@ function salvarForm(){
       if (paragraphs && paragraphs[0]) paragraphs[0].innerHTML = 'Sua solicitação foi registrada com sucesso.<br>Guarde o número do protocolo abaixo.';
       if (paragraphs && paragraphs[1]) paragraphs[1].innerHTML = 'Acompanhe o status no painel. Nossa equipe confirmará em breve.';
     }
-    
+
     document.getElementById('modal').classList.add('open');
     buscarDatasBlq(); // atualizar capacidade após salvar
   }).catch(function(){carregando('btn-salvar',false);alerta('f-alert','Falha de comunicação.');});
@@ -2324,9 +2732,10 @@ function fecharModal(){document.getElementById('modal').classList.remove('open')
 // ═══════════════════════════════════════════════════════════════
 function fazerLogout(){
   clearTimeout(S.tAtiv);clearTimeout(S.tAviso);esconderAviso();
-  delCookie('pm_token');delCookie('pm_monitor');
+  delCookie('pm_token');delCookie('pm_monitor');delCookie('pm_role');delCookie('pm_admin');delCookie('pm_admin_token');
   if(S.token)google.script.run.dispatch('logout',{token:S.token});
-  S.token=null;S.monitor=null;S.datasBlq=[];S.datasLotadas=[];S.datasMinhas=[];S.calPronto=false;S.dataSel=null;
+  if(S.adminToken&&S.adminToken!==S.token)google.script.run.dispatch('logout',{token:S.adminToken});
+  S.token=null;S.monitor=null;S.adminToken=null;S.admin=null;S.papel='monitor';S.adminPermissoes=[];S.datasBlq=[];S.datasLotadas=[];S.datasMinhas=[];S.calPronto=false;S.dataSel=null;
   document.getElementById('i-cpf').value='';document.getElementById('i-senha').value='';
   ['v-pa','v-pa-senha','v-recuperar','v-recuperar-nova'].forEach(function(i){document.getElementById(i).style.display='none';});
   document.getElementById('v-login').style.display='';
@@ -2354,10 +2763,23 @@ document.getElementById('f-origem').addEventListener('input',function(){this.cla
 // REIDRATAÇÃO DE SESSÃO
 // ═══════════════════════════════════════════════════════════════
 (function(){
-  var token=getCookie('pm_token'),monRaw=getCookie('pm_monitor');
-  if(!token||!monRaw)return;
-  var mon;try{mon=JSON.parse(monRaw);}catch(e){return;}
-  gs('validarToken',{token:token}).then(function(r){if(r&&r.ok)iniciarSessao(token,mon);else{delCookie('pm_token');delCookie('pm_monitor');}}).catch(function(){});
+  var token=getCookie('pm_token'),papel=getCookie('pm_role')||'monitor';
+  if(!token)return;
+  gs('validarToken',{token:token}).then(function(r){
+    if(!r||!r.ok||r.papel!==papel){delCookie('pm_token');delCookie('pm_monitor');delCookie('pm_role');return;}
+    if(papel==='admin'){
+      var admin;try{admin=JSON.parse(getCookie('pm_admin')||'{}');}catch(e){return;}
+      return gs('adminPerfil',{token:token}).then(function(perfil){if(!perfil.ok)return;admin.permissoes=perfil.permissoes;iniciarAdmin(token,admin);});
+    }
+    var mon;try{mon=JSON.parse(getCookie('pm_monitor')||'{}');}catch(e){return;}
+    if(papel==='delegado'){
+      var adminToken=getCookie('pm_admin_token'),admin;
+      try{admin=JSON.parse(getCookie('pm_admin')||'{}');}catch(e){return;}
+      if(!adminToken)return;
+      return gs('adminPerfil',{token:adminToken}).then(function(perfil){if(!perfil.ok)return;S.adminToken=adminToken;S.admin=admin;S.adminPermissoes=perfil.permissoes;iniciarSessao(token,mon,true);});
+    }
+    iniciarSessao(token,mon);
+  }).catch(function(){});
 })();
 
 // ═══════════════════════════════════════════════════════════════
