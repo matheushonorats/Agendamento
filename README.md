@@ -66,13 +66,13 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 
 ## 🛠️ Instruções de Incorporação do Iframe
 
-Na página de turismo, substitua o trecho que incorpora o portal pelo bloco abaixo **somente após testar em uma página de homologação**. Mantenha o endereço da implantação de teste durante os testes e o endereço atual de produção na publicação. O script valida a origem e a janela antes de aceitar mensagens do aplicativo.
+Na página de turismo, substitua o trecho que incorpora o portal pelo bloco abaixo **somente após testar em uma página de homologação**. Mantenha o endereço da implantação de teste durante os testes e o endereço atual de produção na publicação. O script valida a origem e a janela antes de aceitar mensagens do aplicativo. Configure também a seção ou coluna do editor da página para ocupar a largura disponível; um limite imposto pelo editor continua restringindo o iframe mesmo com este código.
 
 ```html
-<div style="width: 100%; max-width: 750px; margin: 0 auto;">
+<div style="width: 100%; max-width: 1360px; margin: 0 auto;">
   <iframe 
     id="agendamento-iframe" 
-    style="width: 100%; height: 950px; border: 0; display: block; border-radius: 16px;"
+    style="width: 100%; height: 950px; border: 0; display: block;"
     src="https://script.google.com/macros/s/AKfycbx64cFvzE9As-gxIVnxNqiY7uhLLGhL7xH1g5EsB7Mw-Yljv5RbXeGmEn76mRbwaLZDKA/exec" 
     title="Portal do Monitor - Agendamento Sítio Arqueológico"
     scrolling="no">
@@ -83,6 +83,11 @@ Na página de turismo, substitua o trecho que incorpora o portal pelo bloco abai
 (function() {
   var iframe = document.getElementById('agendamento-iframe');
   if (!iframe) return;
+  function solicitarAltura() {
+    if (iframe.contentWindow) iframe.contentWindow.postMessage({type:'requestResize'}, '*');
+  }
+  iframe.addEventListener('load', solicitarAltura);
+  window.addEventListener('resize', solicitarAltura);
   window.addEventListener('message', function(event) {
     if (event.source !== iframe.contentWindow) return;
     var host;
