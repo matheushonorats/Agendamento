@@ -74,7 +74,9 @@ Abra a implantação de teste no computador e em um celular, ou use janelas estr
 
 Para reproduzir a página de turismo, crie uma **página de teste** com o bloco de incorporação do [README](README.md#️-instruções-de-incorporação-do-iframe), usando o endereço da implantação de teste. No celular, deslize pelo meio do formulário, da lista de solicitações e dos resultados de busca: a página inteira deve descer com um único gesto, sem exigir tocar na borda direita do iframe. Passe de uma tela alta para uma curta e confira que não sobra uma grande área vazia. Abra um modal de detalhes e verifique sua rolagem própria. Teste também abrir a implantação diretamente, fora do iframe.
 
-## Protocolos antigos: teste antes de executar na produção
+## Protocolos antigos: migração opcional
+
+O portal já abre registros sem protocolo usando uma referência temporária de leitura. A migração da coluna U **não é necessária para publicar**. Se quiser atribuir protocolos permanentes depois, faça isso separadamente, com backup recente e em horário de baixo uso:
 
 1. Na **cópia de teste**, execute `migrarProtocolosEmBranco` pelo editor do Apps Script **sem argumento**. Ela retorna apenas a quantidade e os números das linhas vazias; não grava nada.
 2. Compare essa prévia com a coluna U. Verifique que protocolos já existentes, inclusive os antigos de oito caracteres, não estão na lista.
@@ -83,11 +85,12 @@ Para reproduzir a página de turismo, crie uma **página de teste** com o bloco 
 
 ## Publicação, somente após os testes
 
-1. Compare o código da implantação atual com o backup. Se houve mudança de produção depois da cópia, incorpore-a antes de publicar.
-2. Faça **nova cópia da planilha de produção imediatamente antes da publicação**, pois a primeira cópia é uma fotografia de 25/09/2026 e novos pedidos podem ter chegado desde então. Preserve também o identificador da versão atual da implantação do Apps Script.
-3. Em horário de baixo uso, atualize o projeto de Apps Script de produção com os dois arquivos testados. Configure o administrador inicial no projeto de produção pelo procedimento acima, usando os dados definitivos e conferindo a remoção das propriedades temporárias. Confira a prévia da migração de protocolos, execute a migração com a propriedade de autorização e remova a propriedade. Confirme que o total pendente voltou a zero.
-4. Crie uma nova versão da implantação usada pela página de turismo, preservando o mesmo endereço do aplicativo da Web. Atualize o trecho de incorporação da página de turismo com o bloco testado do README e preserve a versão anterior desse trecho para reversão. Verifique imediatamente login de monitor e administrador, histórico, nova solicitação, aceite e rolagem no celular em contas controladas pela SETUR. Observe os registros de execução do Apps Script e as abas `Log_Auditoria` e `Administradores`.
-5. Se login, histórico ou envio falharem, volte a implantação à versão anterior. Não restaure a planilha inteira por cima de pedidos recebidos após o backup. Corrija apenas os dados afetados, comparando com a cópia e com o histórico de versões.
+1. Abra a **planilha original em produção**, não a cópia de backup nem a de teste. Confirme que o aplicativo da página de turismo usa a implantação do Apps Script vinculada a essa planilha. Se houve mudanças de código depois da cópia de teste, incorpore-as e teste novamente antes de publicar.
+2. Faça **nova cópia da planilha de produção imediatamente antes da publicação**, pois a primeira cópia é uma fotografia de 25/09/2026 e novos pedidos podem ter chegado desde então. Em **Implantar → Gerenciar implantações**, anote a implantação ativa, seu URL `/exec`, número da versão e configuração de execução/acesso. Guarde também o trecho atual de incorporação da página de turismo.
+3. Em horário de baixo uso, abra **Extensões → Apps Script** da planilha original. Atualize os arquivos `Código.gs` e `index.html` com os dois arquivos desta branch, salve e confira o fuso `America/Sao_Paulo`. Configure o administrador inicial no projeto de produção pelo procedimento acima, usando os dados definitivos; confirme que a aba `Administradores` foi criada e que as propriedades temporárias desapareceram. Não execute a migração de protocolos como parte desta publicação.
+4. Em **Implantar → Gerenciar implantações**, selecione a **implantação ativa atual** e clique em **Editar**. Escolha **Nova versão**, registre uma descrição e clique em **Implantar**. Preserve as opções de execução e acesso já usadas pelo portal. Confira que o URL `/exec` permanece o mesmo. Não crie uma implantação separada para substituir a página de turismo, pois isso mudaria o endereço.
+5. Verifique imediatamente o endereço `/exec` diretamente e depois pela página de turismo: login de monitor e administrador, histórico e detalhes de um pedido antigo, nova solicitação controlada, aceite de auxiliar, cancelamento administrativo, log e rolagem no celular. Observe **Execuções** no Apps Script e as abas `Log_Auditoria` e `Administradores`. Se a página de turismo ainda tiver rolagem dentro do iframe, aplique o bloco de incorporação do README numa cópia da página, teste no celular e então atualize essa página.
+6. Se login, histórico ou envio falharem, abra **Gerenciar implantações → Editar** na mesma implantação e selecione a versão anterior anotada no passo 2. Isso restaura o código servido no mesmo URL. Não restaure a planilha inteira por cima de pedidos recebidos após o backup; compare os dados afetados com a cópia e o histórico de versões.
 
 ## Verificação automática local
 
