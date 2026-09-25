@@ -37,7 +37,7 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 * **Capacidade Máxima:** Limite de 50 pessoas por período. Se a lotação for atingida, a data é marcada como lotada no calendário e novas solicitações são bloqueadas no servidor.
 
 ### 3. Autodimensionamento do Iframe (ResizeObserver)
-* **Comunicação Ativa:** O portal mede a altura real do conteúdo com `ResizeObserver` e envia `postMessage({ type: 'resize', height: h }, '*')` para a página que o incorpora. A página externa precisa aplicar essa altura ao iframe.
+* **Comunicação Ativa:** O portal mede a altura real do conteúdo com `ResizeObserver` e envia a medida por `postMessage` até a página que o incorpora. O Apps Script coloca o HTML dentro de um frame intermediário; por isso o portal precisa comunicar-se com `window.top`, e a página externa precisa aceitar a mensagem vinda do domínio `script.googleusercontent.com`.
 * **Scroll Inteligente:** Quando ocorrem transições de tela ou modais são abertos, o portal envia um sinal `scrollToTop` para o site principal realizar a rolagem automática e suave do usuário para o início do iframe.
 * **Rolagem no celular:** A incorporação recomendada usa `scrolling="no"` e deixa a página externa rolar. Sem o trecho de incorporação abaixo, o navegador ainda poderá criar uma barra dentro do iframe.
 
@@ -66,7 +66,7 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 
 ## 🛠️ Instruções de Incorporação do Iframe
 
-Na página de turismo, substitua o trecho que incorpora o portal pelo bloco abaixo **somente após testar em uma página de homologação**. Mantenha o endereço da implantação de teste durante os testes e o endereço atual de produção na publicação. O script valida a origem e a janela antes de aceitar mensagens do aplicativo. Configure também a seção ou coluna do editor da página para ocupar a largura disponível; um limite imposto pelo editor continua restringindo o iframe mesmo com este código.
+Na página de turismo, substitua o trecho que incorpora o portal pelo bloco abaixo **somente após testar em uma página de homologação**. O arquivo [IFRAME_PAGINA_TURISMO_ATUALIZADO.html](IFRAME_PAGINA_TURISMO_ATUALIZADO.html) contém o documento completo para colar no editor de código-fonte da página; [BACKUP_IFRAME_PAGINA_TURISMO_2026-09-25.html](BACKUP_IFRAME_PAGINA_TURISMO_2026-09-25.html) conserva o código publicado em 25/09/2026. Mantenha o endereço da implantação de teste durante os testes e o endereço atual de produção na publicação. O script valida a origem e a janela antes de aceitar mensagens do aplicativo. Configure também a seção ou coluna do editor da página para ocupar a largura disponível; um limite imposto pelo editor continua restringindo o iframe mesmo com este código.
 
 ```html
 <div style="width: 100%; max-width: 1360px; margin: 0 auto;">
@@ -89,14 +89,16 @@ Na página de turismo, substitua o trecho que incorpora o portal pelo bloco abai
   iframe.addEventListener('load', solicitarAltura);
   window.addEventListener('resize', solicitarAltura);
   window.addEventListener('message', function(event) {
-    if (event.source !== iframe.contentWindow) return;
     var host;
     try { host = new URL(event.origin).hostname; } catch (e) { return; }
     if (new URL(event.origin).protocol !== 'https:' ||
         !(/(^|\.)script\.google\.com$/.test(host) ||
           host === 'script.googleusercontent.com' ||
           host.endsWith('-script.googleusercontent.com'))) return;
-    if (!event.data || typeof event.data !== 'object') return;
+    if (!event.data || typeof event.data !== 'object' || event.data.portal !== 'espaco-monitor') return;
+    if (event.source !== iframe.contentWindow &&
+        host !== 'script.googleusercontent.com' &&
+        !host.endsWith('-script.googleusercontent.com')) return;
     if (event.data.type === 'resize') {
       var altura = Number(event.data.height);
       if (Number.isFinite(altura) && altura >= 300 && altura <= 30000)

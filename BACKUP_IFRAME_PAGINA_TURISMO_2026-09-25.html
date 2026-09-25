@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<div style="width: 100%; display: flex; justify-content: center; background: #f0faf3; padding: 10px 0;"><iframe style="display: block; width: 100%; max-width: 750px; height: 950px; border: 0; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,.08);" id="agendamento-iframe" src="https://script.google.com/macros/s/AKfycbx64cFvzE9As-gxIVnxNqiY7uhLLGhL7xH1g5EsB7Mw-Yljv5RbXeGmEn76mRbwaLZDKA/exec" title="Espa&ccedil;o do Monitor &mdash; S&iacute;tio Arqueol&oacute;gico" scrolling="no">
+  </iframe></div>
+<script>
+(function () {
+  var iframe = document.getElementById('agendamento-iframe');
+  if (!iframe) return;
+
+  window.addEventListener('message', function (event) {
+    if (event.source !== iframe.contentWindow) return;
+
+    var origem;
+    try { origem = new URL(event.origin); } catch (e) { return; }
+    var host = origem.hostname;
+    if (origem.protocol !== 'https:' ||
+        !(/(^|\.)script\.google\.com$/.test(host) ||
+          host === 'script.googleusercontent.com' ||
+          host.endsWith('-script.googleusercontent.com'))) return;
+
+    if (!event.data || typeof event.data !== 'object') return;
+
+    if (event.data.type === 'resize') {
+      var altura = Number(event.data.height);
+      if (Number.isFinite(altura) && altura >= 300 && altura <= 30000) {
+        iframe.style.height = Math.ceil(altura) + 'px';
+      }
+    } else if (event.data.type === 'scrollToTop') {
+      iframe.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  });
+})();
+</script>
+</body>
+</html>
