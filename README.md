@@ -12,6 +12,10 @@ O painel permite consultar detalhes e decidir solicitações pendentes, cancelar
 
 O gestor pode editar nome, e-mail e permissões de outros administradores, remover o acesso e reativá-lo. A remoção desativa a conta imediatamente e preserva seus registros para auditoria.
 
+A aba `Agenda` mostra as solicitações por data, com ocupação da manhã e da tarde e acesso aos detalhes de cada reserva. Pedidos pendentes e aguardando auxiliares também entram na ocupação; negados e cancelados continuam visíveis no histórico do dia, mas não ocupam vagas.
+
+O monitor tem uma discreta área **Mensagens e sugestões** para enviar feedback e responder à equipe. O gestor de acessos pode ler e responder todas as conversas, além de conceder a permissão `Mensagens dos monitores` a outros administradores. O administrador também pode iniciar uma conversa com um monitor. Cada monitor vê apenas suas conversas; o acesso administrativo em nome de monitor não abre essa caixa. As mensagens ficam na aba `Caixa_Postal`, criada no primeiro envio. O log registra ações e identificadores da conversa, sem copiar o texto das mensagens.
+
 A aba `Relatórios` reúne agendamentos do período, indicadores, gráficos de perfil dos grupos confirmados e a relação de monitores. O botão de PDF/impressão abre o diálogo do navegador com um documento próprio em formato A4, incluindo tabelas, gráficos e quebras de página; no destino da impressão, escolha **Salvar como PDF**. A aba `Log_Auditoria` registra as ações do servidor, inclusive erros, com ator, alvo e resultado, sem senha, código ou token. Se a gravação do log falhar, a operação principal continua e a falha aparece nos registros de execução do Apps Script.
 
 ---

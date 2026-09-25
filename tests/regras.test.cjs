@@ -27,7 +27,7 @@ function ambiente() {
     console,
     Logger: {log() {}},
     Session: {getScriptTimeZone: () => 'America/Sao_Paulo'},
-    SpreadsheetApp: {getActiveSpreadsheet: () => ({getSheetByName: name => sheets[name] ? sheet(name) : null, insertSheet: name => {sheets[name]=[[]]; return sheet(name);}})},
+    SpreadsheetApp: {getActiveSpreadsheet: () => ({getSheetByName: name => sheets[name] ? sheet(name) : null, insertSheet: name => {sheets[name]=[]; return sheet(name);}})},
     CacheService: {getScriptCache: () => ({get: key => cache.get(key) || null, put: (key, val) => cache.set(key, val), remove: key => cache.delete(key)})},
     LockService: {getScriptLock: () => ({tryLock: () => true, releaseLock() {}})},
     MailApp: {sendEmail: (...args) => emails.push(args)},
@@ -37,8 +37,11 @@ function ambiente() {
       DigestAlgorithm: {SHA_256: 'sha256'}, Charset: {UTF_8: 'utf8'},
       computeDigest: (_, text) => [...crypto.createHash('sha256').update(text).digest()],
       formatDate: (date, _tz, pattern) => {
-        if (pattern !== 'yyyy-MM-dd') throw Error('Formato não usado neste teste');
-        return new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+        const local = new Intl.DateTimeFormat('en-GB', {timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+        const part = key => local.find(item => item.type === key).value;
+        if (pattern === 'yyyy-MM-dd') return `${part('year')}-${part('month')}-${part('day')}`;
+        if (pattern === 'dd/MM/yyyy HH:mm') return `${part('day')}/${part('month')}/${part('year')} ${part('hour')}:${part('minute')}`;
+        throw Error('Formato não usado neste teste');
       }
     }
   };
@@ -360,4 +363,45 @@ test('prévia de origens antigas não grava e execução altera só valores ineq
   assert.equal(a.sheets['Respostas ao formulário 1'][4][11],'Qatar');
   assert.equal(a.sheets['Respostas ao formulário 1'][6][11],'Guarulhos/SP');
   assert.equal(a.writes.every(w=>w.col===12),true);
+});
+
+test('caixa postal entrega resposta somente ao monitor destinatário e audita sem conteúdo', () => {
+  const a=ambiente();const gestor=incluirAdmin(a);
+  const envio=a.ctx.dispatch('caixaEnviar',{token:a.token,assunto:'Sugestão de tela',mensagem:'Melhorar a consulta no celular'});
+  assert.equal(envio.ok,true);
+  assert.equal(a.sheets.Caixa_Postal.length,2);
+  assert.equal(a.ctx._caixaListar({token:gestor.token}).pendentes,1);
+  assert.equal(a.ctx._caixaListar({token:a.auxToken}).lista.length,0);
+  assert.equal(a.ctx._caixaAbrir({token:a.auxToken,conversa:envio.conversa}).code,'FORBIDDEN');
+  assert.equal(a.ctx.dispatch('caixaEnviar',{token:gestor.token,conversa:envio.conversa,mensagem:'Recebido, obrigado.'}).ok,true);
+  assert.equal(a.ctx._caixaListar({token:a.token}).lista[0].naoLidas,1);
+  assert.equal(a.ctx._caixaAbrir({token:a.token,conversa:envio.conversa}).mensagens.length,2);
+  assert.equal(a.ctx._caixaListar({token:a.token}).lista[0].naoLidas,0);
+  assert.equal(a.sheets.Log_Auditoria.some(row=>row.join(' ').includes('Melhorar a consulta no celular')),false);
+});
+
+test('caixa postal exige permissão e bloqueia acesso delegado', () => {
+  const a=ambiente();const gestor=incluirAdmin(a);
+  const criado=a.ctx._adminCriarAdmin({token:gestor.token,cpf:'16899535009',email:'outro@example.test',nome:'Outro',permissoes:['verMonitores']});
+  assert.equal(criado.ok,true);
+  a.sheets.Administradores[2][3]=a.ctx._hashSenha('16899535009','SenhaOutro123');
+  const outro=a.ctx._login({cpf:'16899535009',senha:'SenhaOutro123'});
+  assert.equal(a.ctx._caixaListar({token:outro.token}).code,'FORBIDDEN');
+  assert.equal(a.ctx._adminAtualizarAdmin({token:gestor.token,cpf:'16899535009',nome:'Outro',email:'outro@example.test',permissoes:['verMonitores','caixaPostal']}).ok,true);
+  const autorizado=a.ctx._login({cpf:'16899535009',senha:'SenhaOutro123'});
+  assert.equal(a.ctx._caixaListar({token:autorizado.token}).ok,true);
+  const delegado=a.ctx._adminAcessarMonitor({token:gestor.token,cpf:'12345678909'});
+  assert.equal(a.ctx._caixaListar({token:delegado.token}).code,'FORBIDDEN');
+  assert.equal(a.ctx._caixaEnviar({token:delegado.token,assunto:'Teste',mensagem:'Mensagem teste'}).code,'FORBIDDEN');
+});
+
+test('gestor pode iniciar conversa e texto que parece fórmula é gravado como texto', () => {
+  const a=ambiente();const gestor=incluirAdmin(a);
+  const envio=a.ctx.dispatch('caixaEnviar',{token:gestor.token,cpfMonitor:'12345678909',assunto:'Aviso de operação',mensagem:'=IMPORTDATA("endereço")'});
+  assert.equal(envio.ok,true);
+  assert.equal(a.sheets.Caixa_Postal[1][8].startsWith("'="),true);
+  assert.equal(a.ctx._caixaListar({token:a.token}).lista.length,1);
+  assert.equal(a.ctx._caixaAbrir({token:a.token,conversa:envio.conversa}).mensagens[0].autor,'Administrador');
+  assert.equal(a.ctx.dispatch('caixaEnviar',{token:a.token,conversa:envio.conversa,mensagem:'Mensagem recebida.'}).ok,true);
+  assert.equal(a.ctx._caixaListar({token:gestor.token}).pendentes,1);
 });

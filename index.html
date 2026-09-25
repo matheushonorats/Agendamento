@@ -102,6 +102,40 @@ body::-webkit-scrollbar-thumb:hover{background:var(--n3);}
 .admin-item-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
 .admin-item h3{font-size:.94rem;line-height:1.35;}
 .admin-item p{font-size:.82rem;color:var(--n1);margin-top:5px;overflow-wrap:anywhere;}
+.mail-box{border:1px solid var(--n4);background:var(--white);padding:14px 16px;margin:16px 0;border-radius:var(--r-sm);}
+.mail-box summary{cursor:pointer;font-size:.86rem;font-weight:700;color:var(--c1);}
+.mail-box summary span{font-size:.7rem;color:var(--warn);margin-left:8px;}
+.mail-body{margin-top:15px;}
+.mail-compose{display:grid;gap:8px;margin-bottom:16px;}
+.mail-compose input,.mail-compose textarea,.mail-reply textarea{width:100%;border:1px solid var(--n4);border-radius:var(--r-sm);padding:10px 11px;font:inherit;font-size:.84rem;background:var(--white);}
+.mail-compose textarea,.mail-reply textarea{min-height:88px;resize:vertical;}
+.mail-compose button,.mail-reply button{width:auto;justify-self:start;}
+.mail-layout{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,1.5fr);gap:14px;}
+.mail-list{display:flex;flex-direction:column;gap:6px;max-height:410px;overflow:auto;}
+.mail-thread{border:1px solid var(--n4);background:var(--white);text-align:left;padding:10px 12px;border-radius:var(--r-sm);font:inherit;cursor:pointer;}
+.mail-thread:hover,.mail-thread.active{border-color:var(--c2);background:var(--n5);}
+.mail-thread strong,.mail-thread small{display:block;}
+.mail-thread small{color:var(--n2);margin-top:3px;font-size:.72rem;}
+.mail-conversation{border:1px solid var(--n4);padding:12px;border-radius:var(--r-sm);min-height:150px;}
+.mail-message{padding:10px 12px;margin:8px 0;border-left:3px solid var(--n3);background:var(--n5);font-size:.82rem;overflow-wrap:anywhere;}
+.mail-message.own{border-left-color:var(--c2);}
+.mail-message small{display:block;color:var(--n2);margin-bottom:5px;}
+.mail-reply{display:grid;gap:8px;margin-top:12px;}
+.mail-recipient-results{display:flex;flex-wrap:wrap;gap:6px;}
+.mail-recipient-results button{border:1px solid var(--n4);background:var(--white);border-radius:var(--r-sm);padding:6px 9px;font:inherit;font-size:.78rem;cursor:pointer;}
+.mail-recipient-results button:hover{border-color:var(--c2);}
+.agenda-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.agenda-bar h3{font-size:1rem;margin:0;}
+.agenda-bar button,.agenda-bar input{border:1px solid var(--n4);border-radius:var(--r-sm);background:var(--white);padding:8px 10px;font:inherit;}
+.agenda-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
+.agenda-weekday{text-align:center;font-size:.7rem;color:var(--n2);padding:5px 0;}
+.agenda-day{min-height:74px;border:1px solid var(--n4);border-radius:var(--r-sm);background:var(--white);padding:6px;text-align:left;font:inherit;cursor:pointer;}
+.agenda-day:hover,.agenda-day.selected{border-color:var(--c2);background:var(--n5);}
+.agenda-day.today{box-shadow:inset 0 0 0 1px var(--c2);}
+.agenda-day strong,.agenda-day small{display:block;}
+.agenda-day small{font-size:.69rem;color:var(--n2);margin-top:4px;line-height:1.25;overflow-wrap:anywhere;}
+.agenda-day.empty{visibility:hidden;}
+.agenda-day-list{margin-top:18px;}
 .admin-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
 .admin-actions button{width:auto;min-height:40px;}
 .admin-form{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px;}
@@ -145,6 +179,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--n3);}
   .report-fill,.report-stat{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
 @media(max-width:600px){.admin-screen{padding:18px 14px 36px;}.admin-head{align-items:flex-start;}.admin-toolbar{flex-direction:column;align-items:stretch;}.admin-toolbar input,.admin-toolbar select{width:100%;}.admin-form{flex-direction:column;}.admin-form input,.admin-form button{width:100%;}}
+@media(max-width:600px){.mail-layout{grid-template-columns:1fr;}.mail-list{max-height:220px;}}
+@media(max-width:600px){.agenda-day{min-height:60px;padding:4px;}.agenda-day small{font-size:.61rem;}}
 
 /* ═══════════════ BOTÕES ═══════════════ */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:10px 18px;border:none;border-radius:var(--r);font-size:.87rem;font-weight:700;cursor:pointer;width:100%;transition:transform var(--t),box-shadow var(--t),background var(--t);font-family:var(--font);position:relative;letter-spacing:.01em;}
@@ -813,6 +849,19 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
 
   <div id="d-alert" class="alert" role="alert" style="margin-top:10px;"></div>
 
+  <details id="caixa-monitor" class="mail-box" ontoggle="if(this.open)carregarCaixa('monitor')">
+    <summary>Mensagens e sugestões <span id="caixa-monitor-contador"></span></summary>
+    <div class="mail-body">
+      <p class="field-hint" style="margin-bottom:10px;">Envie sugestões, relate um problema ou acompanhe uma resposta da equipe.</p>
+      <div class="mail-compose">
+        <input id="caixa-assunto-monitor" type="text" maxlength="120" placeholder="Assunto" aria-label="Assunto da mensagem"/>
+        <textarea id="caixa-texto-monitor" maxlength="2000" placeholder="Escreva sua mensagem" aria-label="Mensagem para a equipe"></textarea>
+        <button class="btn btn-p btn-sm" type="button" onclick="enviarNovaCaixa('monitor')">Enviar mensagem</button>
+      </div>
+      <div class="mail-layout"><div id="caixa-lista-monitor" class="mail-list"></div><div id="caixa-conversa-monitor" class="mail-conversation"><p class="field-hint">Selecione uma conversa para ler e responder.</p></div></div>
+    </div>
+  </details>
+
   <div class="sec-hd"><h3>Minhas Solicitações</h3><button class="btn btn-p btn-sm" onclick="abrirForm()">+ Nova Solicitação</button></div>
   <p style="font-size:.72rem;color:var(--n3);margin-bottom:8px;">Clique em qualquer solicitação para ver os detalhes completos.</p>
 
@@ -835,8 +884,10 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
   <div id="admin-alert" class="alert" role="alert"></div>
   <nav class="admin-nav" aria-label="Áreas da administração">
     <button type="button" id="admin-tab-solicitacoes" class="active" onclick="abrirAdminAba('solicitacoes')">Solicitações</button>
+    <button type="button" id="admin-tab-agenda" onclick="abrirAdminAba('agenda')">Agenda</button>
     <button type="button" id="admin-tab-datas" onclick="abrirAdminAba('datas')">Datas bloqueadas</button>
     <button type="button" id="admin-tab-monitores" onclick="abrirAdminAba('monitores')">Monitores</button>
+    <button type="button" id="admin-tab-caixa" onclick="abrirAdminAba('caixa')">Mensagens</button>
     <button type="button" id="admin-tab-relatorios" onclick="abrirAdminAba('relatorios')">Relatórios</button>
     <button type="button" id="admin-tab-auditoria" onclick="abrirAdminAba('auditoria')">Auditoria</button>
     <button type="button" id="admin-tab-admins" onclick="abrirAdminAba('admins')" style="display:none;">Administradores</button>
@@ -849,6 +900,11 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
     </div>
     <div id="admin-solicitacoes" class="admin-list"><p>Carregando solicitações…</p></div>
   </section>
+  <section id="admin-panel-agenda" class="admin-panel">
+    <p class="field-hint" style="margin-bottom:12px;">Consulte as visitas por dia. Solicitações pendentes e aguardando auxiliares também ocupam vagas.</p>
+    <div class="agenda-bar"><button type="button" onclick="mudarMesAgenda(-1)" aria-label="Mês anterior">←</button><h3 id="agenda-mes"></h3><button type="button" onclick="mudarMesAgenda(1)" aria-label="Próximo mês">→</button><input id="agenda-ir-data" type="date" aria-label="Ir para data" onchange="irParaDataAgenda()"/><button type="button" onclick="carregarAgendaAdmin()">Atualizar</button></div>
+    <div id="agenda-resumo" class="field-hint"></div><div id="agenda-grade" class="agenda-grid"></div><div id="agenda-dia-lista" class="agenda-day-list"></div>
+  </section>
   <section id="admin-panel-datas" class="admin-panel">
     <p class="field-hint" style="margin-bottom:12px;">O bloqueio impede novas solicitações; agendamentos existentes precisam ser tratados separadamente.</p>
     <div class="admin-form"><input id="admin-data" type="date" aria-label="Data a bloquear"/><input id="admin-motivo" type="text" placeholder="Motivo do bloqueio" aria-label="Motivo do bloqueio"/><button class="btn btn-p" type="button" onclick="bloquearDataAdmin()">Bloquear data</button></div>
@@ -857,6 +913,17 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
   <section id="admin-panel-monitores" class="admin-panel">
     <div class="admin-toolbar"><input id="admin-busca-monitor" type="search" placeholder="Buscar monitor, CPF ou cidade" aria-label="Buscar monitores" oninput="renderAdminMonitores()"/><button type="button" onclick="carregarAdminMonitores()">Atualizar</button></div>
     <div id="admin-monitores" class="admin-list"></div>
+  </section>
+  <section id="admin-panel-caixa" class="admin-panel">
+    <p class="field-hint" style="margin-bottom:12px;">Conversas com monitores sobre o uso do portal. Somente gestores e administradores autorizados veem esta área.</p>
+    <details class="mail-box"><summary>Nova mensagem para um monitor</summary><div class="mail-body mail-compose">
+      <input id="caixa-busca-monitor" type="search" placeholder="Digite o nome do monitor" aria-label="Buscar destinatário" oninput="filtrarDestinatariosCaixa()"/>
+      <div id="caixa-destinatarios" class="mail-recipient-results"></div><span id="caixa-destinatario-selecionado" class="field-hint">Nenhum destinatário selecionado.</span>
+      <input id="caixa-assunto-admin" type="text" maxlength="120" placeholder="Assunto" aria-label="Assunto da mensagem"/>
+      <textarea id="caixa-texto-admin" maxlength="2000" placeholder="Escreva sua mensagem" aria-label="Mensagem para o monitor"></textarea>
+      <button class="btn btn-p btn-sm" type="button" onclick="enviarNovaCaixa('admin')">Enviar mensagem</button>
+    </div></details>
+    <div class="mail-layout"><div id="caixa-lista-admin" class="mail-list"></div><div id="caixa-conversa-admin" class="mail-conversation"><p class="field-hint">Selecione uma conversa para ler e responder.</p></div></div>
   </section>
   <section id="admin-panel-relatorios" class="admin-panel">
     <p class="field-hint">Consulte o perfil dos grupos e prepare um relatório para impressão ou PDF.</p>
@@ -1402,7 +1469,9 @@ var S = {
   INATIVIDADE: 30*60*1000, AVISO_ANTES: 5*60*1000,
   auxAcompanha: false,
   papel: 'monitor', adminToken: null, admin: null, adminPermissoes: [],
-  adminSolicitacoes: [], adminMonitores: [], adminContas: []
+  adminSolicitacoes: [], adminMonitores: [], adminContas: [], agendaMes: new Date(), agendaDia: '',
+  caixaConversasMonitor: [], caixaConversasAdmin: [], caixaConversaMonitor: null, caixaConversaAdmin: null,
+  caixaDestinatarios: [], caixaDestinatario: null
 };
 var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -1569,18 +1638,21 @@ function iniciarSessao(token,mon,delegado){
   document.getElementById('dash-sair').textContent=delegado?'Voltar à administração':'Sair da conta';
   document.getElementById('dash-sair').onclick=delegado?voltarAdmin:fazerLogout;
   document.getElementById('btn-editar-perfil').style.display=delegado?'none':'';
+  document.getElementById('caixa-monitor').style.display=delegado?'none':'';
+  document.getElementById('caixa-monitor').open=false;
   setCookie('pm_token',token,6);setCookie('pm_monitor',JSON.stringify(mon),6);
   setCookie('pm_role',S.papel,6);
-  tela('dash');carregarHistorico();buscarDatasBlq();iniciarTimerAtiv();carregarMonitoresAux();verificarNotificacoes();
+  tela('dash');carregarHistorico();buscarDatasBlq();iniciarTimerAtiv();carregarMonitoresAux();verificarNotificacoes();if(!delegado)carregarCaixa('monitor');
 }
 function iniciarAdmin(token,admin){
   S.papel='admin';S.token=token;S.adminToken=token;S.admin=admin;S.monitor=null;
   S.adminPermissoes=admin.permissoes||[];
+  S.agendaMes=new Date();S.agendaDia=chaveDataAgenda(S.agendaMes);
   document.getElementById('admin-nome').textContent=admin.nome+' · Gestão do portal';
   var hoje=new Date();document.getElementById('rel-inicio').value=hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0')+'-01';
   document.getElementById('rel-fim').value=hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0')+'-'+String(new Date(hoje.getFullYear(),hoje.getMonth()+1,0).getDate()).padStart(2,'0');
   setCookie('pm_token',token,6);setCookie('pm_admin_token',token,6);setCookie('pm_role','admin',6);setCookie('pm_admin',JSON.stringify(admin),6);
-  configurarAdminPermissoes();tela('admin');iniciarTimerAtiv();
+  configurarAdminPermissoes();tela('admin');iniciarTimerAtiv();if(podeAdmin('caixaPostal')||podeAdmin('gerirAdmins'))carregarCaixa('admin');
 }
 function voltarAdmin(){
   if(S.papel!=='delegado'||!S.adminToken)return fazerLogout();
@@ -1588,7 +1660,7 @@ function voltarAdmin(){
   gs('logout',{token:tokenDelegado}).catch(function(){});
   S.token=S.adminToken;S.papel='admin';S.monitor=null;
   setCookie('pm_token',S.adminToken,6);setCookie('pm_role','admin',6);delCookie('pm_monitor');
-  configurarAdminPermissoes();tela('admin');
+  configurarAdminPermissoes();tela('admin');if(podeAdmin('caixaPostal')||podeAdmin('gerirAdmins'))carregarCaixa('admin');
 }
 function abrirPA(){limpaAlerta('alerta-login');S.ticketSenha='';['v-login','v-recuperar','v-recuperar-codigo','v-recuperar-nova','v-pa-codigo','v-pa-senha'].forEach(function(i){document.getElementById(i).style.display='none';});document.getElementById('v-pa').style.display='';document.getElementById('i-cpf-pa').value='';campoErr('e-cpf-pa','');}
 function fecharPA(){document.getElementById('v-login').style.display='';S.ticketSenha='';['v-pa','v-pa-codigo','v-pa-senha','v-recuperar','v-recuperar-codigo','v-recuperar-nova'].forEach(function(i){document.getElementById(i).style.display='none';});limpaAlerta('alerta-login');}
@@ -1683,12 +1755,12 @@ function salvarNovaSenha(){
 // ═══════════════════════════════════════════════════════════════
 // DASHBOARD — HISTÓRICO COM PAGINAÇÃO
 // ═══════════════════════════════════════════════════════════════
-var NOMES_PERMISSOES={verSolicitacoes:'Consultar solicitações',decidir:'Aprovar e negar',bloquearDatas:'Bloquear datas',verMonitores:'Consultar monitores',resetarSenha:'Redefinir acesso',agendarEmNome:'Agendar em nome de monitor',verRelatorios:'Ver relatórios',verAuditoria:'Ver auditoria'};
+var NOMES_PERMISSOES={verSolicitacoes:'Consultar solicitações',decidir:'Aprovar e negar',bloquearDatas:'Bloquear datas',verMonitores:'Consultar monitores',resetarSenha:'Redefinir acesso',agendarEmNome:'Agendar em nome de monitor',verRelatorios:'Ver relatórios',verAuditoria:'Ver auditoria',caixaPostal:'Mensagens dos monitores'};
 function podeAdmin(permissao){return S.adminPermissoes.indexOf(permissao)!==-1;}
 function configurarAdminPermissoes(){
-  var abas={solicitacoes:'verSolicitacoes',datas:'bloquearDatas',monitores:'verMonitores',relatorios:'verRelatorios',auditoria:'verAuditoria',admins:'gerirAdmins'};
+  var abas={solicitacoes:'verSolicitacoes',agenda:'verSolicitacoes',datas:'bloquearDatas',monitores:'verMonitores',caixa:'caixaPostal',relatorios:'verRelatorios',auditoria:'verAuditoria',admins:'gerirAdmins'};
   Object.keys(abas).forEach(function(a){
-    document.getElementById('admin-tab-'+a).style.display=(podeAdmin(abas[a])||(a==='solicitacoes'&&podeAdmin('decidir'))||(a==='monitores'&&(podeAdmin('agendarEmNome')||podeAdmin('resetarSenha'))))?'':'none';
+    document.getElementById('admin-tab-'+a).style.display=(podeAdmin(abas[a])||((a==='solicitacoes'||a==='agenda')&&podeAdmin('decidir'))||(a==='monitores'&&(podeAdmin('agendarEmNome')||podeAdmin('resetarSenha')))||(a==='caixa'&&podeAdmin('gerirAdmins')))?'':'none';
   });
   var primeira=Object.keys(abas).filter(function(a){return document.getElementById('admin-tab-'+a).style.display!=='none';})[0];
   if(primeira)abrirAdminAba(primeira);
@@ -1696,24 +1768,93 @@ function configurarAdminPermissoes(){
 }
 function abrirAdminAba(aba){
   if(document.getElementById('admin-tab-'+aba).style.display==='none')return;
-  ['solicitacoes','datas','monitores','relatorios','auditoria','admins'].forEach(function(a){
+  ['solicitacoes','agenda','datas','monitores','caixa','relatorios','auditoria','admins'].forEach(function(a){
     document.getElementById('admin-tab-'+a).classList.toggle('active',a===aba);
     document.getElementById('admin-panel-'+a).classList.toggle('active',a===aba);
   });
   if(aba==='solicitacoes')carregarAdminSolicitacoes();
+  if(aba==='agenda')carregarAgendaAdmin();
   if(aba==='datas')carregarAdminDatas();
   if(aba==='monitores')carregarAdminMonitores();
+  if(aba==='caixa'){carregarCaixa('admin');carregarDestinatariosCaixa();}
   if(aba==='auditoria')carregarAdminLogs();
   if(aba==='admins')carregarAdminContas();
 }
 function adminErro(r){alerta('admin-alert',esc(r.erro||'Falha de comunicação.'));}
+function caixaErro(papel,erro){if(papel==='admin')adminErro({erro:erro});else alerta('d-alert',esc(erro));}
+function caixaToken(papel){return papel==='admin'?S.adminToken:S.token;}
+function carregarCaixa(papel){
+  if(papel==='monitor'&&S.papel!=='monitor')return;
+  if(papel==='admin'&&S.papel!=='admin')return;
+  return gs('caixaListar',{token:caixaToken(papel)}).then(function(r){
+    if(!r.ok)return caixaErro(papel,r.erro);
+    var lista=r.lista||[];S[papel==='admin'?'caixaConversasAdmin':'caixaConversasMonitor']=lista;
+    var el=document.getElementById('caixa-lista-'+papel);
+    el.innerHTML=lista.length?lista.map(function(c,i){return '<button class="mail-thread" type="button" onclick="abrirConversaCaixa(\''+papel+'\','+i+')"><strong>'+esc(c.assunto)+'</strong><small>'+(papel==='admin'?esc(c.nomeMonitor)+' · ':'')+esc(c.data)+' · '+esc(c.ultimoAutor)+(c.naoLidas?' · '+c.naoLidas+' nova(s)':'')+'</small><small>'+esc(c.ultimaMensagem)+'</small></button>';}).join(''):'<p class="field-hint">Nenhuma conversa ainda.</p>';
+    if(papel==='monitor')document.getElementById('caixa-monitor-contador').textContent=lista.reduce(function(n,c){return n+c.naoLidas;},0)?'· '+lista.reduce(function(n,c){return n+c.naoLidas;},0)+' nova(s)':'';
+    else document.getElementById('admin-tab-caixa').textContent='Mensagens'+(r.pendentes?' ('+r.pendentes+')':'');
+  }).catch(function(){caixaErro(papel,'Falha ao carregar mensagens.');});
+}
+function abrirConversaCaixa(papel,i){
+  var lista=S[papel==='admin'?'caixaConversasAdmin':'caixaConversasMonitor'],c=lista[i];if(!c)return;
+  gs('caixaAbrir',{token:caixaToken(papel),conversa:c.id}).then(function(r){
+    if(!r.ok)return caixaErro(papel,r.erro);
+    S[papel==='admin'?'caixaConversaAdmin':'caixaConversaMonitor']=r;
+    var el=document.getElementById('caixa-conversa-'+papel);
+    el.innerHTML='<h3>'+esc(r.assunto)+'</h3>'+(papel==='admin'?'<p class="field-hint">'+esc(r.nomeMonitor)+' · '+esc(r.cpfMonitor)+'</p>':'')+(r.mensagens||[]).map(function(m){return '<div class="mail-message'+((papel==='admin'&&m.autor==='Administrador'||papel==='monitor'&&m.autor==='Monitor')?' own':'')+'"><small>'+esc(m.nome)+' · '+esc(m.data)+'</small>'+esc(m.texto).replace(/\n/g,'<br>')+'</div>';}).join('')+'<div class="mail-reply"><textarea id="caixa-resposta-'+papel+'" maxlength="2000" placeholder="Escreva uma resposta" aria-label="Resposta"></textarea><button class="btn btn-p btn-sm" type="button" onclick="responderCaixa(\''+papel+'\')">Responder</button></div>';
+    if(papel==='monitor')carregarCaixa('monitor');
+  }).catch(function(){caixaErro(papel,'Falha ao abrir a conversa.');});
+}
+function enviarNovaCaixa(papel){
+  var assunto=document.getElementById('caixa-assunto-'+papel).value.trim(),mensagem=document.getElementById('caixa-texto-'+papel).value.trim();
+  if(assunto.length<3||mensagem.length<3)return caixaErro(papel,'Informe assunto e mensagem com pelo menos 3 caracteres.');
+  var carga={token:caixaToken(papel),assunto:assunto,mensagem:mensagem};
+  if(papel==='admin'){if(!S.caixaDestinatario)return caixaErro(papel,'Selecione um monitor.');carga.cpfMonitor=S.caixaDestinatario.cpf;}
+  gs('caixaEnviar',carga).then(function(r){if(!r.ok)return caixaErro(papel,r.erro);document.getElementById('caixa-assunto-'+papel).value='';document.getElementById('caixa-texto-'+papel).value='';if(papel==='admin'){S.caixaDestinatario=null;document.getElementById('caixa-busca-monitor').value='';document.getElementById('caixa-destinatarios').innerHTML='';document.getElementById('caixa-destinatario-selecionado').textContent='Nenhum destinatário selecionado.';}carregarCaixa(papel).then(function(){abrirConversaCaixaPorId(papel,r.conversa);});}).catch(function(){caixaErro(papel,'Falha ao enviar mensagem.');});
+}
+function abrirConversaCaixaPorId(papel,id){var lista=S[papel==='admin'?'caixaConversasAdmin':'caixaConversasMonitor'];var i=lista.findIndex(function(x){return x.id===id;});if(i!==-1)abrirConversaCaixa(papel,i);}
+function responderCaixa(papel){
+  var c=S[papel==='admin'?'caixaConversaAdmin':'caixaConversaMonitor'];if(!c)return;
+  var el=document.getElementById('caixa-resposta-'+papel),mensagem=el.value.trim();if(mensagem.length<3)return caixaErro(papel,'Escreva uma resposta com pelo menos 3 caracteres.');
+  gs('caixaEnviar',{token:caixaToken(papel),conversa:c.id,mensagem:mensagem}).then(function(r){if(!r.ok)return caixaErro(papel,r.erro);el.value='';carregarCaixa(papel).then(function(){abrirConversaCaixaPorId(papel,c.id);});}).catch(function(){caixaErro(papel,'Falha ao enviar resposta.');});
+}
+function carregarDestinatariosCaixa(){gs('caixaMonitores',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);S.caixaDestinatarios=r.lista||[];}).catch(function(){adminErro({erro:'Falha ao carregar monitores.'});});}
+function filtrarDestinatariosCaixa(){var q=normalizarBusca(document.getElementById('caixa-busca-monitor').value),el=document.getElementById('caixa-destinatarios');if(q.length<2){el.innerHTML='';return;}var encontrados=S.caixaDestinatarios.map(function(m,i){return {m:m,i:i};}).filter(function(x){return normalizarBusca(x.m.nome).indexOf(q)!==-1;}).slice(0,10);el.innerHTML=encontrados.length?encontrados.map(function(x){return '<button type="button" onclick="selecionarDestinatarioCaixa('+x.i+')">'+esc(x.m.nome)+'</button>';}).join(''):'<span class="field-hint">Nenhum monitor encontrado.</span>';}
+function selecionarDestinatarioCaixa(i){var m=S.caixaDestinatarios[i];if(!m)return;S.caixaDestinatario=m;document.getElementById('caixa-destinatario-selecionado').textContent='Para: '+m.nome;document.getElementById('caixa-destinatarios').innerHTML='';document.getElementById('caixa-busca-monitor').value=m.nome;}
 function carregarAdminLogs(){
   var el=document.getElementById('admin-logs');el.textContent='Carregando auditoria…';
   gs('adminLogs',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);el.innerHTML=(r.lista||[]).length?r.lista.map(function(x){return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(x.acao)+' · '+esc(x.resultado)+'</h3><span class="report-meta">'+esc(x.data)+'</span></div><p>'+esc(x.papel)+' · '+esc(x.ator)+' · '+esc(x.alvo||'—')+'</p>'+(x.detalhes?'<p>'+esc(x.detalhes)+'</p>':'')+'</article>';}).join(''):'<p class="aux-empty">Nenhum evento registrado.</p>';}).catch(function(){adminErro({erro:'Falha ao carregar auditoria.'});});
 }
 function carregarAdminSolicitacoes(){
   document.getElementById('admin-solicitacoes').textContent='Carregando solicitações…';
-  gs('adminSolicitacoes',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);S.adminSolicitacoes=r.lista||[];renderAdminSolicitacoes();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+  gs('adminSolicitacoes',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);S.adminSolicitacoes=r.lista||[];renderAdminSolicitacoes();renderAgendaAdmin();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function chaveDataAgenda(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function carregarAgendaAdmin(){
+  document.getElementById('agenda-resumo').textContent='Carregando agenda…';
+  gs('adminSolicitacoes',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);S.adminSolicitacoes=r.lista||[];renderAgendaAdmin();}).catch(function(){adminErro({erro:'Falha ao carregar a agenda.'});});
+}
+function mudarMesAgenda(delta){S.agendaMes=new Date(S.agendaMes.getFullYear(),S.agendaMes.getMonth()+delta,1);S.agendaDia='';renderAgendaAdmin();}
+function irParaDataAgenda(){var d=document.getElementById('agenda-ir-data').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return;S.agendaMes=new Date(Number(d.slice(0,4)),Number(d.slice(5,7))-1,1);S.agendaDia=d;renderAgendaAdmin();}
+function selecionarDiaAgenda(d){S.agendaDia=d;document.getElementById('agenda-ir-data').value=d;renderAgendaAdmin();}
+function periodosAgenda(hora){var p=String(hora||'').match(/^(\d{1,2}):(\d{2})/);if(!p)return [];var inicio=Number(p[1])+Number(p[2])/60;return (inicio<13?['manha']:[]).concat(inicio+4>13?['tarde']:[]);}
+function renderAgendaAdmin(){
+  var mes=S.agendaMes.getMonth(),ano=S.agendaMes.getFullYear(),primeiro=new Date(ano,mes,1),dias=new Date(ano,mes+1,0).getDate();
+  document.getElementById('agenda-mes').textContent=MESES[mes]+' de '+ano;
+  var porDia={},mesTotal=0,mesAtivas=0;
+  S.adminSolicitacoes.forEach(function(a,i){if(!/^\d{4}-\d{2}-\d{2}$/.test(a.data||''))return;(porDia[a.data]||(porDia[a.data]=[])).push({a:a,i:i});if(a.data.slice(0,7)===chaveDataAgenda(primeiro).slice(0,7)){mesTotal++;if(['Confirmado','Pendente','Aguardando Auxiliares'].indexOf(a.status)!==-1)mesAtivas++;}});
+  document.getElementById('agenda-resumo').textContent=mesTotal+' solicitações no mês · '+mesAtivas+' confirmadas ou em andamento · M/T: pessoas por período (limite de 50)';
+  var html=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(function(d){return '<span class="agenda-weekday">'+d+'</span>';}).join('');
+  for(var v=0;v<primeiro.getDay();v++)html+='<span class="agenda-day empty"></span>';
+  var hoje=chaveDataAgenda(new Date());
+  for(var dia=1;dia<=dias;dia++){
+    var chave=chaveDataAgenda(new Date(ano,mes,dia)),itens=porDia[chave]||[],ativos=itens.filter(function(x){return ['Confirmado','Pendente','Aguardando Auxiliares'].indexOf(x.a.status)!==-1;}),manha=0,tarde=0;
+    ativos.forEach(function(x){periodosAgenda(x.a.horario).forEach(function(p){if(p==='manha')manha+=Number(x.a.grupo)||0;else tarde+=Number(x.a.grupo)||0;});});
+    html+='<button type="button" class="agenda-day'+(chave===hoje?' today':'')+(chave===S.agendaDia?' selected':'')+'" onclick="selecionarDiaAgenda(\''+chave+'\')" aria-label="'+dia+' de '+MESES[mes]+': '+itens.length+' solicitações, manhã '+manha+' de 50 pessoas, tarde '+tarde+' de 50 pessoas"><strong>'+dia+'</strong><small>'+itens.length+' '+(itens.length===1?'solicitação':'solicitações')+'</small>'+(ativos.length?'<small>M '+manha+'/50<br>T '+tarde+'/50</small>':'')+'</button>';
+  }
+  document.getElementById('agenda-grade').innerHTML=html;
+  var el=document.getElementById('agenda-dia-lista');if(!S.agendaDia){el.innerHTML='<p class="field-hint">Selecione um dia para ver as reservas.</p>';return;}
+  var lista=porDia[S.agendaDia]||[];el.innerHTML='<h3>'+esc(dataBr(S.agendaDia))+' · '+lista.length+' '+(lista.length===1?'solicitação':'solicitações')+'</h3>'+(lista.length?lista.sort(function(x,y){return String(x.a.horario).localeCompare(String(y.a.horario));}).map(function(x){var a=x.a;return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(a.horario||'Horário não informado')+' · '+esc(a.monitor||'Monitor não informado')+'</h3><span class="badge'+(a.status==='Pendente'?' b-pendente':'')+'">'+esc(a.status||'Sem status')+'</span></div><p>'+esc(rotuloProtocolo(a.protocolo))+' · '+esc(a.grupo)+' pessoas · '+esc(a.tipo||'')+' · '+esc(a.origem||'')+'</p><button class="btn btn-o btn-sm" type="button" onclick="abrirDetalheAdmin('+x.i+')">Ver detalhes</button></article>';}).join(''):'<p class="aux-empty">Não há solicitações para esta data.</p>');
 }
 function renderAdminSolicitacoes(){
   var q=normalizarBusca(document.getElementById('admin-busca').value),f=document.getElementById('admin-filtro').value;

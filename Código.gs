@@ -18,13 +18,14 @@ var CFG = {
   ABA_MONITORES:  'Monitores Credenciados',
   ABA_ADMIN:      'Administradores',
   ABA_AUDITORIA:  'Log_Auditoria',
+  ABA_CAIXA:      'Caixa_Postal',
   ABA_RESPOSTAS:  'Respostas ao formulário 1',
   ABA_BLOQUEADAS: 'Datas_Bloqueadas'
 };
 
 var MC = { RG: 2, CPF: 3, NOME: 4, TELEFONE: 5, EMAIL: 6, CIDADE: 7, BAIRRO: 8, SENHA_HASH: 9, ULTIMO_LOGIN: 10 };
 var RF = { CPF: 7, PROTOCOLO: 21, TOTAL_COLUNAS: 23 };
-var PERMISSOES_ADMIN = ['verSolicitacoes','decidir','bloquearDatas','verMonitores','resetarSenha','agendarEmNome','verRelatorios','verAuditoria','gerirAdmins'];
+var PERMISSOES_ADMIN = ['verSolicitacoes','decidir','bloquearDatas','verMonitores','resetarSenha','agendarEmNome','verRelatorios','verAuditoria','caixaPostal','gerirAdmins'];
 var UFS_VALIDAS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
 var CIDADES_PADRAO = ['São Sebastião/SP','Caraguatatuba/SP','Ubatuba/SP','Ilhabela/SP','São Paulo/SP','Santos/SP','São José dos Campos/SP','Barretos/SP','Rio de Janeiro/RJ','Belo Horizonte/MG','Curitiba/PR','Florianópolis/SC','Porto Alegre/RS','Salvador/BA','Brasília/DF'];
 var PAISES_PADRAO = ['Argentina','Bolívia','Chile','Colômbia','Equador','Guiana','Guiana Francesa','Paraguai','Peru','Suriname','Uruguai','Venezuela','Estados Unidos','Canadá','México','Cuba','Costa Rica','Panamá','Jamaica','República Dominicana','Guatemala','Haiti','Trinidad e Tobago','Portugal','Espanha','França','Itália','Alemanha','Reino Unido','Holanda','Bélgica','Suíça','Áustria','Suécia','Noruega','Dinamarca','Finlândia','Polônia','República Tcheca','Hungria','Grécia','Turquia','Rússia','Ucrânia','Irlanda','Croácia','Sérvia','Luxemburgo','Japão','China','Coreia do Sul','Índia','Tailândia','Singapura','Vietnam','Indonésia','Filipinas','Malásia','Taiwan','Israel','Emirados Árabes Unidos','Arábia Saudita','Austrália','Nova Zelândia','África do Sul','Marrocos','Egito','Angola','Moçambique','Cabo Verde'];
@@ -90,6 +91,10 @@ function _dispatchInterno(acao, carga) {
       case 'adminReativarAdmin':return _adminReativarAdmin(carga);
       case 'adminRelatorio':     return _adminRelatorio(carga);
       case 'adminLogs':          return _adminLogs(carga);
+      case 'caixaListar':        return _caixaListar(carga);
+      case 'caixaAbrir':         return _caixaAbrir(carga);
+      case 'caixaEnviar':        return _caixaEnviar(carga);
+      case 'caixaMonitores':     return _caixaMonitores(carga);
       default:                    return _err('Ação desconhecida.');
     }
   } catch (e) {
@@ -1289,7 +1294,7 @@ function _validaTokenAdmin(token) {
   return null;
 }
 function _permissoesAdmin(valor) {
-  try {var p=JSON.parse(String(valor||'[]'));return Array.isArray(p)?p.filter(function(x){return PERMISSOES_ADMIN.indexOf(x)!==-1;}):[];} catch(e){return [];}
+  try {var p=JSON.parse(String(valor||'[]'));if(!Array.isArray(p))return [];var validas=p.filter(function(x){return PERMISSOES_ADMIN.indexOf(x)!==-1;});if(validas.indexOf('gerirAdmins')!==-1&&validas.indexOf('caixaPostal')===-1)validas.push('caixaPostal');return validas;} catch(e){return [];}
 }
 function _adminTem(token, permissao) {
   var admin=_validaTokenAdmin(token);
@@ -1530,6 +1535,83 @@ function _adminLogs(p) {
     ator:_san(r[1]||''),papel:_san(r[2]||''),acao:_san(r[3]||''),alvo:_san(r[4]||''),resultado:_san(r[5]||''),detalhes:_san(r[6]||'')});}
   return {ok:true,lista:lista};
 }
+function _caixaAcesso(token){
+  var admin=_adminTem(token,'caixaPostal');if(admin)return {papel:'admin',cpf:admin.cpf};
+  var monitor=_validaToken(token);if(monitor&&!monitor.adminToken)return {papel:'monitor',cpf:monitor.cpf};
+  return null;
+}
+function _caixaAba(criar){
+  var planilha=SpreadsheetApp.getActiveSpreadsheet(),sheet=planilha.getSheetByName(CFG.ABA_CAIXA);
+  if(!sheet&&criar){sheet=planilha.insertSheet(CFG.ABA_CAIXA);sheet.appendRow(['Data e hora','Conversa','CPF Monitor','Nome Monitor','Assunto','Autor','CPF Autor','Nome Autor','Mensagem','Lida pelo Monitor']);}
+  return sheet;
+}
+function _caixaNome(cpf,papel){
+  var sheet=_aba(papel==='admin'?CFG.ABA_ADMIN:CFG.ABA_MONITORES);
+  if(!sheet)return '';
+  var rows=sheet.getDataRange().getValues(),colCpf=papel==='admin'?0:MC.CPF-1,colNome=papel==='admin'?2:MC.NOME-1;
+  for(var i=1;i<rows.length;i++)if(_normCPF(String(rows[i][colCpf]||''))===cpf)return String(rows[i][colNome]||'').trim();
+  return '';
+}
+function _caixaData(valor){return valor instanceof Date?Utilities.formatDate(valor,Session.getScriptTimeZone(),'dd/MM/yyyy HH:mm'):String(valor||'');}
+function _caixaListar(p){
+  var acesso=_caixaAcesso(p.token);if(!acesso)return _err('Sem acesso à caixa postal.','FORBIDDEN');
+  var sheet=_caixaAba(false);if(!sheet)return {ok:true,lista:[],pendentes:0};
+  var rows=sheet.getDataRange().getValues(),conversas={};
+  for(var i=1;i<rows.length;i++){
+    var r=rows[i],id=String(r[1]||'').trim(),cpf=_normCPF(String(r[2]||''));
+    if(!id||acesso.papel==='monitor'&&cpf!==acesso.cpf)continue;
+    if(!conversas[id])conversas[id]={id:id,cpfMonitor:_maskCPF(cpf),nomeMonitor:String(r[3]||''),assunto:String(r[4]||''),naoLidas:0};
+    var c=conversas[id];c.data=_caixaData(r[0]);c.ultimaMensagem=String(r[8]||'').slice(0,100);c.ultimoAutor=String(r[5]||'');c.ordem=i;
+    if(acesso.papel==='monitor'&&c.ultimoAutor==='Administrador'&&String(r[9]||'')!=='Sim')c.naoLidas++;
+  }
+  var lista=Object.keys(conversas).map(function(id){return conversas[id];}).sort(function(a,b){return b.ordem-a.ordem;}).slice(0,100);
+  return {ok:true,lista:lista,pendentes:lista.filter(function(c){return c.ultimoAutor==='Monitor';}).length};
+}
+function _caixaAbrir(p){
+  var acesso=_caixaAcesso(p.token);if(!acesso)return _err('Sem acesso à caixa postal.','FORBIDDEN');
+  var id=String(p.conversa||'').trim(),sheet=_caixaAba(false);if(!id||!sheet)return _err('Conversa não encontrada.','NOT_FOUND');
+  var rows=sheet.getDataRange().getValues(),mensagens=[],assunto='',nomeMonitor='',cpfMonitor='';
+  for(var i=1;i<rows.length;i++){
+    var r=rows[i];if(String(r[1]||'').trim()!==id)continue;
+    var cpf=_normCPF(String(r[2]||''));
+    if(acesso.papel==='monitor'&&cpf!==acesso.cpf)return _err('Sem acesso a esta conversa.','FORBIDDEN');
+    cpfMonitor=cpf;assunto=String(r[4]||'');nomeMonitor=String(r[3]||'');
+    mensagens.push({data:_caixaData(r[0]),autor:String(r[5]||''),nome:String(r[7]||''),texto:String(r[8]||'')});
+    if(acesso.papel==='monitor'&&String(r[5]||'')==='Administrador'&&String(r[9]||'')!=='Sim')sheet.getRange(i+1,10).setValue('Sim');
+  }
+  if(!mensagens.length)return _err('Conversa não encontrada.','NOT_FOUND');
+  return {ok:true,id:id,assunto:assunto,nomeMonitor:nomeMonitor,cpfMonitor:_maskCPF(cpfMonitor),mensagens:mensagens};
+}
+function _caixaMonitores(p){
+  if(!_adminTem(p.token,'caixaPostal'))return _err('Sem permissão para enviar mensagens.','FORBIDDEN');
+  var rows=_aba(CFG.ABA_MONITORES).getDataRange().getValues(),lista=[];
+  for(var i=1;i<rows.length;i++)if(rows[i][MC.NOME-1])lista.push({nome:String(rows[i][MC.NOME-1]),cpf:_maskCPF(_normCPF(String(rows[i][MC.CPF-1])))});
+  return {ok:true,lista:lista};
+}
+function _caixaEnviar(p){
+  var acesso=_caixaAcesso(p.token);if(!acesso)return _err('Sem acesso à caixa postal.','FORBIDDEN');
+  var texto=String(p.mensagem||'').trim();
+  if(texto.length<3||texto.length>2000)return _err('Escreva uma mensagem de 3 a 2000 caracteres.','MESSAGE_INVALID');
+  var lock=LockService.getScriptLock();if(!lock.tryLock(30000))return _err('Sistema ocupado. Tente novamente.','BUSY');
+  try{
+    var sheet=_caixaAba(true),rows=sheet.getDataRange().getValues(),id=String(p.conversa||'').trim(),cpfMonitor='',nomeMonitor='',assunto='';
+    if(id){
+      for(var i=1;i<rows.length;i++)if(String(rows[i][1]||'').trim()===id){cpfMonitor=_normCPF(String(rows[i][2]||''));nomeMonitor=String(rows[i][3]||'');assunto=String(rows[i][4]||'');break;}
+      if(!cpfMonitor)return _err('Conversa não encontrada.','NOT_FOUND');
+      if(acesso.papel==='monitor'&&cpfMonitor!==acesso.cpf)return _err('Sem acesso a esta conversa.','FORBIDDEN');
+    }else{
+      cpfMonitor=acesso.papel==='monitor'?acesso.cpf:_normCPF(p.cpfMonitor||'');
+      nomeMonitor=_caixaNome(cpfMonitor,'monitor');
+      if(!nomeMonitor)return _err('Monitor não encontrado.','NOT_FOUND');
+      assunto=String(p.assunto||'').trim();
+      if(assunto.length<3||assunto.length>120)return _err('Informe um assunto de 3 a 120 caracteres.','SUBJECT_INVALID');
+      id='CX-'+new Date().getFullYear()+'-'+Utilities.getUuid().replace(/-/g,'').slice(0,16);
+    }
+    var nomeAutor=_caixaNome(acesso.cpf,acesso.papel)||'Administrador';
+    sheet.appendRow([new Date(),id,cpfMonitor,_textoSeguroPlanilha(nomeMonitor),_textoSeguroPlanilha(assunto),acesso.papel==='admin'?'Administrador':'Monitor',acesso.cpf,_textoSeguroPlanilha(nomeAutor),_textoSeguroPlanilha(texto),acesso.papel==='monitor'?'Sim':'Não']);
+    return {ok:true,conversa:id};
+  }finally{lock.releaseLock();}
+}
 function _registrarAuditoria(acao,p,resultado,contexto) {
   var planilha=SpreadsheetApp.getActiveSpreadsheet();
   var sheet=planilha.getSheetByName(CFG.ABA_AUDITORIA);
@@ -1541,6 +1623,7 @@ function _registrarAuditoria(acao,p,resultado,contexto) {
   else if(p.data)alvo=String(p.data).slice(0,20);
   else if(p.cpf && papel==='administrador')alvo=_maskCPF(_normCPF(p.cpf));
   else if(resultado && resultado.protocolo)alvo=String(resultado.protocolo);
+  else if(p.conversa||resultado&&resultado.conversa)alvo=String(p.conversa||resultado.conversa).slice(0,80);
   var detalhes='';
   if(contexto&&contexto.monitorAlvo)detalhes='Monitor: '+contexto.monitorAlvo+'; ';
   if(p.decisao){detalhes+='Decisão: '+String(p.decisao).slice(0,30);if(p.motivo)detalhes+='; Motivo: '+String(p.motivo).slice(0,160);}
