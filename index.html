@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <!-- ✏️ TÍTULO DA ABA DO NAVEGADOR — edite o texto abaixo -->
 <title>Espaço do Monitor — Sítio Arqueológico São Francisco</title>
 <style>
@@ -23,7 +23,8 @@
   --sh-m:0 4px 20px rgba(0,0,0,.12);--sh-l:0 8px 40px rgba(0,0,0,.18);
   --t:.18s ease;
 }
-body{font-family:var(--font);background:var(--white);color:var(--c0);min-height:100vh;display:flex;flex-direction:column;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;scrollbar-width:thin;scrollbar-color:var(--n4) var(--white);}
+body{font-family:var(--font);background:var(--white);color:var(--c0);min-height:100vh;display:flex;flex-direction:column;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;scrollbar-width:thin;scrollbar-color:var(--n4) var(--white);}
+html.is-embedded body{min-height:0;}
 body::-webkit-scrollbar{width:6px;height:6px;}
 body::-webkit-scrollbar-track{background:var(--white);}
 body::-webkit-scrollbar-thumb{background:var(--n4);border-radius:10px;}
@@ -57,20 +58,21 @@ body::-webkit-scrollbar-thumb:hover{background:var(--n3);}
 .alert-lot {background:var(--lot-bg);color:var(--lot);border-color:var(--lot-bd);}
 
 /* ═══════════════ CAMPOS ═══════════════ */
-.fg{margin-bottom:14px;}
-.fg label{display:block;font-size:.69rem;font-weight:700;color:var(--n2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
-.fg input,.fg select{width:100%;padding:9px 12px;border:1.5px solid var(--n4);border-radius:var(--r);font-size:.87rem;color:var(--c0);background:var(--white);outline:none;transition:border-color var(--t),box-shadow var(--t);font-family:var(--font);-webkit-appearance:none;appearance:none;}
+.fg{margin-bottom:18px;min-width:0;}
+.fg label{display:block;font-size:.76rem;font-weight:700;color:var(--n1);text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px;}
+.fg input,.fg select{width:100%;min-height:44px;padding:10px 12px;border:1.5px solid var(--n4);border-radius:var(--r);font-size:.92rem;color:var(--c0);background:var(--white);outline:none;transition:border-color var(--t),box-shadow var(--t);font-family:var(--font);-webkit-appearance:none;appearance:none;}
 .fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;}
 .fg input:focus,.fg select:focus{border-color:var(--c3);box-shadow:0 0 0 3px rgba(64,145,108,.14);}
 .fg input.err,.fg select.err{border-color:var(--danger);}
 .fg input:disabled{background:var(--n5);color:var(--n2);cursor:not-allowed;border-color:var(--n4);}
 .field-err{display:none;font-size:.72rem;color:var(--danger);margin-top:4px;}
 .field-err.show{display:block;}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.field-hint{font-size:.76rem;color:var(--n2);margin-top:6px;line-height:1.4;}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:18px;row-gap:2px;}
 .g2 .span2{grid-column:span 2;}
 
 /* ═══════════════ BOTÕES ═══════════════ */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 18px;border:none;border-radius:var(--r);font-size:.87rem;font-weight:700;cursor:pointer;width:100%;transition:transform var(--t),box-shadow var(--t),background var(--t);font-family:var(--font);position:relative;letter-spacing:.01em;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:10px 18px;border:none;border-radius:var(--r);font-size:.87rem;font-weight:700;cursor:pointer;width:100%;transition:transform var(--t),box-shadow var(--t),background var(--t);font-family:var(--font);position:relative;letter-spacing:.01em;}
 .btn:active:not(:disabled){transform:scale(.98);}
 .btn:disabled{opacity:.45;pointer-events:none;}
 .btn-p {background:var(--c2);color:var(--white);box-shadow:0 2px 8px rgba(45,106,79,.28);}
@@ -79,7 +81,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--n3);}
 .btn-o:hover{background:rgba(45,106,79,.06);}
 .btn-ghost{background:transparent;color:var(--n2);font-weight:500;}
 .btn-ghost:hover{color:var(--c2);}
-.btn-sm{padding:6px 14px;font-size:.78rem;width:auto;}
+.btn-sm{padding:8px 14px;font-size:.78rem;width:auto;}
+.btn:focus-visible,.back:focus-visible,.day:focus-visible,.ag-card:focus-visible,.date-trigger:focus-visible{outline:3px solid var(--c3);outline-offset:3px;}
 .btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-bd);}
 .btn-danger:hover{background:var(--danger)!important;color:var(--white)!important;}
 .spin{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:var(--white);border-radius:50%;animation:spin .65s linear infinite;}
@@ -109,7 +112,8 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 .hero-logo-img{max-height:64px;max-width:160px;object-fit:contain;border-radius:10px;}
 .login-hero h1{font-size:1rem;font-weight:800;margin-bottom:3px;position:relative;}
 .login-hero p {font-size:.77rem;opacity:.75;position:relative;}
-.login-body{padding:24px 28px 28px;}
+.login-body{padding:28px 28px 30px;}
+.verification-intro{font-size:.87rem;color:var(--n1);line-height:1.6;margin-bottom:18px;}
 .pwd-strength{height:3px;border-radius:2px;background:var(--n4);margin-top:6px;overflow:hidden;display:none;}
 .pwd-strength.show{display:block;}
 .pwd-bar{height:100%;border-radius:2px;transition:width .25s ease,background .25s ease;width:0%;}
@@ -117,35 +121,36 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 .pwd-lbl.show{display:block;}
 
 /* ═══════════════ DASHBOARD ═══════════════ */
-#s-dash{padding:18px 16px 40px;max-width:1000px;width:100%;align-self:center;}
-.welcome{background:linear-gradient(130deg,var(--c1) 0%,var(--c2) 50%,var(--c3) 100%);border-radius:var(--r-lg);padding:20px 22px;color:var(--white);display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
+#s-dash{padding:24px 20px 48px;max-width:1000px;width:100%;align-self:center;}
+.welcome{background:linear-gradient(130deg,var(--c1) 0%,var(--c2) 50%,var(--c3) 100%);border-radius:var(--r-lg);padding:24px 26px;color:var(--white);display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:14px;}
 .w-text h2{font-size:1.02rem;font-weight:800;margin-bottom:2px;}
 .w-text p {font-size:.76rem;opacity:.75;}
 .avatar{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;flex-shrink:0;}
 .timeout-bar{background:var(--warn-bg);border:1px solid var(--warn-bd);border-radius:var(--r);padding:8px 14px;font-size:.78rem;color:var(--warn);display:none;margin-bottom:12px;align-items:center;justify-content:space-between;gap:8px;}
 .timeout-bar.show{display:flex;}
 .timeout-bar button{background:var(--warn);color:var(--white);border:none;border-radius:var(--r-sm);padding:3px 10px;font-size:.73rem;font-weight:700;cursor:pointer;font-family:var(--font);}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
-.info-card{background:var(--white);border-radius:var(--r);padding:11px 14px;box-shadow:var(--sh-xs);}
+.info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-bottom:20px;}
+.info-card{background:var(--white);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh-xs);min-width:0;}
+.info-card-wide{grid-column:1/-1;}
 .info-card .lbl{font-size:.67rem;font-weight:700;color:var(--n2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
-.info-card .val{font-size:.84rem;font-weight:600;word-break:break-all;}
+.info-card .val{font-size:.9rem;font-weight:600;overflow-wrap:anywhere;}
 .sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .sec-hd h3{font-size:.88rem;font-weight:800;}
 
 /* ═══════════════ CARDS DE SOLICITAÇÃO ═══════════════ */
-.ag-list-wrap{max-height:450px;overflow-y:auto;border-radius:var(--r);padding-right:6px;margin-right:-6px;display:flex;flex-direction:column;gap:7px;}
+.ag-list-wrap{border-radius:var(--r);display:flex;flex-direction:column;gap:10px;}
 .ag-list-wrap::-webkit-scrollbar {width:6px;}
 .ag-list-wrap::-webkit-scrollbar-track {background:var(--c7);border-radius:10px;}
 .ag-list-wrap::-webkit-scrollbar-thumb {background:var(--n4);border-radius:10px;}
 .ag-list-wrap::-webkit-scrollbar-thumb:hover {background:var(--n3);}
 
-.ag-card{background:var(--white);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh-xs);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-left:3px solid transparent;transition:box-shadow var(--t),transform var(--t);cursor:pointer;}
+.ag-card{background:var(--white);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh-xs);display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-left:3px solid transparent;transition:box-shadow var(--t),transform var(--t);cursor:pointer;min-width:0;}
 .ag-card:hover{box-shadow:var(--sh-s);transform:translateY(-1px);}
 .ag-card.s-confirmado{border-color:var(--ok);}
 .ag-card.s-pendente  {border-color:var(--warn);}
 .ag-card.s-cancelado,.ag-card.s-negado{border-color:var(--danger);}
 .ag-proto{font-size:.75rem;font-weight:800;color:var(--c2);letter-spacing:.04em;}
-.ag-meta {font-size:.76rem;color:var(--n2);margin-top:2px;}
+.ag-meta {font-size:.8rem;color:var(--n2);margin-top:5px;line-height:1.55;}
 .ag-badges{display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;align-items:flex-start;}
 .empty{background:var(--white);border-radius:var(--r);padding:28px 16px;text-align:center;color:var(--n2);font-size:.83rem;box-shadow:var(--sh-xs);}
 .empty-ico{font-size:1.8rem;margin-bottom:8px;}
@@ -161,15 +166,16 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 .btn-filtro.active{background:var(--c2);border-color:var(--c2);color:var(--white);}
 
 /* ═══════════════ FORMULÁRIO ═══════════════ */
-#s-form{padding:18px 16px 44px;max-width:800px;width:100%;align-self:center;}
-.form-card{background:var(--white);border-radius:var(--r-xl);padding:24px 26px;box-shadow:var(--sh-m);}
-.form-card h2  {font-size:.97rem;font-weight:800;margin-bottom:3px;}
-.form-card .sub{font-size:.77rem;color:var(--n2);margin-bottom:20px;line-height:1.55;}
-.sec-title{font-size:.67rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--n2);padding-bottom:8px;border-bottom:1.5px solid var(--n4);margin:18px 0 12px;}
+#s-form{padding:24px 20px 48px;max-width:800px;width:100%;align-self:center;}
+.form-card{background:var(--white);border-radius:var(--r-xl);padding:28px 30px;box-shadow:var(--sh-m);}
+.form-card h2  {font-size:1.2rem;font-weight:800;margin-bottom:5px;line-height:1.3;}
+.form-card .sub{font-size:.85rem;color:var(--n2);margin-bottom:24px;line-height:1.6;}
+.sec-title{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--c1);padding-bottom:10px;border-bottom:1.5px solid var(--n4);margin:26px 0 16px;}
 
 /* ORIENTAÇÕES */
 .orientacoes-box{background:var(--info-bg);border:1px solid var(--info-bd);border-radius:var(--r);padding:12px 14px;margin-bottom:18px;}
 .orientacoes-hd{display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:8px;}
+.orientacoes-hd:focus-visible{outline:3px solid var(--c3);outline-offset:4px;border-radius:var(--r-sm);}
 .orientacoes-hd span{font-size:.82rem;font-weight:700;color:var(--info);}
 .orientacoes-hd .arrow{font-size:.8rem;color:var(--info);transition:transform .2s;flex-shrink:0;}
 .orientacoes-hd .arrow.open{transform:rotate(180deg);}
@@ -257,6 +263,8 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 /* ═══════════════ MODAL SUCESSO ═══════════════ */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:900;padding:20px;backdrop-filter:blur(2px);}
 .overlay.open{display:flex;}
+html.is-embedded .overlay{align-items:flex-start;overflow-y:auto;padding-top:24px;}
+html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
 .modal{background:var(--white);border-radius:var(--r-xl);padding:36px 26px;text-align:center;max-width:360px;width:100%;box-shadow:var(--sh-l);animation:popModal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;}
 @keyframes popModal{from{transform:scale(.94) translateY(12px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
 .modal-icon{font-size:2.8rem;margin-bottom:12px;}
@@ -268,7 +276,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 .modal-detalhe{background:var(--white);border-radius:var(--r-xl);max-width:520px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--sh-l);animation:popModal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;}
 .modal-detalhe-hd{background:var(--c1);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:var(--r-xl) var(--r-xl) 0 0;flex-shrink:0;}
 .modal-detalhe-hd h3{color:var(--white);font-size:.95rem;font-weight:800;}
-.modal-detalhe-hd button{background:rgba(255,255,255,.15);border:none;color:var(--white);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background var(--t);}
+.modal-detalhe-hd button{background:rgba(255,255,255,.15);border:none;color:var(--white);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background var(--t);}
 .modal-detalhe-hd button:hover{background:rgba(255,255,255,.3);}
 .modal-detalhe-body{padding:20px;overflow-y:auto;}
 .detalhe-proto{background:var(--c6);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
@@ -289,13 +297,11 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 .pag-btn:hover:not(:disabled){background:var(--n5);border-color:var(--n3);}
 
 .pa-cadastral-wrap {
-  max-height: 280px;
-  overflow-y: auto;
   border: 1px solid var(--n4);
   border-radius: var(--r);
-  padding: 12px;
+  padding: 16px;
   background: var(--n5);
-  margin-bottom: 14px;
+  margin-bottom: 20px;
   -webkit-overflow-scrolling: touch;
 }
 .form-buttons-row {
@@ -310,12 +316,19 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 }
 
 @media(max-width:480px){
-  .login-body{padding:20px 18px 24px;}
+  .login-body{padding:24px 20px 26px;}
   .info-grid{grid-template-columns:1fr;}
   .g2{grid-template-columns:1fr;}
   .g2 .span2{grid-column:span 1;}
-  .welcome{flex-direction:column;align-items:flex-start;}
-  .form-card{padding:18px 14px;}
+  .welcome{padding:20px;}
+  #s-dash,#s-form{padding:18px 14px 36px;}
+  .form-card{padding:22px 18px;}
+  .ag-card{flex-direction:column;gap:12px;padding:15px 16px;}
+  .ag-badges{width:100%;}
+  .sec-hd{align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .sec-hd .btn{width:100%;}
+  .timeout-bar{align-items:flex-start;flex-wrap:wrap;}
+  .timeout-bar button{min-height:40px;}
   .cal-popup{left:-1px;right:-1px;width:auto;min-width:0;}
   .busca-row{flex-direction:column;}
   .detalhe-grid{grid-template-columns:1fr;}
@@ -329,6 +342,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
     flex-direction: column !important;
   }
 }
+@media(prefers-reduced-motion:reduce){.screen.on,.modal,.modal-detalhe,.cal-popup.open{animation:none!important;}.btn,.ag-card{transition:none!important;}}
 
 /* ═══════════════ CUSTOM STYLING BY ANTIGRAVITY ═══════════════ */
 /* 1. Tactile number widgets (+ and -) */
@@ -557,6 +571,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
   color: var(--c1);
 }
 </style>
+<script>if(window.parent!==window)document.documentElement.classList.add('is-embedded');</script>
 </head>
 <body>
 
@@ -595,7 +610,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
       <!-- LOGIN -->
       <div id="v-login">
         <div class="fg"><label for="i-cpf">CPF ou E-mail</label><input id="i-cpf" type="text" placeholder="Digite seu CPF ou E-mail" maxlength="80" autocomplete="username" oninput="handleLoginInput(this)" onkeydown="if(event.key==='Enter')document.getElementById('i-senha').focus()"/><span class="field-err" id="e-cpf"></span></div>
-        <div class="fg"><label for="i-senha">Senha</label><div class="pwd-wrapper"><input id="i-senha" type="password" placeholder="Sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()"/><button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('i-senha', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div></div>
+        <div class="fg"><label for="i-senha">Senha</label><div class="pwd-wrapper"><input id="i-senha" type="password" placeholder="Sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()"/><button type="button" class="pwd-toggle-btn" aria-label="Mostrar senha" onclick="togglePasswordVisibility('i-senha', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div></div>
         <button class="btn btn-p" id="btn-login" onclick="fazerLogin()"><span class="lbl">Entrar</span><span class="spin"></span></button>
         <hr class="div"/>
         <button class="btn btn-ghost" onclick="abrirPA()">Meu Primeiro Acesso</button>
@@ -605,8 +620,14 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
       <div id="v-pa" style="display:none;">
         <p style="font-size:.8rem;color:var(--n2);margin-bottom:13px;line-height:1.5">Informe seu CPF para confirmar seu cadastro na base de monitores credenciados.</p>
         <div class="fg"><label for="i-cpf-pa">CPF</label><input id="i-cpf-pa" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" autocomplete="off" oninput="maskCPF(this)"/><span class="field-err" id="e-cpf-pa"></span></div>
-        <button class="btn btn-p" id="btn-verCPF" onclick="verificarCPF()"><span class="lbl">Verificar CPF</span><span class="spin"></span></button>
+        <button class="btn btn-p" id="btn-verCPF" onclick="verificarCPF()"><span class="lbl">Enviar código</span><span class="spin"></span></button>
         <button class="btn btn-o" style="margin-top:10px;" onclick="fecharPA()">← Voltar para o Login</button>
+      </div>
+      <div id="v-pa-codigo" style="display:none;">
+        <p class="verification-intro">Enviamos um código de 6 dígitos para <strong id="pa-email-destino"></strong>. Ele vale por 10 minutos.</p>
+        <div class="fg"><label for="i-codigo-pa">Código de confirmação</label><input id="i-codigo-pa" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" onkeydown="if(event.key==='Enter')confirmarCodigoPA()"/></div>
+        <button class="btn btn-p" id="btn-codigo-pa" onclick="confirmarCodigoPA()"><span class="lbl">Confirmar código</span><span class="spin"></span></button>
+        <button class="btn btn-o" style="margin-top:10px;" onclick="abrirPA()">Usar outro CPF</button>
       </div>
       <!-- PRIMEIRO ACESSO: CRIAR SENHA -->
       <div id="v-pa-senha" style="display:none;">
@@ -655,8 +676,8 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
           </div>
         </div>
 
-        <div class="fg"><label for="i-nova">Nova Senha</label><div class="pwd-wrapper"><input id="i-nova" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" oninput="avaliarSenha(this.value,'pwd-fill','pwd-lbl','pwd-bar')"/><button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('i-nova', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><div class="pwd-strength" id="pwd-bar"><div class="pwd-bar" id="pwd-fill"></div></div><div class="pwd-lbl" id="pwd-lbl"></div></div>
-        <div class="fg"><label for="i-conf">Confirmar Senha</label><div class="pwd-wrapper"><input id="i-conf" type="password" placeholder="Repita a senha" autocomplete="new-password" onkeydown="if(event.key==='Enter')confirmarSenha()"/><button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('i-conf', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><span class="field-err" id="e-conf"></span></div>
+        <div class="fg"><label for="i-nova">Nova Senha</label><div class="pwd-wrapper"><input id="i-nova" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" oninput="avaliarSenha(this.value,'pwd-fill','pwd-lbl','pwd-bar')"/><button type="button" class="pwd-toggle-btn" aria-label="Mostrar senha" onclick="togglePasswordVisibility('i-nova', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><div class="pwd-strength" id="pwd-bar"><div class="pwd-bar" id="pwd-fill"></div></div><div class="pwd-lbl" id="pwd-lbl"></div></div>
+        <div class="fg"><label for="i-conf">Confirmar Senha</label><div class="pwd-wrapper"><input id="i-conf" type="password" placeholder="Repita a senha" autocomplete="new-password" onkeydown="if(event.key==='Enter')confirmarSenha()"/><button type="button" class="pwd-toggle-btn" aria-label="Mostrar senha" onclick="togglePasswordVisibility('i-conf', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><span class="field-err" id="e-conf"></span></div>
         <button class="btn btn-p" id="btn-criar" onclick="confirmarSenha()"><span class="lbl">Criar Senha e Acessar</span><span class="spin"></span></button>
         <button class="btn btn-o" style="margin-top:10px;" onclick="fecharPA()">← Voltar</button>
       </div>
@@ -665,14 +686,20 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
         <p style="font-size:.8rem;color:var(--n2);margin-bottom:13px;line-height:1.5">Informe seu CPF e e-mail cadastrado para redefinir sua senha.</p>
         <div class="fg"><label for="i-cpf-rec">CPF</label><input id="i-cpf-rec" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)"/></div>
         <div class="fg"><label for="i-email-rec">E-mail cadastrado</label><input id="i-email-rec" type="email" placeholder="seu@email.com"/></div>
-        <button class="btn btn-p" id="btn-rec-verificar" onclick="verificarRecuperacao()"><span class="lbl">Verificar Identidade</span><span class="spin"></span></button>
+        <button class="btn btn-p" id="btn-rec-verificar" onclick="verificarRecuperacao()"><span class="lbl">Enviar código</span><span class="spin"></span></button>
         <button class="btn btn-o" style="margin-top:10px;" onclick="fecharRecuperarSenha()">← Voltar</button>
+      </div>
+      <div id="v-recuperar-codigo" style="display:none;">
+        <p class="verification-intro">Enviamos um código de 6 dígitos para <strong id="rec-email-destino"></strong>. Ele vale por 10 minutos.</p>
+        <div class="fg"><label for="i-codigo-rec">Código de confirmação</label><input id="i-codigo-rec" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" onkeydown="if(event.key==='Enter')confirmarCodigoRec()"/></div>
+        <button class="btn btn-p" id="btn-codigo-rec" onclick="confirmarCodigoRec()"><span class="lbl">Confirmar código</span><span class="spin"></span></button>
+        <button class="btn btn-o" style="margin-top:10px;" onclick="abrirRecuperarSenha()">Voltar</button>
       </div>
       <!-- RECUPERAÇÃO: NOVA SENHA -->
       <div id="v-recuperar-nova" style="display:none;">
         <p id="rec-bvindo" style="font-size:.88rem;font-weight:700;color:var(--c1);margin-bottom:13px;"></p>
-        <div class="fg"><label for="i-nova-rec">Nova Senha</label><div class="pwd-wrapper"><input id="i-nova-rec" type="password" placeholder="Mínimo 8 caracteres" oninput="avaliarSenha(this.value,'pwd-fill-rec','pwd-lbl-rec','pwd-bar-rec')"/><button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('i-nova-rec', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><div class="pwd-strength" id="pwd-bar-rec"><div class="pwd-bar" id="pwd-fill-rec"></div></div><div class="pwd-lbl" id="pwd-lbl-rec"></div></div>
-        <div class="fg"><label for="i-conf-rec">Confirmar Nova Senha</label><div class="pwd-wrapper"><input id="i-conf-rec" type="password" placeholder="Repita a senha"/><button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('i-conf-rec', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><span class="field-err" id="e-conf-rec"></span></div>
+        <div class="fg"><label for="i-nova-rec">Nova Senha</label><div class="pwd-wrapper"><input id="i-nova-rec" type="password" placeholder="Mínimo 8 caracteres" oninput="avaliarSenha(this.value,'pwd-fill-rec','pwd-lbl-rec','pwd-bar-rec')"/><button type="button" class="pwd-toggle-btn" aria-label="Mostrar senha" onclick="togglePasswordVisibility('i-nova-rec', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><div class="pwd-strength" id="pwd-bar-rec"><div class="pwd-bar" id="pwd-fill-rec"></div></div><div class="pwd-lbl" id="pwd-lbl-rec"></div></div>
+        <div class="fg"><label for="i-conf-rec">Confirmar Nova Senha</label><div class="pwd-wrapper"><input id="i-conf-rec" type="password" placeholder="Repita a senha"/><button type="button" class="pwd-toggle-btn" aria-label="Mostrar senha" onclick="togglePasswordVisibility('i-conf-rec', this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><span class="field-err" id="e-conf-rec"></span></div>
         <button class="btn btn-p" id="btn-rec-salvar" onclick="salvarNovaSenha()"><span class="lbl">Salvar Nova Senha</span><span class="spin"></span></button>
         <button class="btn btn-o" style="margin-top:10px;" onclick="fecharRecuperarSenha()">← Voltar</button>
       </div>
@@ -687,7 +714,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
   <div class="info-grid">
     <div class="info-card"><div class="lbl">CPF</div><div class="val" id="d-cpf">—</div></div>
     <div class="info-card"><div class="lbl">Telefone</div><div class="val" id="d-tel">—</div></div>
-    <div class="info-card" style="grid-column:span 2"><div class="lbl">E-mail</div><div class="val" id="d-email">—</div></div>
+    <div class="info-card info-card-wide"><div class="lbl">E-mail</div><div class="val" id="d-email">—</div></div>
   </div>
   <div class="dash-buttons-row">
     <button class="btn btn-o btn-sm btn-dash-action" onclick="abrirPerfilModal()" style="font-size:.78rem;padding:10px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:6px;background:var(--white);margin:0;">👤 Editar Meus Dados</button>
@@ -733,7 +760,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 
     <!-- ORIENTAÇÕES -->
     <div class="orientacoes-box">
-      <div class="orientacoes-hd" onclick="toggleOrientacoes()">
+        <div class="orientacoes-hd" role="button" tabindex="0" aria-controls="orientacoes-content" aria-expanded="true" onclick="toggleOrientacoes()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleOrientacoes()}">
         <span>ℹ️ Orientações importantes — leia antes de prosseguir</span>
         <span class="arrow open" id="ori-arrow">▼</span>
       </div>
@@ -755,10 +782,10 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 
     <div class="sec-title">Dados do Monitor (automáticos)</div>
     <div class="g2">
-      <div class="fg"><label>Nome</label><input id="f-nome" type="text" disabled/></div>
-      <div class="fg"><label>CPF</label><input id="f-cpf" type="text" disabled/></div>
-      <div class="fg"><label>Telefone</label><input id="f-tel" type="text" disabled/></div>
-      <div class="fg"><label>E-mail</label><input id="f-email" type="text" disabled/></div>
+      <div class="fg"><label for="f-nome">Nome</label><input id="f-nome" type="text" disabled/></div>
+      <div class="fg"><label for="f-cpf">CPF</label><input id="f-cpf" type="text" disabled/></div>
+      <div class="fg"><label for="f-tel">Telefone</label><input id="f-tel" type="text" disabled/></div>
+      <div class="fg"><label for="f-email">E-mail</label><input id="f-email" type="text" disabled/></div>
     </div>
 
     <div class="sec-title">Dados da Visita</div>
@@ -790,7 +817,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
         <span class="field-err" id="e-data"></span>
       </div>
       <!-- HORÁRIO -->
-      <div class="fg"><label for="f-hora">Horário Previsto</label><input id="f-hora" type="time" value="09:00" oninput="verificarPeriodo()"/><span class="field-err" id="e-hora"></span></div>
+      <div class="fg"><label for="f-hora">Horário Previsto</label><input id="f-hora" type="time" value="09:00" max="14:00" oninput="verificarPeriodo()"/><span class="field-err" id="e-hora"></span><p class="field-hint">A visita dura até 4 horas e deve terminar até as 18h.</p></div>
       <!-- GRUPO (LIMITE 50) -->
       <div class="fg">
         <label for="f-grupo">Tamanho do Grupo * <span style="font-weight:400;text-transform:none;font-size:.65rem;">(1 a 50 pessoas)</span></label>
@@ -882,7 +909,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
 </main>
 
 <!-- MODAL SUCESSO -->
-<div class="overlay" id="modal"><div class="modal"><div class="modal-icon">✅</div><h3>Solicitação Registrada!</h3><p>Sua visita foi agendada com sucesso.<br>Guarde o número do protocolo abaixo.</p><div class="proto-box" id="modal-proto">—</div><p style="font-size:.76rem;margin-bottom:22px">Acompanhe o status no painel. Nossa equipe confirmará em breve.</p><button class="btn btn-p" onclick="fecharModal()"><span class="lbl">Voltar ao Painel</span></button></div></div>
+<div class="overlay" id="modal"><div class="modal"><div class="modal-icon">✅</div><h3>Solicitação Registrada!</h3><p>Sua solicitação foi registrada com sucesso.<br>Guarde o número do protocolo abaixo.</p><div class="proto-box" id="modal-proto">—</div><p style="font-size:.76rem;margin-bottom:22px">Acompanhe o status no painel. Nossa equipe confirmará em breve.</p><button class="btn btn-p" onclick="fecharModal()"><span class="lbl">Voltar ao Painel</span></button></div></div>
 
 <!-- MODAL DETALHE -->
 <div class="overlay" id="modal-detalhe" onclick="fecharDetalhe(event)">
@@ -952,7 +979,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
           <label for="i-senha-perf">Nova Senha</label>
           <div class="pwd-wrapper">
             <input id="i-senha-perf" type="password" placeholder="Mínimo 8 caracteres" oninput="avaliarSenha(this.value,'pwd-fill-perf','pwd-lbl-perf','pwd-bar-perf')" />
-            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('i-senha-perf', this)">
+            <button type="button" class="pwd-toggle-btn" aria-label="Mostrar senha" onclick="togglePasswordVisibility('i-senha-perf', this)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
           </div>
@@ -965,7 +992,7 @@ hr.div{border:none;border-top:1px solid var(--n4);margin:14px 0;}
           <label for="i-conf-perf">Confirmar Nova Senha</label>
           <div class="pwd-wrapper">
             <input id="i-conf-perf" type="password" placeholder="Confirmar senha" />
-            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('i-conf-perf', this)">
+            <button type="button" class="pwd-toggle-btn" aria-label="Mostrar senha" onclick="togglePasswordVisibility('i-conf-perf', this)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
           </div>
@@ -1222,7 +1249,7 @@ var S = {
   datasBlq: [], datasLotadas: [], datasMinhas: [],
   listaHistoricoCompleta: [], paginaAtual: 1, pageSize: 15,
   calPronto: false, calMes: null, dataSel: null,
-  cpfPA: '', filtro: 'ambas',
+  cpfPA: '', ticketSenha: '', filtro: 'ambas',
   tAtiv: null, tAviso: null,
   INATIVIDADE: 30*60*1000, AVISO_ANTES: 5*60*1000,
   auxAcompanha: false
@@ -1344,6 +1371,7 @@ function togglePasswordVisibility(inputId, btn) {
   var eyeOffSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
   
   btn.innerHTML = isPwd ? eyeOffSvg : eyeSvg;
+  btn.setAttribute('aria-label', isPwd ? 'Ocultar senha' : 'Mostrar senha');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1388,8 +1416,8 @@ function iniciarSessao(token,mon){
   setCookie('pm_token',token,6);setCookie('pm_monitor',JSON.stringify(mon),6);
   tela('dash');carregarHistorico();buscarDatasBlq();iniciarTimerAtiv();carregarMonitoresAux();verificarNotificacoes();
 }
-function abrirPA(){limpaAlerta('alerta-login');['v-login','v-recuperar','v-recuperar-nova','v-pa-senha'].forEach(function(i){document.getElementById(i).style.display='none';});document.getElementById('v-pa').style.display='';document.getElementById('i-cpf-pa').value='';campoErr('e-cpf-pa','');}
-function fecharPA(){document.getElementById('v-login').style.display='';['v-pa','v-pa-senha','v-recuperar','v-recuperar-nova'].forEach(function(i){document.getElementById(i).style.display='none';});limpaAlerta('alerta-login');}
+function abrirPA(){limpaAlerta('alerta-login');S.ticketSenha='';['v-login','v-recuperar','v-recuperar-codigo','v-recuperar-nova','v-pa-codigo','v-pa-senha'].forEach(function(i){document.getElementById(i).style.display='none';});document.getElementById('v-pa').style.display='';document.getElementById('i-cpf-pa').value='';campoErr('e-cpf-pa','');}
+function fecharPA(){document.getElementById('v-login').style.display='';S.ticketSenha='';['v-pa','v-pa-codigo','v-pa-senha','v-recuperar','v-recuperar-codigo','v-recuperar-nova'].forEach(function(i){document.getElementById(i).style.display='none';});limpaAlerta('alerta-login');}
 function verificarCPF(){
   limpaAlerta('alerta-login');var cpf=document.getElementById('i-cpf-pa').value;campoErr('e-cpf-pa','');
   if(cpf.replace(/\D/g,'').length!==11)return campoErr('e-cpf-pa','CPF deve ter 11 dígitos.');
@@ -1397,23 +1425,26 @@ function verificarCPF(){
   gs('verificarCPF',{cpf:cpf}).then(function(r){
     carregando('btn-verCPF',false);
     if(!r.ok)return alerta('alerta-login',r.erro);
-    S.cpfPA=cpf;
-    document.getElementById('pa-bvindo').textContent='Bem-vindo(a), '+r.nome+'! Confirme seus dados e crie uma senha.';
-    document.getElementById('i-pa-nome').value = r.monitor.nome || '';
-    document.getElementById('i-pa-cpf').value = r.monitor.cpf || '';
-    document.getElementById('i-pa-rg').value = r.monitor.rg || '';
-    document.getElementById('i-pa-tel').value = r.monitor.telefone || '';
-    document.getElementById('i-pa-email').value = r.monitor.email || '';
-    document.getElementById('i-pa-cidade').value = r.monitor.cidade || '';
-    document.getElementById('i-pa-bairro').value = r.monitor.bairro || '';
-    document.getElementById('i-pa-cpf').disabled = true;
-    var currentRgTrimmed = (r.monitor.rg || '').trim();
-    document.getElementById('i-pa-rg').disabled = !!currentRgTrimmed;
+    S.cpfPA=cpf;document.getElementById('pa-email-destino').textContent=r.emailMascarado;
     document.getElementById('v-pa').style.display='none';
-    document.getElementById('v-pa-senha').style.display='';
-    document.getElementById('i-nova').value='';
-    document.getElementById('i-conf').value='';
+    document.getElementById('v-pa-codigo').style.display='';
+    document.getElementById('i-codigo-pa').value='';
   }).catch(function(){carregando('btn-verCPF',false);alerta('alerta-login','Falha de comunicação.');});
+}
+function confirmarCodigoPA(){
+  var codigo=document.getElementById('i-codigo-pa').value.trim();
+  if(!/^\d{6}$/.test(codigo))return alerta('alerta-login','Digite os 6 dígitos do código.');
+  carregando('btn-codigo-pa',true);
+  gs('confirmarCodigo',{cpf:S.cpfPA,finalidade:'primeiro',codigo:codigo}).then(function(r){
+    carregando('btn-codigo-pa',false);if(!r.ok)return alerta('alerta-login',r.erro);
+    S.ticketSenha=r.ticket;var mon=r.monitor;
+    document.getElementById('pa-bvindo').textContent='Bem-vindo(a), '+mon.nome.split(' ')[0]+'! Confirme seus dados e crie uma senha.';
+    ['nome','cpf','rg','tel','email','cidade','bairro'].forEach(function(campo){var chave=campo==='tel'?'telefone':campo;document.getElementById('i-pa-'+campo).value=mon[chave]||'';});
+    document.getElementById('i-pa-cpf').disabled=true;
+    document.getElementById('i-pa-rg').disabled=!!(mon.rg||'').trim();
+    document.getElementById('v-pa-codigo').style.display='none';document.getElementById('v-pa-senha').style.display='';
+    document.getElementById('i-nova').value='';document.getElementById('i-conf').value='';
+  }).catch(function(){carregando('btn-codigo-pa',false);alerta('alerta-login','Falha de comunicação.');});
 }
 function confirmarSenha(){
   limpaAlerta('alerta-login');var s1=document.getElementById('i-nova').value,s2=document.getElementById('i-conf').value;campoErr('e-conf','');
@@ -1437,23 +1468,33 @@ function confirmarSenha(){
   if(!/[A-Za-z]/.test(s1)||!/[0-9]/.test(s1))return alerta('alerta-login','A senha deve conter letras e números.');
   if(s1!==s2)return campoErr('e-conf','As senhas não coincidem.');
   carregando('btn-criar',true);
-  gs('criarSenha',{cpf:S.cpfPA,senha:s1,nome:nome,rg:rg,telefone:tel,email:email,cidade:cidade,bairro:bairro}).then(function(r){carregando('btn-criar',false);if(!r.ok)return alerta('alerta-login',r.erro);fecharPA();alerta('alerta-login',r.msg+' Faça login abaixo.','ok');}).catch(function(){carregando('btn-criar',false);alerta('alerta-login','Falha de comunicação.');});
+  gs('criarSenha',{cpf:S.cpfPA,ticket:S.ticketSenha,senha:s1,nome:nome,rg:rg,telefone:tel,email:email,cidade:cidade,bairro:bairro}).then(function(r){carregando('btn-criar',false);if(!r.ok)return alerta('alerta-login',r.erro);fecharPA();alerta('alerta-login',r.msg+' Faça login abaixo.','ok');}).catch(function(){carregando('btn-criar',false);alerta('alerta-login','Falha de comunicação.');});
 }
-function abrirRecuperarSenha(){limpaAlerta('alerta-login');['v-login','v-pa','v-pa-senha','v-recuperar-nova'].forEach(function(i){document.getElementById(i).style.display='none';});document.getElementById('v-recuperar').style.display='';}
-function fecharRecuperarSenha(){document.getElementById('v-login').style.display='';['v-recuperar','v-recuperar-nova','v-pa','v-pa-senha'].forEach(function(i){document.getElementById(i).style.display='none';});limpaAlerta('alerta-login');}
+function abrirRecuperarSenha(){limpaAlerta('alerta-login');S.ticketSenha='';['v-login','v-pa','v-pa-codigo','v-pa-senha','v-recuperar-codigo','v-recuperar-nova'].forEach(function(i){document.getElementById(i).style.display='none';});document.getElementById('v-recuperar').style.display='';}
+function fecharRecuperarSenha(){document.getElementById('v-login').style.display='';S.ticketSenha='';['v-recuperar','v-recuperar-codigo','v-recuperar-nova','v-pa','v-pa-codigo','v-pa-senha'].forEach(function(i){document.getElementById(i).style.display='none';});limpaAlerta('alerta-login');}
 function verificarRecuperacao(){
   var cpf=document.getElementById('i-cpf-rec').value,email=document.getElementById('i-email-rec').value.trim();
   if(cpf.replace(/\D/g,'').length!==11)return alerta('alerta-login','CPF inválido.');
   if(!email)return alerta('alerta-login','Informe o e-mail cadastrado.');
   carregando('btn-rec-verificar',true);
-  gs('verificarIdentidade',{cpf:cpf,email:email}).then(function(r){carregando('btn-rec-verificar',false);if(!r.ok)return alerta('alerta-login',r.erro);S.cpfPA=cpf;document.getElementById('rec-bvindo').textContent='Identidade confirmada, '+r.nome+'! Defina sua nova senha.';document.getElementById('v-recuperar').style.display='none';document.getElementById('v-recuperar-nova').style.display='';}).catch(function(){carregando('btn-rec-verificar',false);alerta('alerta-login','Falha de comunicação.');});
+  gs('verificarIdentidade',{cpf:cpf,email:email}).then(function(r){carregando('btn-rec-verificar',false);if(!r.ok)return alerta('alerta-login',r.erro);S.cpfPA=cpf;document.getElementById('rec-email-destino').textContent=r.emailMascarado;document.getElementById('i-codigo-rec').value='';document.getElementById('v-recuperar').style.display='none';document.getElementById('v-recuperar-codigo').style.display='';}).catch(function(){carregando('btn-rec-verificar',false);alerta('alerta-login','Falha de comunicação.');});
+}
+function confirmarCodigoRec(){
+  var codigo=document.getElementById('i-codigo-rec').value.trim();
+  if(!/^\d{6}$/.test(codigo))return alerta('alerta-login','Digite os 6 dígitos do código.');
+  carregando('btn-codigo-rec',true);
+  gs('confirmarCodigo',{cpf:S.cpfPA,finalidade:'recuperar',codigo:codigo}).then(function(r){
+    carregando('btn-codigo-rec',false);if(!r.ok)return alerta('alerta-login',r.erro);
+    S.ticketSenha=r.ticket;document.getElementById('rec-bvindo').textContent='Identidade confirmada. Defina sua nova senha.';
+    document.getElementById('v-recuperar-codigo').style.display='none';document.getElementById('v-recuperar-nova').style.display='';
+  }).catch(function(){carregando('btn-codigo-rec',false);alerta('alerta-login','Falha de comunicação.');});
 }
 function salvarNovaSenha(){
   var s1=document.getElementById('i-nova-rec').value,s2=document.getElementById('i-conf-rec').value;campoErr('e-conf-rec','');
   if(!s1||s1.length<8)return alerta('alerta-login','Senha deve ter pelo menos 8 caracteres.');
   if(s1!==s2)return alerta('alerta-login','As senhas não coincidem.');
   carregando('btn-rec-salvar',true);
-  gs('redefinirSenha',{cpf:S.cpfPA,senha:s1}).then(function(r){carregando('btn-rec-salvar',false);if(!r.ok)return alerta('alerta-login',r.erro);fecharRecuperarSenha();alerta('alerta-login','Senha redefinida com sucesso! Faça login.','ok');}).catch(function(){carregando('btn-rec-salvar',false);alerta('alerta-login','Falha de comunicação.');});
+  gs('redefinirSenha',{cpf:S.cpfPA,ticket:S.ticketSenha,senha:s1}).then(function(r){carregando('btn-rec-salvar',false);if(!r.ok)return alerta('alerta-login',r.erro);fecharRecuperarSenha();alerta('alerta-login','Senha redefinida com sucesso! Faça login.','ok');}).catch(function(){carregando('btn-rec-salvar',false);alerta('alerta-login','Falha de comunicação.');});
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1469,7 +1510,7 @@ function carregarHistorico(){
     
     // Armazena as datas do monitor para bloqueio no calendário
     S.datasMinhas=(r.lista||[]).filter(function(a){
-      var s=(a.status||'').toLowerCase();return s!=='cancelado'&&s!=='negado';
+      var s=(a.status||'').toLowerCase();return a.isPrincipal&&s!=='cancelado'&&s!=='negado';
     }).map(function(a){
       if(!a.data||a.data==='—')return null;var p=a.data.split('/');return p.length===3?p[2]+'-'+p[1]+'-'+p[0]:null;
     }).filter(Boolean);
@@ -1557,8 +1598,8 @@ function renderCard(a,mostrarCancelar){
   var inviteHtml = '';
   if (a.convitePendente) {
     inviteHtml = '<div style="margin-top:8px; display:flex; gap:8px;" onclick="event.stopPropagation()">' +
-      '<button class="btn btn-p btn-sm" onclick="responderConvite(\''+esc(a.protocolo)+'\', \'Aceito\')" style="width:auto; padding:4px 10px; background:var(--ok); font-size:0.7rem; margin:0 !important; height:26px;">✓ Aceitar</button>' +
-      '<button class="btn btn-danger btn-sm" onclick="responderConvite(\''+esc(a.protocolo)+'\', \'Recusado\')" style="width:auto; padding:4px 10px; font-size:0.7rem; margin:0 !important; height:26px;">✕ Recusar</button>' +
+      '<button class="btn btn-p btn-sm" onclick="responderConvite(\''+esc(a.protocolo)+'\', \'Aceito\')" style="width:auto;background:var(--ok);">✓ Aceitar</button>' +
+      '<button class="btn btn-danger btn-sm" onclick="responderConvite(\''+esc(a.protocolo)+'\', \'Recusado\')" style="width:auto;">✕ Recusar</button>' +
       '</div>';
   }
   var cancelBtn=(mostrarCancelar&&(sl==='pendente'||sl==='confirmado')&&a.isPrincipal && podeCancelar(a.data, a.horario))
@@ -1797,8 +1838,8 @@ function renderDetalhe(sol){
       inviteButtonsHtml = '<div style="margin-top:12px;background:var(--warn-bg);border:1.5px solid var(--warn-bd);border-radius:var(--r);padding:12px;text-align:center;">' +
         '<p style="font-size:.76rem;color:var(--warn);margin-bottom:8px;font-weight:700;">⚠️ Você foi indicado como monitor auxiliar nesta visita. Por favor, confirme seu aceite:</p>' +
         '<div style="display:flex;gap:8px;justify-content:center;">' +
-          '<button class="btn btn-p btn-sm" onclick="responderConvite(\''+esc(sol.protocolo)+'\', \'Aceito\')" style="width:auto;background:var(--ok);margin:0 !important;height:28px;">✓ Aceitar Indicação</button>' +
-          '<button class="btn btn-danger btn-sm" onclick="responderConvite(\''+esc(sol.protocolo)+'\', \'Recusado\')" style="width:auto;margin:0 !important;height:28px;">✕ Recusar</button>' +
+          '<button class="btn btn-p btn-sm" onclick="responderConvite(\''+esc(sol.protocolo)+'\', \'Aceito\')" style="width:auto;background:var(--ok);">✓ Aceitar Indicação</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="responderConvite(\''+esc(sol.protocolo)+'\', \'Recusado\')" style="width:auto;">✕ Recusar</button>' +
         '</div>' +
         '</div>';
     }
@@ -1887,14 +1928,14 @@ function executarBusca(){
       return 0;
     });
     el.innerHTML='<p style="font-size:.72rem;color:var(--n2);margin-bottom:8px;">'+label+'</p>'+
-      '<div class="ag-list" style="max-height:400px;overflow-y:auto;padding-right:5px;">'+tempBusca.map(function(a){return renderCard(a,false);}).join('')+'</div>';
+      '<div class="ag-list">'+tempBusca.map(function(a){return renderCard(a,false);}).join('')+'</div>';
   }).catch(function(){carregando('btn-buscar',false);document.getElementById('busca-resultados').innerHTML='<p style="font-size:.82rem;color:var(--danger);">Falha de comunicação.</p>';});
 }
 
 // ═══════════════════════════════════════════════════════════════
 // ORIENTAÇÕES E MONITORES
 // ═══════════════════════════════════════════════════════════════
-function toggleOrientacoes(){var c=document.getElementById('orientacoes-content'),a=document.getElementById('ori-arrow'),ab=c.style.display!=='none';c.style.display=ab?'none':'';a.classList.toggle('open',!ab);}
+function toggleOrientacoes(){var c=document.getElementById('orientacoes-content'),a=document.getElementById('ori-arrow'),ab=c.style.display!=='none';c.style.display=ab?'none':'';a.classList.toggle('open',!ab);document.querySelector('.orientacoes-hd').setAttribute('aria-expanded',String(!ab));}
 
 function carregarMonitoresAux(){
   gs('listarMonitores',{token:S.token}).then(function(r){
@@ -1905,7 +1946,7 @@ function carregarMonitoresAux(){
     if(!filtrados.length){cont.innerHTML='<p style="grid-column:1 / -1;margin:0;font-size:.78rem;color:var(--n2);">Nenhum outro monitor disponível.</p>';return;}
     cont.innerHTML=filtrados.map(function(m){
       return '<label class="aux-label" id="lbl-aux-'+esc(m.cpf)+'">' +
-        '<input type="checkbox" value="'+esc(m.nome)+'" onchange="toggleAuxStyle(this, \''+esc(m.cpf)+'\')"/> ' +
+        '<input type="checkbox" value="'+esc(m.cpf)+'" onchange="toggleAuxStyle(this, \''+esc(m.cpf)+'\')"/> ' +
         '<span class="custom-chk"></span>' +
         '<span>'+esc(m.nome)+'</span>' +
         '</label>';
@@ -2051,7 +2092,7 @@ function navMes(d,e){if(e)e.stopPropagation();S.calMes=new Date(S.calMes.getFull
 function renderCal(){
   var pop=document.getElementById('cal-popup');if(!pop.classList.contains('open'))return;
   var hoje=new Date();hoje.setHours(0,0,0,0);
-  var minDt=new Date(hoje);minDt.setDate(hoje.getDate()+1); // mínimo 1 dias
+  var minDt=new Date(hoje);minDt.setDate(hoje.getDate()+2);
   var maxDt=new Date(hoje);maxDt.setDate(hoje.getDate()+120);
   var ano=S.calMes.getFullYear(),mes=S.calMes.getMonth();
   document.getElementById('cal-lbl').textContent=MESES[mes]+' '+ano;
@@ -2128,6 +2169,8 @@ function _getPeriodosDeVisita(horario) {
 // ═══════════════════════════════════════════════════════════════
 function verificarPeriodo(){
   var data=S.dataSel,hora=document.getElementById('f-hora').value;
+  if(hora && !/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) {campoErr('e-hora','Informe um horário válido.');return false;}
+  if(hora && _parseHoraMinuto(hora).hora*60+_parseHoraMinuto(hora).minuto>14*60){campoErr('e-hora','Escolha um horário até 14h.');return false;}
   if(!data||!hora){limpaAlerta('f-alert');return true;}
   
   var periodosNovos = _getPeriodosDeVisita(hora);
@@ -2266,7 +2309,7 @@ function salvarForm(){
       if (paragraphs && paragraphs[1]) paragraphs[1].innerHTML = '⚠️ <strong>Importante:</strong> Esta solicitação ficará suspensa e <strong>só será enviada para aprovação administrativa</strong> após todos os monitores auxiliares indicados confirmarem o aceite pelo painel deles.';
     } else {
       if (mTitle) mTitle.textContent = 'Solicitação Registrada!';
-      if (paragraphs && paragraphs[0]) paragraphs[0].innerHTML = 'Sua visita foi agendada com sucesso.<br>Guarde o número do protocolo abaixo.';
+      if (paragraphs && paragraphs[0]) paragraphs[0].innerHTML = 'Sua solicitação foi registrada com sucesso.<br>Guarde o número do protocolo abaixo.';
       if (paragraphs && paragraphs[1]) paragraphs[1].innerHTML = 'Acompanhe o status no painel. Nossa equipe confirmará em breve.';
     }
     
@@ -2321,22 +2364,26 @@ document.getElementById('f-origem').addEventListener('input',function(){this.cla
 // REDIMENSIONAMENTO AUTOMÁTICO DO IFRAME (ResizeObserver)
 // ═══════════════════════════════════════════════════════════════
 
-if (typeof ResizeObserver !== 'undefined') {
-  var obs = new ResizeObserver(function() {
-    try {
-      var h = document.documentElement.scrollHeight || document.body.scrollHeight;
-      window.parent.postMessage({ type: 'resize', height: h }, '*');
-    } catch(e){}
-  });
-  obs.observe(document.body);
-}
-
+var ultimoAlturaEnviada = 0;
+var redimensionamentoPendente = false;
 function forcarRedimensionamento() {
-  try {
-    var h = document.documentElement.scrollHeight || document.body.scrollHeight;
-    window.parent.postMessage({ type: 'resize', height: h }, '*');
-  } catch(e){}
+  if (window.parent === window || redimensionamentoPendente) return;
+  redimensionamentoPendente = true;
+  requestAnimationFrame(function() {
+    redimensionamentoPendente = false;
+    var h = Math.ceil(document.body.scrollHeight);
+    if (h > 0 && h !== ultimoAlturaEnviada) {
+      ultimoAlturaEnviada = h;
+      window.parent.postMessage({type:'resize',height:h},'*');
+    }
+  });
 }
+if (typeof ResizeObserver !== 'undefined') {
+  new ResizeObserver(forcarRedimensionamento).observe(document.body);
+}
+window.addEventListener('load', forcarRedimensionamento);
+window.addEventListener('resize', forcarRedimensionamento);
+forcarRedimensionamento();
 </script>
 </body>
 </html>

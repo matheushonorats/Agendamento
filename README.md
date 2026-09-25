@@ -10,7 +10,7 @@ O projeto é construído em uma arquitetura leve integrada ao ecossistema do Goo
 
 ### 1. Camada de Segurança e Confirmação de Auxiliares
 Implementa uma regra de validação e segurança em duas etapas para visitas guiadas que necessitam de monitores adicionais:
-* **Banco de Dados (Coluna 22):** A planilha de respostas possui 22 colunas, sendo a última destinada a `Aceites Auxiliares`, que armazena um mapa em JSON (ex: `{"Nome do Monitor": "Pendente", "Outro Monitor": "Aceito"}`).
+* **Banco de Dados (Colunas 22 e 23):** A coluna V mantém `Aceites Auxiliares` no formato por nome que a versão anterior entende (ex: `{"Nome do Monitor": "Pendente"}`). A nova coluna W guarda os CPFs dos auxiliares na mesma ordem dos nomes da coluna R. Registros antigos podem continuar sem a coluna W preenchida.
 * **Status `Aguardando Auxiliares`:** Sempre que um agendamento é feito com monitores auxiliares, seu status inicial é gravado como `Aguardando Auxiliares` e a solicitação fica temporariamente oculta para a liberação do administrador.
 * **Transição de Estados:**
   * **Aceite:** Quando um monitor auxiliar aceita o convite em seu próprio painel, o JSON de aceites é atualizado. Se todos os monitores auxiliares confirmarem, o status do agendamento passa automaticamente para `Pendente`, tornando-o elegível para aprovação ou recusa do administrador.
@@ -23,9 +23,9 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 * **Capacidade Máxima:** Limite de 50 pessoas por período. Se a lotação for atingida, a data é marcada como lotada no calendário e novas solicitações são bloqueadas no servidor.
 
 ### 3. Autodimensionamento do Iframe (ResizeObserver)
-* **Comunicação Ativa:** O portal monitora as mudanças de altura do documento em tempo real utilizando um `ResizeObserver` e envia as dimensões via `postMessage({ type: 'resize', height: h }, '*')` para o site estático externo.
+* **Comunicação Ativa:** O portal mede a altura real do conteúdo com `ResizeObserver` e envia `postMessage({ type: 'resize', height: h }, '*')` para a página que o incorpora. A página externa precisa aplicar essa altura ao iframe.
 * **Scroll Inteligente:** Quando ocorrem transições de tela ou modais são abertos, o portal envia um sinal `scrollToTop` para o site principal realizar a rolagem automática e suave do usuário para o início do iframe.
-* **Barra de Rolagem Fallback Premium:** Habilitamos barras de rolagem finas e elegantes de contingência (`6px` de largura em tons de cinza suave) para casos em que o site externo restrinja a altura do iframe ou não execute o script de auto-resize, garantindo que o formulário nunca fique cortado.
+* **Rolagem no celular:** A incorporação recomendada usa `scrolling="no"` e deixa a página externa rolar. Sem o trecho de incorporação abaixo, o navegador ainda poderá criar uma barra dentro do iframe.
 
 ### 4. Grade de Seleção de Auxiliares e Pergunta Opcional
 * **Remoção de Scroll Local:** A lista de seleção de monitores foi transformada em um layout responsivo de grade CSS (`display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))`), eliminando a janela pequena rolável que prejudicava a experiência mobile.
@@ -37,47 +37,54 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 * **IBGE Auto-Complete:** Integração automática com a API de Localidades do IBGE com cache em `sessionStorage` para sugerir e autocompletar nomes de municípios no formato correto `Cidade/UF` (ex: `São Sebastião/SP`) nos campos de Origem do Grupo, Cidade no Cadastro e Cidade no Perfil.
 * **Fuzzy Auto-Correction:** Caso o usuário digite o nome de uma cidade brasileira sem o estado (ex: apenas `São Sebastião`), o portal busca na lista de cidades e formata o input automaticamente antes de enviar. Países internacionais são reconhecidos e aceitos sem o estado.
 
-### 6. Padronização de Protocolos e Auto-Healing
-* **Formato Único:** O padrão de protocolos do sistema é `SS-ANO-NÚMERO` (ex: `SS-2026-900080`).
-* **Auto-Healing de Histórico:** O sistema regenera em tempo real no banco de dados qualquer protocolo de registro legado que esteja em branco, inválido ou no formato hexadecimal antigo de 8 caracteres (como `0880c035`), gerando um novo protocolo alinhado ao ano de submissão daquela linha da planilha (ex: `SS-2025-XXXXXX` para registros de 2025).
+### 6. Protocolos e compatibilidade com o histórico
+* **Formato dos novos protocolos:** `SS-ANO-NÚMERO`, com verificação de unicidade antes de gravar.
+* **Registros antigos:** consultas não modificam mais a planilha. Protocolos existentes, inclusive os antigos em formato hexadecimal, permanecem válidos. Células vazias são preenchidas somente pela rotina manual `migrarProtocolosEmBranco`, após backup e conferência da prévia.
+
+### 7. Acesso e publicação segura
+* Primeiro acesso e recuperação de senha exigem código enviado ao e-mail já cadastrado. O projeto de Apps Script precisa de autorização para envio por `MailApp`.
+* O aceite de auxiliares só pode alterar solicitações no estado `Aguardando Auxiliares`.
+* Novas solicitações verificam capacidade, duplicidade e protocolo dentro de um bloqueio do Apps Script.
+* O roteiro de testes, migração e retorno à versão anterior está em [PROCEDIMENTO_DE_TESTE.md](PROCEDIMENTO_DE_TESTE.md). A cópia de produção e a publicação não ocorrem automaticamente por mudanças neste repositório.
 
 ---
 
 ## 🛠️ Instruções de Incorporação do Iframe
 
-Cole o seguinte snippet limpo de tags estruturais dentro de uma caixa de "Código Fonte" ou bloco HTML no seu CMS (WordPress, Wix, Elementor, etc.) para habilitar o auto-resize e rolagem suave:
+Na página de turismo, substitua o trecho que incorpora o portal pelo bloco abaixo **somente após testar em uma página de homologação**. Mantenha o endereço da implantação de teste durante os testes e o endereço atual de produção na publicação. O script valida a origem e a janela antes de aceitar mensagens do aplicativo.
 
 ```html
-<!-- Container do Iframe (Estilo Premium e Centralizado) -->
-<div style="width: 100%; display: flex; justify-content: center; background-color: #f0faf3; padding: 10px 0;">
+<div style="width: 100%; max-width: 750px; margin: 0 auto;">
   <iframe 
     id="agendamento-iframe" 
-    width="100%" 
-    height="950px" 
-    style="border: none; max-width: 750px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: height 0.15s ease-out;" 
+    style="width: 100%; height: 950px; border: 0; display: block; border-radius: 16px;"
     src="https://script.google.com/macros/s/AKfycbx64cFvzE9As-gxIVnxNqiY7uhLLGhL7xH1g5EsB7Mw-Yljv5RbXeGmEn76mRbwaLZDKA/exec" 
-    title="Portal do Monitor - Agendamento Sítio Arqueológico">
+    title="Portal do Monitor - Agendamento Sítio Arqueológico"
+    scrolling="no">
   </iframe>
 </div>
 
-<!-- Script Inteligente de Redimensionamento e Scroll Automático -->
 <script>
 (function() {
   var iframe = document.getElementById('agendamento-iframe');
-  if (iframe) {
-    window.addEventListener('message', function(event) {
-      if (event.data && typeof event.data === 'object') {
-        // 1. Redimensionamento Dinâmico (Resize)
-        if (event.data.type === 'resize' && event.data.height) {
-          iframe.style.height = event.data.height + 'px';
-        }
-        // 2. Rolagem Automática ao Topo ao Mudar de Tela (Scroll to Top)
-        if (event.data.type === 'scrollToTop') {
-          iframe.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }
-    });
-  }
+  if (!iframe) return;
+  window.addEventListener('message', function(event) {
+    if (event.source !== iframe.contentWindow) return;
+    var host;
+    try { host = new URL(event.origin).hostname; } catch (e) { return; }
+    if (new URL(event.origin).protocol !== 'https:' ||
+        !(/(^|\.)script\.google\.com$/.test(host) ||
+          host === 'script.googleusercontent.com' ||
+          host.endsWith('-script.googleusercontent.com'))) return;
+    if (!event.data || typeof event.data !== 'object') return;
+    if (event.data.type === 'resize') {
+      var altura = Number(event.data.height);
+      if (Number.isFinite(altura) && altura >= 300 && altura <= 30000)
+        iframe.style.height = Math.ceil(altura) + 'px';
+    } else if (event.data.type === 'scrollToTop') {
+      iframe.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  });
 })();
 </script>
 ```
