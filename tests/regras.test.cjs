@@ -19,7 +19,7 @@ function ambiente() {
     getDataRange: () => ({ getValues: () => sheets[name].map(row => row.slice()) }),
     getLastColumn: () => sheets[name][0].length,
     getLastRow: () => sheets[name].length,
-    getRange: (row, col) => ({ setValue: value => { sheets[name][row - 1][col - 1] = value; writes.push({name, row, col, value}); }, setValues: values => { values.forEach((v,j) => { sheets[name][row-1+j]=v.slice(); }); } }),
+    getRange: (row, col) => ({ getValue: () => sheets[name][row-1][col-1], setValue: value => { sheets[name][row - 1][col - 1] = value; writes.push({name, row, col, value}); }, setValues: values => { values.forEach((v,j) => { sheets[name][row-1+j]=v.slice(); }); } }),
     appendRow: row => { sheets[name].push(row.slice()); writes.push({name, append: true}); },
     deleteRow: row => { sheets[name].splice(row-1,1); writes.push({name, delete: row}); }
   });
@@ -323,4 +323,41 @@ test('gestor edita e remove acesso de administrador sem apagar auditoria', () =>
   assert.equal(a.ctx.dispatch('adminReativarAdmin',{token:gestor.token,cpf:novoCpf}).ok,true);
   assert.equal(a.sheets.Administradores[2][4],'Sim');
   assert.equal(a.sheets.Log_Auditoria.slice(-2).map(r=>r[3]).join(','),'adminDesativarAdmin,adminReativarAdmin');
+});
+
+test('novos agendamentos padronizam cidade e rejeitam origem sem formato', () => {
+  const a=ambiente();const data=new Date(Date.now()+5*86400000).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'});
+  const v=visita(data);v.origem='Sao Paulo';
+  assert.equal(a.ctx._salvar({token:a.token,visita:v}).ok,true);
+  assert.equal(a.sheets['Respostas ao formulário 1'][1][11],'São Paulo/SP');
+  const b=ambiente();const invalida=visita(data);invalida.origem='Cidade sem estado';
+  assert.equal(b.ctx._salvar({token:b.token,visita:invalida}).code,'ORIGIN_INVALID');
+  assert.equal(b.sheets['Respostas ao formulário 1'].length,1);
+  assert.equal(b.ctx._localidadePadronizada('  caraguatatuba / sp ',true),'Caraguatatuba/SP');
+  assert.equal(b.ctx._localidadePadronizada('País: Qatar',true),'País: Qatar');
+});
+
+test('perfil padroniza cidade do monitor no servidor', () => {
+  const a=ambiente();
+  const p={token:a.token,nome:'Ana Monitor',cpf:'12345678909',rg:'RG',telefone:'11999999999',email:'ana@example.test',cidade:'sao sebastiao',bairro:'Centro'};
+  assert.equal(a.ctx._atualizarPerfil(p).ok,true);
+  assert.equal(a.sheets['Monitores Credenciados'][1][6],'São Sebastião/SP');
+});
+
+test('prévia de origens antigas não grava e execução altera só valores inequívocos', () => {
+  const a=ambiente();
+  ['São Paulo','São Paulo/SP','Caraguatatuba','Qatar','Guarulhos/SP','Guarulhos'].forEach((origem,i)=>{
+    const r=linha({protocolo:'SS-2026-'+String(100001+i),data:'15/10/2026'});r[11]=origem;a.sheets['Respostas ao formulário 1'].push(r);
+  });
+  const previa=a.ctx.preverPadronizacaoOrigensHistoricas();
+  assert.equal(previa.total,3);
+  assert.equal(previa.pendentes[0].valor,'Qatar');
+  assert.equal(a.writes.length,0);
+  const aplicada=a.ctx.executarPadronizacaoOrigensHistoricas();
+  assert.equal(aplicada.atualizadas,3);
+  assert.equal(a.sheets['Respostas ao formulário 1'][1][11],'São Paulo/SP');
+  assert.equal(a.sheets['Respostas ao formulário 1'][3][11],'Caraguatatuba/SP');
+  assert.equal(a.sheets['Respostas ao formulário 1'][4][11],'Qatar');
+  assert.equal(a.sheets['Respostas ao formulário 1'][6][11],'Guarulhos/SP');
+  assert.equal(a.writes.every(w=>w.col===12),true);
 });

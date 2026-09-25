@@ -971,7 +971,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
         </div>
         <datalist id="lista-origens"></datalist>
         <span class="field-err" id="e-origem"></span>
-        <p style="font-size:.7rem;color:var(--n3);margin-top:4px;">Se a sua cidade/país não aparecer na lista, você pode simplesmente digitar o nome completo.</p>
+        <p style="font-size:.7rem;color:var(--n3);margin-top:4px;">Se não aparecer na lista, informe Cidade/UF. Para um país não listado, digite País: Nome.</p>
       </div>
 
       <!-- AGÊNCIA -->
@@ -1183,7 +1183,8 @@ var P = {
 // ═══════════════════════════════════════════════════════════════
 var ORIGENS_BR_FALLBACK = [
   'São Sebastião/SP','Caraguatatuba/SP','Ubatuba/SP','Ilhabela/SP',
-  'São Paulo/SP','Rio de Janeiro/RJ','Belo Horizonte/MG','Curitiba/PR',
+  'São Paulo/SP','Santos/SP','São José dos Campos/SP','Barretos/SP',
+  'Rio de Janeiro/RJ','Belo Horizonte/MG','Curitiba/PR',
   'Florianópolis/SC','Porto Alegre/RS','Salvador/BA','Brasília/DF'
 ];
 var ORIGENS_INT = [
@@ -1205,6 +1206,18 @@ var TODAS_ORIGENS = [];
 
 function normalizarBusca(valor) {
   return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+var UFS_ORIGEM='AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
+function tituloLocalidade(valor){return String(valor||'').toLocaleLowerCase('pt-BR').split(/\s+/).map(function(p,i){return i&&['de','da','do','dos','das','e'].indexOf(p)!==-1?p:p.charAt(0).toLocaleUpperCase('pt-BR')+p.slice(1);}).join(' ');}
+function cidadeFormatada(valor){
+  var val=String(valor||'').trim().replace(/\s+/g,' '),partes=val.match(/^(.+?)\s*\/\s*([A-Za-z]{2})$/);
+  if(partes){
+    var uf=partes[2].toUpperCase();if(UFS_ORIGEM.indexOf(uf)===-1)return '';
+    var cidade=partes[1].trim(),encontrada=TODAS_ORIGENS.find(function(item){var m=item.match(/^(.+)\/([A-Z]{2})$/);return m&&m[2]===uf&&normalizarBusca(m[1])===normalizarBusca(cidade);});
+    return encontrada||tituloLocalidade(cidade)+'/'+uf;
+  }
+  var candidatas=TODAS_ORIGENS.filter(function(item){var m=item.match(/^(.+)\/([A-Z]{2})$/);return m&&normalizarBusca(m[1])===normalizarBusca(val);});
+  return candidatas.length===1?candidatas[0]:'';
 }
 function mostrarOrigens() {
   var input = document.getElementById('f-origem');
@@ -1249,15 +1262,15 @@ function validarEFormatarOrigem() {
   var val = input.value.trim();
   if (!val) return false;
 
-  var lower = val.toLowerCase();
+  var lower = normalizarBusca(val);
 
   // 1. Se for país internacional, passa direto
   var ehPais = ORIGENS_INT.some(function(p) {
-    return p.toLowerCase() === lower;
+    return normalizarBusca(p) === lower;
   });
   if (ehPais) {
     for (var i = 0; i < ORIGENS_INT.length; i++) {
-      if (ORIGENS_INT[i].toLowerCase() === lower) {
+      if (normalizarBusca(ORIGENS_INT[i]) === lower) {
         input.value = ORIGENS_INT[i];
         break;
       }
@@ -1265,30 +1278,9 @@ function validarEFormatarOrigem() {
     return true;
   }
 
-  // 2. Se já estiver no formato Cidade/UF
-  var reg = /^.+\/[A-Za-z]{2}$/;
-  if (reg.test(val)) {
-    var partes = val.split('/');
-    partes[partes.length - 1] = partes[partes.length - 1].toUpperCase();
-    input.value = partes.join('/');
-    return true;
-  }
-
-  // 3. Tentar auto-completar a partir de TODAS_ORIGENS
-  var prefixo = lower + '/';
-  var correspondencias = [];
-  for (var j = 0; j < TODAS_ORIGENS.length; j++) {
-    var item = TODAS_ORIGENS[j];
-    if (item.toLowerCase().indexOf(prefixo) === 0) {
-      correspondencias.push(item);
-    }
-  }
-
-  if (correspondencias.length === 1) {
-    input.value = correspondencias[0];
-    return true;
-  }
-
+  if(/^pa[ií]s\s*:\s*[\p{L}\p{M} .'-]{2,80}$/iu.test(val)){input.value='País: '+tituloLocalidade(val.split(':').slice(1).join(':').trim());return true;}
+  var cidade=cidadeFormatada(val);
+  if(cidade){input.value=cidade;return true;}
   return false;
 }
 
@@ -1298,32 +1290,8 @@ function validarEFormatarCidadeMonitor(inputId) {
   var val = input.value.trim();
   if (!val) return false;
 
-  var lower = val.toLowerCase();
-
-  // 1. Se já estiver no formato Cidade/UF
-  var reg = /^.+\/[A-Za-z]{2}$/;
-  if (reg.test(val)) {
-    var partes = val.split('/');
-    partes[partes.length - 1] = partes[partes.length - 1].toUpperCase();
-    input.value = partes.join('/');
-    return true;
-  }
-
-  // 2. Tentar auto-completar a partir de TODAS_ORIGENS
-  var prefixo = lower + '/';
-  var correspondencias = [];
-  for (var j = 0; j < TODAS_ORIGENS.length; j++) {
-    var item = TODAS_ORIGENS[j];
-    if (item.indexOf('/') !== -1 && item.toLowerCase().indexOf(prefixo) === 0) {
-      correspondencias.push(item);
-    }
-  }
-
-  if (correspondencias.length === 1) {
-    input.value = correspondencias[0];
-    return true;
-  }
-
+  var cidade=cidadeFormatada(val);
+  if(cidade){input.value=cidade;return true;}
   return false;
 }
 
@@ -1760,7 +1728,7 @@ function renderAdminSolicitacoes(){
     return a.i-b.i;
   });
   var el=document.getElementById('admin-solicitacoes');
-  var resumo='<div class="admin-pending-summary">'+totalPendentes+' solicitação'+(totalPendentes===1?'':'ões')+' pendente'+(totalPendentes===1?'':'s')+' de decisão</div>';
+  var resumo='<div class="admin-pending-summary">'+totalPendentes+' '+(totalPendentes===1?'solicitação pendente':'solicitações pendentes')+' de decisão</div>';
   if(!itens.length){el.innerHTML=resumo+'<p class="aux-empty">Nenhuma solicitação encontrada neste filtro.</p>';return;}
   el.innerHTML=resumo+itens.map(function(x){var a=x.v,i=x.i;
     var ativa=['Pendente','Confirmado','Aguardando Auxiliares'].indexOf(a.status)!==-1;
@@ -2697,7 +2665,7 @@ function salvarForm(){
     document.getElementById('f-origem').classList.add('err');
     ok=false;
   } else if(!validarEFormatarOrigem()){
-    campoErr('e-origem','Informe no formato Cidade/UF (ex: São Sebastião/SP) ou país.');
+    campoErr('e-origem','Informe Cidade/UF, selecione um país ou digite País: Nome.');
     document.getElementById('f-origem').classList.add('err');
     ok=false;
   } else {

@@ -44,6 +44,7 @@ Marque cada item somente depois de observar o resultado no portal de teste e na 
 | Trocar senha logado | Sem código confirmado, a senha não muda. Envie e confirme o código pelo e-mail já cadastrado; depois salve a nova senha e entre novamente. |
 | Busca de auxiliares | Digite duas letras, selecione um nome, apague a busca e confirme que o selecionado continua visível. |
 | Origem do grupo | Digite parte de uma cidade, selecione uma sugestão e confirme o formato `Cidade/UF`. |
+| Origem digitada livremente | `Sao Paulo` e `caraguatatuba/sp` são gravados como `São Paulo/SP` e `Caraguatatuba/SP`. Nome desconhecido sem UF é rejeitado; um país fora da lista pode ser informado como `País: Nome`. |
 
 ## Conferências do painel administrativo
 
@@ -82,6 +83,13 @@ O portal já abre registros sem protocolo usando uma referência temporária de 
 2. Compare essa prévia com a coluna U. Verifique que protocolos já existentes, inclusive os antigos de oito caracteres, não estão na lista.
 3. Nas **propriedades do script de teste**, defina `MIGRACAO_PROTOCOLOS_AUTORIZADA` como `SIM`. Execute `executarMigracaoProtocolosEmBranco`. Remova a propriedade logo após a execução.
 4. Execute novamente `migrarProtocolosEmBranco`: o total deve ser zero. Verifique que não há protocolos duplicados e que os pedidos antigos abrem nos detalhes.
+
+## Padronização das origens antigas: opcional e separada da publicação
+
+1. Na **cópia de teste**, execute `preverPadronizacaoOrigensHistoricas` pelo editor. A resposta lista cada linha da coluna L com o valor atual e a proposta, além dos valores `pendentes` que precisam de análise humana. A prévia não grava nada.
+2. Compare propostas e linhas pendentes com a planilha. A rotina só propõe conversões inequívocas, como `São Paulo` → `São Paulo/SP`. Corrija manualmente os nomes ambíguos; não há alteração automática desses valores.
+3. Se aprovar a prévia, defina `PADRONIZACAO_ORIGENS_AUTORIZADA=SIM` nas propriedades **do projeto de teste** e execute `executarPadronizacaoOrigensHistoricas`. Remova a propriedade em seguida. Confira a coluna L e os gráficos do relatório.
+4. Repita na produção **apenas depois da publicação e de um novo backup**, com prévia refeita na planilha atual. Esse passo não é necessário para que os novos pedidos sigam o padrão.
 
 ## Publicação, somente após os testes
 

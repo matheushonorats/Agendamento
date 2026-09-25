@@ -25,6 +25,9 @@ var CFG = {
 var MC = { RG: 2, CPF: 3, NOME: 4, TELEFONE: 5, EMAIL: 6, CIDADE: 7, BAIRRO: 8, SENHA_HASH: 9, ULTIMO_LOGIN: 10 };
 var RF = { CPF: 7, PROTOCOLO: 21, TOTAL_COLUNAS: 23 };
 var PERMISSOES_ADMIN = ['verSolicitacoes','decidir','bloquearDatas','verMonitores','resetarSenha','agendarEmNome','verRelatorios','verAuditoria','gerirAdmins'];
+var UFS_VALIDAS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
+var CIDADES_PADRAO = ['São Sebastião/SP','Caraguatatuba/SP','Ubatuba/SP','Ilhabela/SP','São Paulo/SP','Santos/SP','São José dos Campos/SP','Barretos/SP','Rio de Janeiro/RJ','Belo Horizonte/MG','Curitiba/PR','Florianópolis/SC','Porto Alegre/RS','Salvador/BA','Brasília/DF'];
+var PAISES_PADRAO = ['Argentina','Bolívia','Chile','Colômbia','Equador','Guiana','Guiana Francesa','Paraguai','Peru','Suriname','Uruguai','Venezuela','Estados Unidos','Canadá','México','Cuba','Costa Rica','Panamá','Jamaica','República Dominicana','Guatemala','Haiti','Trinidad e Tobago','Portugal','Espanha','França','Itália','Alemanha','Reino Unido','Holanda','Bélgica','Suíça','Áustria','Suécia','Noruega','Dinamarca','Finlândia','Polônia','República Tcheca','Hungria','Grécia','Turquia','Rússia','Ucrânia','Irlanda','Croácia','Sérvia','Luxemburgo','Japão','China','Coreia do Sul','Índia','Tailândia','Singapura','Vietnam','Indonésia','Filipinas','Malásia','Taiwan','Israel','Emirados Árabes Unidos','Arábia Saudita','Austrália','Nova Zelândia','África do Sul','Marrocos','Egito','Angola','Moçambique','Cabo Verde'];
 
 function doGet(e) {
   return HtmlService
@@ -289,14 +292,14 @@ function _criarSenha(p) {
   var rg = _san(p.rg || '');
   var telefone = _san(p.telefone || '');
   var email = _san(p.email || '');
-  var cidade = _san(p.cidade || '');
+  var cidade = _localidadePadronizada(p.cidade, false);
   var bairro = _san(p.bairro || '');
   
   if (!nome) return _err('Nome é obrigatório.');
   if (!rg) return _err('RG é obrigatório.');
   if (!telefone) return _err('Telefone é obrigatório.');
   if (!email) return _err('E-mail é obrigatório.');
-  if (!cidade) return _err('Cidade é obrigatória.');
+  if (!cidade) return _err('Informe a cidade no formato Cidade/UF (ex.: São Sebastião/SP).', 'CITY_INVALID');
   if (!bairro) return _err('Bairro é obrigatório.');
 
   var sheet = _aba(CFG.ABA_MONITORES);
@@ -434,6 +437,8 @@ function _salvar(p) {
   if (!String(v.tipoGrupo || '').trim() || !String(v.faixaEtaria || '').trim() || !String(v.origem || '').trim()) {
     return _err('Preencha tipo, faixa etária e origem do grupo.', 'FIELDS_REQUIRED');
   }
+  var origemPadronizada=_localidadePadronizada(v.origem,true);
+  if(!origemPadronizada)return _err('Informe uma cidade/UF válida ou selecione um país. Para outro país, use País: Nome.', 'ORIGIN_INVALID');
   if (!Number.isInteger(Number(v.antecedencia)) || Number(v.antecedencia) < 1 ||
       !Number.isInteger(Number(v.diasSS)) || Number(v.diasSS) < 1) {
     return _err('Informe números válidos para antecedência e dias de permanência.', 'FIELDS_INVALID');
@@ -553,7 +558,7 @@ function _salvar(p) {
   linha[8]  = _san(v.cnpjAgencia || '');
   linha[9]  = new Date(v.dataVisita + 'T00:00:00');
   linha[10] = v.horario ? (_san(v.horario) + ':00') : '';      // HH:mm:ss
-  linha[11] = _san(v.origem);
+  linha[11] = _san(origemPadronizada);
   linha[12] = _san(v.tipoGrupo);
   linha[13] = _san(v.faixaEtaria);
   linha[14] = _san(v.hospedagem || '');
@@ -568,7 +573,7 @@ function _salvar(p) {
 
   // ── Notificar auxiliares ─────────────────────────────────────
   if (auxiliares.cpfs.length) {
-    var monInfo = { quem: _san(monRow[MC.NOME - 1]), email: _san(monRow[MC.EMAIL - 1]), telefone: _san(monRow[MC.TELEFONE - 1]), data: _san(v.dataVisita), horario: v.horario ? (_san(v.horario)+':00') : '—', tamanho: tamGrupo, origem: _san(v.origem), tipoGrupo: _san(v.tipoGrupo), protocolo: protocolo };
+    var monInfo = { quem: _san(monRow[MC.NOME - 1]), email: _san(monRow[MC.EMAIL - 1]), telefone: _san(monRow[MC.TELEFONE - 1]), data: _san(v.dataVisita), horario: v.horario ? (_san(v.horario)+':00') : '—', tamanho: tamGrupo, origem: _san(origemPadronizada), tipoGrupo: _san(v.tipoGrupo), protocolo: protocolo };
     for (var n = 0; n < auxiliares.cpfs.length; n++) {
       var chave = 'NOTIF_' + auxiliares.cpfs[n];
       var existentes = [];
@@ -1058,6 +1063,26 @@ function _validaCPFAlg(cpf) {
 }
 function _cpfExisteNaBase(cpf) { var rows=_aba(CFG.ABA_MONITORES).getDataRange().getValues(); for(var i=1;i<rows.length;i++){if(_normCPF(String(rows[i][MC.CPF-1]))===cpf)return true;} return false; }
 function _hashSenha(cpf,senha){var input=CFG.PEPPER+'|'+cpf+'|'+senha;var bytes=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,input,Utilities.Charset.UTF_8);return bytes.map(function(b){return('0'+(b&0xFF).toString(16)).slice(-2);}).join('');}
+function _chaveLocalidade(valor){return String(valor||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();}
+function _tituloLocalidade(valor){return String(valor||'').toLocaleLowerCase('pt-BR').split(/\s+/).map(function(p,i){return i&&['de','da','do','dos','das','e'].indexOf(p)!==-1?p:p.charAt(0).toLocaleUpperCase('pt-BR')+p.slice(1);}).join(' ');}
+function _localidadePadronizada(valor,aceitarPais){
+  var texto=String(valor||'').trim().replace(/\s+/g,' ');
+  if(!texto||texto.length>100)return '';
+  var chave=_chaveLocalidade(texto);
+  if(aceitarPais){
+    for(var p=0;p<PAISES_PADRAO.length;p++)if(_chaveLocalidade(PAISES_PADRAO[p])===chave)return PAISES_PADRAO[p];
+    var outro=texto.match(/^pa[ií]s\s*:\s*(.+)$/i);
+    if(outro&&/^[\p{L}\p{M} .'-]{2,80}$/u.test(outro[1]))return 'País: '+_tituloLocalidade(outro[1].trim());
+  }
+  var partes=texto.match(/^(.+?)\s*\/\s*([A-Za-z]{2})$/);
+  var nome=partes?partes[1].trim():texto,uf=partes?partes[2].toUpperCase():'';
+  if(partes&&UFS_VALIDAS.indexOf(uf)===-1)return '';
+  var candidatos=CIDADES_PADRAO.filter(function(c){var cPartes=c.split('/');return _chaveLocalidade(cPartes[0])===_chaveLocalidade(nome)&&(!uf||cPartes[1]===uf);});
+  if(candidatos.length===1)return candidatos[0];
+  if(!partes)return '';
+  if(!/^[\p{L}\p{M} .'-]{2,80}$/u.test(nome))return '';
+  return _tituloLocalidade(nome)+'/'+uf;
+}
 function _referenciaSolicitacao(row, indice) {
   var protocolo=String(row[RF.PROTOCOLO-1]||'').trim();
   if(protocolo)return protocolo;
@@ -1130,6 +1155,34 @@ function executarMigracaoProtocolosEmBranco(){
     throw new Error('Defina MIGRACAO_PROTOCOLOS_AUTORIZADA=SIM nas propriedades do script somente após fazer o backup e conferir a prévia.');
   }
   return migrarProtocolosEmBranco(true);
+}
+function _planejarPadronizacaoOrigens(rows){
+  var porNome={},alteracoes=[],pendentes=[];
+  for(var i=1;i<rows.length;i++){
+    var canonica=_localidadePadronizada(rows[i][11],true);
+    var partes=canonica.match(/^(.+)\/([A-Z]{2})$/);
+    if(partes){var chave=_chaveLocalidade(partes[1]);if(!porNome[chave])porNome[chave]={};porNome[chave][canonica]=true;}
+  }
+  for(var j=1;j<rows.length;j++){
+    var atual=String(rows[j][11]||'').trim();if(!atual)continue;
+    var novo=_localidadePadronizada(atual,true);
+    if(!novo&&atual.indexOf('/')===-1){var candidatos=Object.keys(porNome[_chaveLocalidade(atual)]||{});if(candidatos.length===1)novo=candidatos[0];}
+    if(novo&&novo!==atual)alteracoes.push({linha:j+1,atual:atual,novo:novo});
+    else if(!novo)pendentes.push({linha:j+1,valor:atual});
+  }
+  return {total:alteracoes.length,alteracoes:alteracoes,pendentes:pendentes};
+}
+function preverPadronizacaoOrigensHistoricas(){
+  return _planejarPadronizacaoOrigens(_aba(CFG.ABA_RESPOSTAS).getDataRange().getValues());
+}
+function executarPadronizacaoOrigensHistoricas(){
+  if(PropertiesService.getScriptProperties().getProperty('PADRONIZACAO_ORIGENS_AUTORIZADA')!=='SIM')throw new Error('Faça backup, confira a prévia e defina PADRONIZACAO_ORIGENS_AUTORIZADA=SIM antes de executar.');
+  var lock=LockService.getScriptLock();if(!lock.tryLock(30000))throw new Error('Sistema ocupado. Tente novamente.');
+  try{
+    var sheet=_aba(CFG.ABA_RESPOSTAS),plano=_planejarPadronizacaoOrigens(sheet.getDataRange().getValues()),atualizadas=0;
+    plano.alteracoes.forEach(function(item){if(String(sheet.getRange(item.linha,12).getValue()||'').trim()===item.atual){sheet.getRange(item.linha,12).setValue(item.novo);atualizadas++;}});
+    return {ok:true,atualizadas:atualizadas,ignoradas:plano.total-atualizadas,pendentes:plano.pendentes};
+  }finally{lock.releaseLock();}
 }
 function _resolverAuxiliares(valor, monRows, cpfPrincipal){
   var partes=String(valor || '').split(',').map(function(x){return x.trim();}).filter(Boolean);
@@ -1450,7 +1503,7 @@ function _adminRelatorio(p) {
     agendamentos.push({data:data,horario:_horaAdmin(r[10]),monitor:_san(r[2]||''),telefone:_san(r[3]||''),grupo:tam,status:_san(status),protocolo:String(r[20]||'').trim()});
     if(status.toLowerCase()!=='confirmado')continue;
     confirmados++;totalPessoas+=tam;
-    [['origem',r[11]],['tipo',r[12]],['faixa',r[13]],['hospedagem',r[14]]].forEach(function(par){var chave=String(par[1]||'Não informado').trim()||'Não informado';grupos[par[0]][chave]=(grupos[par[0]][chave]||0)+tam;});
+    [['origem',r[11]],['tipo',r[12]],['faixa',r[13]],['hospedagem',r[14]]].forEach(function(par){var chave=String(par[1]||'Não informado').trim()||'Não informado';if(par[0]==='origem')chave=_localidadePadronizada(chave,true)||chave;grupos[par[0]][chave]=(grupos[par[0]][chave]||0)+tam;});
     var ant=Number(r[15]);if(isFinite(ant)&&ant>0){somaAntecedencia+=ant;contAntecedencia++;}
     var dias=Number(r[16]);if(isFinite(dias)&&dias>0){somaEstadia+=dias;contEstadia++;}
     var cpf=_normCPF(String(r[6]||''));if(!porMonitor[cpf])porMonitor[cpf]={visitas:0,pessoas:0};porMonitor[cpf].visitas++;porMonitor[cpf].pessoas+=tam;
@@ -1534,7 +1587,7 @@ function _atualizarPerfil(p) {
   var rg = _san(p.rg || '');
   var telefone = _san(p.telefone || '');
   var email = _san(p.email || '');
-  var cidade = _san(p.cidade || '');
+  var cidade = _localidadePadronizada(p.cidade, false);
   var bairro = _san(p.bairro || '');
   var senha = p.senha; // Opcional
   if (senha) {
@@ -1552,7 +1605,7 @@ function _atualizarPerfil(p) {
   if (!rg) return _err('RG é obrigatório.');
   if (!telefone) return _err('Telefone é obrigatório.');
   if (!email) return _err('E-mail é obrigatório.');
-  if (!cidade) return _err('Cidade é obrigatória.');
+  if (!cidade) return _err('Informe a cidade no formato Cidade/UF (ex.: São Sebastião/SP).', 'CITY_INVALID');
   if (!bairro) return _err('Bairro é obrigatório.');
 
   var sheet = _aba(CFG.ABA_MONITORES);

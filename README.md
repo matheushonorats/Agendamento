@@ -45,7 +45,8 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 
 ### 5. Padronização e Validação do Formato de Cidade (`Cidade/UF`)
 * **IBGE Auto-Complete:** Integração com a API de Localidades do IBGE com cache em `sessionStorage` para sugerir nomes de municípios no formato `Cidade/UF` (ex: `São Sebastião/SP`). A origem do grupo usa uma lista visual consistente com os demais campos.
-* **Fuzzy Auto-Correction:** Caso o usuário digite o nome de uma cidade brasileira sem o estado (ex: apenas `São Sebastião`), o portal busca na lista de cidades e formata o input automaticamente antes de enviar. Países internacionais são reconhecidos e aceitos sem o estado.
+* **Padronização:** Novos pedidos e perfis passam pela validação do servidor. Cidades brasileiras são gravadas como `Cidade/UF`; países da lista ficam com o nome padronizado. Para um país fora da lista, digite `País: Nome`. Cidades locais conhecidas sem UF ou sem acento são completadas; nomes ambíguos exigem a UF.
+* **Histórico:** Relatórios agrupam variações reconhecidas sem alterar registros antigos. A rotina manual `preverPadronizacaoOrigensHistoricas` mostra quais linhas da coluna L podem ser corrigidas com segurança; a execução exige backup e propriedade de autorização, conforme o roteiro.
 
 ### 6. Protocolos e compatibilidade com o histórico
 * **Formato dos novos protocolos:** `SS-ANO-NÚMERO`, com verificação de unicidade antes de gravar.
