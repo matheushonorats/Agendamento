@@ -261,3 +261,66 @@ test('auditoria trata campos recebidos como texto e não grava segredos', () => 
   assert.equal(log.join(' ').includes('segredo'),false);
   assert.equal(log.join(' ').includes('123456'),false);
 });
+
+test('administrador consulta detalhes e cancela visita confirmada com motivo', () => {
+  const a=ambiente();const admin=incluirAdmin(a);
+  const pedido=linha({status:'Confirmado',data:'2026-10-15'});
+  pedido[1]='ana@example.test';pedido[2]='Ana Monitor';pedido[3]='11999999999';pedido[11]='Cidade/SP';pedido[12]='Escola';
+  a.sheets['Respostas ao formulário 1'].push(pedido);
+  const detalhe=a.ctx.dispatch('detalharSolicitacao',{token:admin.token,protocolo:'SS-2026-100001'});
+  assert.equal(detalhe.ok,true);
+  assert.equal(detalhe.solicitacao.isAdmin,true);
+  assert.equal(detalhe.solicitacao.nomeMonitor,'Ana Monitor');
+  assert.equal(detalhe.solicitacao.origem,'Cidade/SP');
+  assert.equal(a.ctx._adminDecidir({token:admin.token,protocolo:'SS-2026-100001',decisao:'Cancelado'}).code,'REASON_REQUIRED');
+  const cancelado=a.ctx.dispatch('adminDecidir',{token:admin.token,protocolo:'SS-2026-100001',decisao:'Cancelado',motivo:'Grupo desistiu'});
+  assert.equal(cancelado.ok,true);
+  assert.equal(a.sheets['Respostas ao formulário 1'][1][18],'Cancelado');
+  assert.equal(a.sheets['Respostas ao formulário 1'][1][19],'Grupo desistiu');
+  assert.match(a.sheets.Log_Auditoria.at(-1)[6],/Motivo: Grupo desistiu/);
+  assert.equal(a.ctx._adminDecidir({token:admin.token,protocolo:'SS-2026-100001',decisao:'Cancelado',motivo:'Outro'}).code,'INVALID_STATUS');
+  assert.equal(a.ctx._detalharSolicitacao({token:a.token,protocolo:'SS-2026-100001'}).solicitacao.status,'Cancelado');
+  assert.equal(a.sheets.Log_Auditoria.at(-1)[3],'adminDecidir');
+});
+
+test('detalhes e cancelamento administrativo respeitam permissões', () => {
+  const a=ambiente();const admin=incluirAdmin(a,['verMonitores']);
+  a.sheets['Respostas ao formulário 1'].push(linha({status:'Confirmado',data:'2026-10-15'}));
+  assert.equal(a.ctx._detalharSolicitacao({token:admin.token,protocolo:'SS-2026-100001'}).code,'UNAUTHORIZED');
+  assert.equal(a.ctx._adminDecidir({token:admin.token,protocolo:'SS-2026-100001',decisao:'Cancelado',motivo:'Teste'}).code,'FORBIDDEN');
+  assert.equal(a.sheets['Respostas ao formulário 1'][1][18],'Confirmado');
+});
+
+test('registro antigo sem protocolo abre detalhes e pode ser cancelado sem alterar coluna U', () => {
+  const a=ambiente();const admin=incluirAdmin(a);
+  const pedido=linha({status:'Confirmado',protocolo:'',data:'15/10/2026'});
+  pedido[2]='Ana Monitor';pedido[7]='Agência de teste';pedido[11]='Santos/SP';
+  a.sheets['Respostas ao formulário 1'].push(pedido);
+  const historico=a.ctx._getHistorico({token:a.token});
+  const referencia=historico.lista[0].protocolo;
+  assert.match(referencia,/^LEGADO-LINHA-2-[a-f0-9]{12}$/);
+  assert.equal(historico.lista[0].nomeAgencia,'Agência de teste');
+  assert.equal(a.ctx._detalharSolicitacao({token:a.token,protocolo:referencia}).solicitacao.origem,'Santos/SP');
+  assert.equal(a.ctx._detalharSolicitacao({token:admin.token,protocolo:referencia}).solicitacao.isAdmin,true);
+  assert.equal(a.ctx._adminDecidir({token:admin.token,protocolo:referencia,decisao:'Cancelado',motivo:'Teste'}).ok,true);
+  assert.equal(a.sheets['Respostas ao formulário 1'][1][20],'');
+  assert.equal(a.sheets['Respostas ao formulário 1'][1][18],'Cancelado');
+});
+
+test('gestor edita e remove acesso de administrador sem apagar auditoria', () => {
+  const a=ambiente();const gestor=incluirAdmin(a);
+  const novoCpf='16899535009';
+  assert.equal(a.ctx._adminCriarAdmin({token:gestor.token,cpf:novoCpf,email:'outro@example.test',nome:'Outro',permissoes:['verMonitores']}).ok,true);
+  assert.equal(a.ctx._adminAtualizarAdmin({token:gestor.token,cpf:novoCpf,nome:'Novo nome',email:'novo@example.test',permissoes:['verSolicitacoes']}).ok,true);
+  assert.equal(a.sheets.Administradores[2][1],'novo@example.test');
+  assert.equal(a.sheets.Administradores[2][2],'Novo nome');
+  assert.equal(JSON.parse(a.sheets.Administradores[2][5])[0],'verSolicitacoes');
+  assert.equal(a.ctx.dispatch('adminAtualizarAdmin',{token:gestor.token,cpf:novoCpf,nome:'Novo nome',email:'novo@example.test',permissoes:['verSolicitacoes']}).ok,true);
+  assert.match(a.sheets.Log_Auditoria.at(-1)[6],/Permissões: verSolicitacoes/);
+  assert.equal(a.ctx.dispatch('adminDesativarAdmin',{token:gestor.token,cpf:novoCpf}).ok,true);
+  assert.equal(a.sheets.Administradores[2][4],'Não');
+  assert.equal(a.ctx._login({cpf:novoCpf,senha:'qualquer123'}).code,'INACTIVE');
+  assert.equal(a.ctx.dispatch('adminReativarAdmin',{token:gestor.token,cpf:novoCpf}).ok,true);
+  assert.equal(a.sheets.Administradores[2][4],'Sim');
+  assert.equal(a.sheets.Log_Auditoria.slice(-2).map(r=>r[3]).join(','),'adminDesativarAdmin,adminReativarAdmin');
+});

@@ -84,6 +84,7 @@ function _dispatchInterno(acao, carga) {
       case 'adminCriarAdmin':    return _adminCriarAdmin(carga);
       case 'adminAtualizarAdmin':return _adminAtualizarAdmin(carga);
       case 'adminDesativarAdmin':return _adminDesativarAdmin(carga);
+      case 'adminReativarAdmin':return _adminReativarAdmin(carga);
       case 'adminRelatorio':     return _adminRelatorio(carga);
       case 'adminLogs':          return _adminLogs(carga);
       default:                    return _err('Ação desconhecida.');
@@ -628,7 +629,7 @@ function _getHistorico(p) {
     var status = _san(rows[i][18] || 'Pendente');
     var convitePendente = isAuxiliar && status.toLowerCase() === 'aguardando auxiliares' && meuStatusAceite === 'Pendente';
 
-    var protocolo = _san(String(rows[i][RF.PROTOCOLO - 1] || '')).trim();
+    var protocolo = _referenciaSolicitacao(rows[i], i);
 
     lista.push({
       protocolo:     protocolo,
@@ -636,6 +637,7 @@ function _getHistorico(p) {
       horario:       horStr || '—',
       tamanho:       rows[i][4] || '?',
       origem:        _san(rows[i][11] || '—'),
+      nomeAgencia:   _san(rows[i][7] || ''),
       tipo:          _san(rows[i][12] || '—'),
       status:        status,
       motivo:        _san(rows[i][19] || ''),
@@ -695,7 +697,7 @@ function _buscarHistorico(p) {
       horStr = '—';
     }
 
-    var protocolo = _san(String(rows[i][RF.PROTOCOLO - 1] || '')).trim();
+    var protocolo = _referenciaSolicitacao(rows[i], i);
     var status       = _san(rows[i][18] || 'Pendente');
     var motivo       = _san(rows[i][19] || '');
     var tipo         = _san(rows[i][12] || '—');
@@ -721,6 +723,7 @@ function _buscarHistorico(p) {
       horario:       horStr || '—',
       tamanho:       rows[i][4] || '?',
       origem:        origem,
+      nomeAgencia:   _san(rows[i][7] || ''),
       tipo:          tipo,
       status:        status,
       motivo:        motivo,
@@ -739,14 +742,15 @@ function _buscarHistorico(p) {
 // DETALHAR SOLICITAÇÃO (principal e auxiliar podem ver)
 // ─────────────────────────────────────────────────────────────
 function _detalharSolicitacao(p) {
-  var sessao = _validaToken(p.token);
-  if (!sessao) return _err('Sessão expirada.', 'UNAUTHORIZED');
+  var admin = _adminTem(p.token, 'verSolicitacoes') || _adminTem(p.token, 'decidir');
+  var sessao = admin ? null : _validaToken(p.token);
+  if (!admin && !sessao) return _err('Sessão expirada.', 'UNAUTHORIZED');
   if (!p.protocolo) return _err('Protocolo não informado.');
 
   // Buscar nome do monitor logado (para verificar se é auxiliar)
   var monRows = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
   var nomeMonitor = '';
-  for (var m = 1; m < monRows.length; m++) {
+  if (sessao) for (var m = 1; m < monRows.length; m++) {
     if (_normCPF(String(monRows[m][MC.CPF - 1])) === sessao.cpf) { nomeMonitor = _san(monRows[m][MC.NOME - 1]); break; }
   }
 
@@ -755,29 +759,21 @@ function _detalharSolicitacao(p) {
   var tz    = Session.getScriptTimeZone();
 
   for (var i = 1; i < rows.length; i++) {
-    var proto = _san(String(rows[i][RF.PROTOCOLO - 1] || ''));
+    var proto = _referenciaSolicitacao(rows[i], i);
     if (proto !== _san(p.protocolo)) continue;
 
     var cpfPrincipal = _normCPF(String(rows[i][RF.CPF - 1]));
     var auxiliares   = _san(rows[i][17] || '');
-    var isPrincipal  = cpfPrincipal === sessao.cpf;
-    var isAuxiliar = _ehAuxiliar(rows[i], sessao.cpf, nomeMonitor);
+    var isPrincipal  = !!sessao && cpfPrincipal === sessao.cpf;
+    var isAuxiliar = !!sessao && _ehAuxiliar(rows[i], sessao.cpf, nomeMonitor);
 
-    if (!isPrincipal && !isAuxiliar) return _err('Sem permissão para ver esta solicitação.', 'FORBIDDEN');
+    if (!admin && !isPrincipal && !isAuxiliar) return _err('Sem permissão para ver esta solicitação.', 'FORBIDDEN');
 
     var dataRaw = rows[i][9], dataStr = '';
     if (dataRaw instanceof Date) dataStr = Utilities.formatDate(dataRaw, tz, 'dd/MM/yyyy');
     else if (dataRaw) dataStr = String(dataRaw);
 
-    var horRaw = rows[i][10], horStr = '';
-    if (horRaw) {
-      var s = String(horRaw).trim();
-      var m = s.match(/(\d{2}):(\d{2})/);
-      if (m) horStr = m[1] + ':' + m[2];
-      else horStr = s;
-    } else {
-      horStr = '—';
-    }
+    var horStr = rows[i][10] ? _horaAdmin(rows[i][10]) : '—';
 
     var aceitesStr = _san(rows[i][21] || '');
     var aceites = {};
@@ -806,6 +802,7 @@ function _detalharSolicitacao(p) {
         motivo:       _san(rows[i][19] || ''),
         isPrincipal:  isPrincipal,
         isAuxiliar:   isAuxiliar,
+        isAdmin:      !!admin,
         aceites:      _aceitesParaExibicao(aceites, monRows)
       }
     };
@@ -866,7 +863,7 @@ function _cancelar(p) {
   var rows  = sheet.getDataRange().getValues();
   var tz    = Session.getScriptTimeZone();
   for (var i = 1; i < rows.length; i++) {
-    if (_san(String(rows[i][RF.PROTOCOLO - 1])) !== _san(p.protocolo)) continue;
+    if (_referenciaSolicitacao(rows[i], i) !== String(p.protocolo).trim()) continue;
     if (_normCPF(String(rows[i][RF.CPF - 1])) !== sessao.cpf) return _err('Sem permissão para cancelar esta solicitação.');
     var status = _san(String(rows[i][18] || '')).toLowerCase();
     if (['pendente', 'confirmado', 'aguardando auxiliares'].indexOf(status) === -1) {
@@ -936,7 +933,7 @@ function _responderConvite(p) {
   var rows = sheet.getDataRange().getValues();
   var rowIndex = -1;
   for (var i = 1; i < rows.length; i++) {
-    if (String(rows[i][RF.PROTOCOLO - 1] || '').trim() === String(p.protocolo).trim()) {
+    if (_referenciaSolicitacao(rows[i], i) === String(p.protocolo).trim()) {
       rowIndex = i;
       break;
     }
@@ -1061,6 +1058,13 @@ function _validaCPFAlg(cpf) {
 }
 function _cpfExisteNaBase(cpf) { var rows=_aba(CFG.ABA_MONITORES).getDataRange().getValues(); for(var i=1;i<rows.length;i++){if(_normCPF(String(rows[i][MC.CPF-1]))===cpf)return true;} return false; }
 function _hashSenha(cpf,senha){var input=CFG.PEPPER+'|'+cpf+'|'+senha;var bytes=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,input,Utilities.Charset.UTF_8);return bytes.map(function(b){return('0'+(b&0xFF).toString(16)).slice(-2);}).join('');}
+function _referenciaSolicitacao(row, indice) {
+  var protocolo=String(row[RF.PROTOCOLO-1]||'').trim();
+  if(protocolo)return protocolo;
+  var cpf=_normCPF(String(row[RF.CPF-1]||''));
+  var assinatura=_hashSenha(cpf,JSON.stringify(row.slice(0,18))+'|'+indice).slice(0,12);
+  return 'LEGADO-LINHA-'+(indice+1)+'-'+assinatura;
+}
 function _novoToken(){return (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '');}
 function _validaToken(token){
   if(!token||token.length!==64)return null;
@@ -1283,7 +1287,7 @@ function _adminSolicitacoes(p) {
   for (var i=rows.length-1;i>=1;i--) {
     var r=rows[i];
     if (!r[0] && !r[2] && !r[20]) continue;
-    lista.push({protocolo:String(r[20]||'').trim(),data:_dataIsoAdmin(r[9]),horario:_horaAdmin(r[10]),
+    lista.push({protocolo:_referenciaSolicitacao(r,i),data:_dataIsoAdmin(r[9]),horario:_horaAdmin(r[10]),
       monitor:_san(r[2]||''),cpf:_maskCPF(_normCPF(String(r[6]||''))),email:_san(r[1]||''),telefone:_san(r[3]||''),
       grupo:Number(r[4])||0,tipo:_san(r[12]||''),origem:_san(r[11]||''),auxiliares:_san(r[17]||''),
       status:_san(r[18]||''),motivo:_san(r[19]||'')});
@@ -1292,18 +1296,21 @@ function _adminSolicitacoes(p) {
 }
 function _adminDecidir(p) {
   if (!_adminTem(p.token,'decidir')) return _err('Sem permissão para decidir solicitações.', 'FORBIDDEN');
-  if (p.decisao !== 'Confirmado' && p.decisao !== 'Negado') return _err('Decisão inválida.', 'INVALID_DECISION');
+  if (['Confirmado','Negado','Cancelado'].indexOf(p.decisao)===-1) return _err('Decisão inválida.', 'INVALID_DECISION');
   var motivo=String(p.motivo||'').trim();
-  if (p.decisao==='Negado' && !motivo) return _err('Informe o motivo da negativa.', 'REASON_REQUIRED');
+  if (p.decisao!=='Confirmado' && !motivo) return _err('Informe o motivo da negativa ou do cancelamento.', 'REASON_REQUIRED');
   var lock=LockService.getScriptLock();
   if (!lock.tryLock(30000)) return _err('Sistema ocupado. Tente novamente.', 'BUSY');
   try {
     var sheet=_aba(CFG.ABA_RESPOSTAS), rows=sheet.getDataRange().getValues();
     for (var i=1;i<rows.length;i++) {
-      if (String(rows[i][20]||'').trim()!==String(p.protocolo||'').trim() || !p.protocolo) continue;
-      if (String(rows[i][18]||'').trim().toLowerCase()!=='pendente') return _err('Somente solicitações pendentes podem receber esta decisão.', 'INVALID_STATUS');
+      if (_referenciaSolicitacao(rows[i],i)!==String(p.protocolo||'').trim() || !p.protocolo) continue;
+      var status=String(rows[i][18]||'').trim().toLowerCase();
+      if (p.decisao==='Cancelado') {
+        if (['pendente','confirmado','aguardando auxiliares'].indexOf(status)===-1) return _err('Esta solicitação já foi encerrada e não pode ser cancelada.', 'INVALID_STATUS');
+      } else if (status!=='pendente') return _err('Somente solicitações pendentes podem receber esta decisão.', 'INVALID_STATUS');
       sheet.getRange(i+1,19).setValue(p.decisao);
-      sheet.getRange(i+1,20).setValue(p.decisao==='Negado'?_san(motivo):'');
+      sheet.getRange(i+1,20).setValue(p.decisao==='Confirmado'?'':_textoSeguroPlanilha(_san(motivo)));
       return {ok:true,status:p.decisao};
     }
     return _err('Protocolo não encontrado. Verifique a migração dos protocolos antigos.', 'NOT_FOUND');
@@ -1388,7 +1395,7 @@ function _adminCriarAdmin(p) {
   try{
     var sheet=_aba(CFG.ABA_ADMIN),rows=sheet.getDataRange().getValues();
     for(var i=1;i<rows.length;i++)if(_normCPF(String(rows[i][0]||''))===cpf||String(rows[i][1]||'').trim().toLowerCase()===email.toLowerCase())return _err('CPF ou e-mail já cadastrado.','DUPLICATE');
-    sheet.appendRow([cpf,email,_san(nome),'','Sim',JSON.stringify(perms)]);
+    sheet.appendRow([cpf,email,_textoSeguroPlanilha(_san(nome)),'','Sim',JSON.stringify(perms)]);
     return {ok:true,msg:'Conta criada. O novo administrador deve usar Meu Primeiro Acesso.'};
   }finally{lock.releaseLock();}
 }
@@ -1397,15 +1404,37 @@ function _adminAtualizarAdmin(p) {
   var cpf=_normCPF(p.cpf||'');
   if(cpf===gestor.cpf)return _err('Não é possível alterar as próprias permissões por este painel.','FORBIDDEN');
   var perms=Array.isArray(p.permissoes)?p.permissoes.filter(function(x){return PERMISSOES_ADMIN.indexOf(x)!==-1&&x!=='gerirAdmins';}):[];
-  var sheet=_aba(CFG.ABA_ADMIN),rows=sheet.getDataRange().getValues();
-  for(var i=1;i<rows.length;i++)if(_normCPF(String(rows[i][0]||''))===cpf){sheet.getRange(i+1,6).setValue(JSON.stringify(perms));return {ok:true};}
-  return _err('Administrador não encontrado.','NOT_FOUND');
+  var lock=LockService.getScriptLock();if(!lock.tryLock(30000))return _err('Sistema ocupado.','BUSY');
+  try {
+    var sheet=_aba(CFG.ABA_ADMIN),rows=sheet.getDataRange().getValues();
+    for(var i=1;i<rows.length;i++)if(_normCPF(String(rows[i][0]||''))===cpf){
+      if(_permissoesAdmin(rows[i][5]).indexOf('gerirAdmins')!==-1)return _err('A conta gestora não pode ser alterada por este painel.','FORBIDDEN');
+      var nome=p.nome===undefined?String(rows[i][2]||'').trim():String(p.nome||'').trim();
+      var email=p.email===undefined?String(rows[i][1]||'').trim():String(p.email||'').trim();
+      if(!nome||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return _err('Informe nome e e-mail válidos.','FIELDS_INVALID');
+      for(var j=1;j<rows.length;j++)if(j!==i&&String(rows[j][1]||'').trim().toLowerCase()===email.toLowerCase())return _err('E-mail já usado por outra conta.','DUPLICATE');
+      sheet.getRange(i+1,2).setValue(_textoSeguroPlanilha(email));
+      sheet.getRange(i+1,3).setValue(_textoSeguroPlanilha(_san(nome)));
+      sheet.getRange(i+1,6).setValue(JSON.stringify(perms));
+      return {ok:true};
+    }
+    return _err('Administrador não encontrado.','NOT_FOUND');
+  } finally {lock.releaseLock();}
 }
 function _adminDesativarAdmin(p) {
+  return _adminDefinirAtivo(p,false);
+}
+function _adminReativarAdmin(p) {
+  return _adminDefinirAtivo(p,true);
+}
+function _adminDefinirAtivo(p,ativo) {
   var gestor=_adminTem(p.token,'gerirAdmins');if(!gestor)return _err('Sem permissão para gerir administradores.','FORBIDDEN');
   var cpf=_normCPF(p.cpf||'');if(cpf===gestor.cpf)return _err('Não é possível desativar a própria conta gestora.','FORBIDDEN');
   var sheet=_aba(CFG.ABA_ADMIN),rows=sheet.getDataRange().getValues();
-  for(var i=1;i<rows.length;i++)if(_normCPF(String(rows[i][0]||''))===cpf){sheet.getRange(i+1,5).setValue('Não');return {ok:true};}
+  for(var i=1;i<rows.length;i++)if(_normCPF(String(rows[i][0]||''))===cpf){
+    if(_permissoesAdmin(rows[i][5]).indexOf('gerirAdmins')!==-1)return _err('A conta gestora não pode ser alterada por este painel.','FORBIDDEN');
+    sheet.getRange(i+1,5).setValue(ativo?'Sim':'Não');return {ok:true};
+  }
   return _err('Administrador não encontrado.','NOT_FOUND');
 }
 function _adminRelatorio(p) {
@@ -1461,9 +1490,14 @@ function _registrarAuditoria(acao,p,resultado,contexto) {
   else if(resultado && resultado.protocolo)alvo=String(resultado.protocolo);
   var detalhes='';
   if(contexto&&contexto.monitorAlvo)detalhes='Monitor: '+contexto.monitorAlvo+'; ';
-  if(p.decisao)detalhes+='Decisão: '+String(p.decisao).slice(0,30);
+  if(p.decisao){detalhes+='Decisão: '+String(p.decisao).slice(0,30);if(p.motivo)detalhes+='; Motivo: '+String(p.motivo).slice(0,160);}
   else if(p.resposta)detalhes+='Resposta: '+String(p.resposta).slice(0,30);
   else if(p.visita && p.visita.dataVisita)detalhes+='Visita: '+String(p.visita.dataVisita).slice(0,20);
+  if(['adminCriarAdmin','adminAtualizarAdmin'].indexOf(acao)!==-1){
+    if(p.nome)detalhes+='; Nome: '+String(p.nome).slice(0,80);
+    if(p.email)detalhes+='; E-mail: '+String(p.email).slice(0,100);
+    if(Array.isArray(p.permissoes))detalhes+='; Permissões: '+p.permissoes.filter(function(x){return PERMISSOES_ADMIN.indexOf(x)!==-1;}).join(',').slice(0,180);
+  }
   sheet.appendRow([new Date(),_textoSeguroPlanilha(ator),_textoSeguroPlanilha(papel),_textoSeguroPlanilha(String(acao||'').slice(0,80)),
     _textoSeguroPlanilha(alvo),_textoSeguroPlanilha(resultado&&resultado.ok?'OK':String(resultado&&resultado.code||'ERRO')),_textoSeguroPlanilha(detalhes)]);
 }

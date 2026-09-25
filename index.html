@@ -95,6 +95,10 @@ body::-webkit-scrollbar-thumb:hover{background:var(--n3);}
 .admin-toolbar input{flex:1;min-width:0;}
 .admin-list{display:flex;flex-direction:column;gap:10px;}
 .admin-item{border:1px solid var(--n4);border-left:3px solid var(--c2);border-radius:var(--r-sm);padding:15px 16px;background:var(--white);}
+.admin-item.abrivel{cursor:pointer;}
+.admin-item.abrivel:hover,.admin-item.abrivel:focus-visible{border-color:var(--c2);outline:2px solid transparent;background:var(--n5);}
+.admin-item.pendente{border-left-color:var(--warn);background:#fffdf7;}
+.admin-pending-summary{padding:10px 13px;background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--c0);font-size:.84rem;font-weight:700;}
 .admin-item-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
 .admin-item h3{font-size:.94rem;line-height:1.35;}
 .admin-item p{font-size:.82rem;color:var(--n1);margin-top:5px;overflow-wrap:anywhere;}
@@ -102,6 +106,8 @@ body::-webkit-scrollbar-thumb:hover{background:var(--n3);}
 .admin-actions button{width:auto;min-height:40px;}
 .admin-form{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px;}
 .admin-form input{flex:1;min-width:160px;}
+#admin-contas .admin-form label{flex:1;min-width:180px;font-size:.76rem;font-weight:700;color:var(--n1);}
+#admin-contas .admin-form label input{display:block;width:100%;margin-top:5px;}
 .admin-form button{width:auto;}
 .admin-perms{display:flex;gap:10px 16px;flex-wrap:wrap;}
 .admin-perms label{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;cursor:pointer;}
@@ -864,6 +870,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
     <div class="admin-form"><input id="novo-admin-nome" type="text" placeholder="Nome" aria-label="Nome do novo administrador"/><input id="novo-admin-cpf" type="text" placeholder="CPF" aria-label="CPF do novo administrador"/><input id="novo-admin-email" type="email" placeholder="E-mail" aria-label="E-mail do novo administrador"/></div>
     <div id="novo-admin-permissoes" class="admin-perms"></div>
     <button class="btn btn-p btn-sm" type="button" onclick="criarAdmin()" style="width:auto;margin:12px 0 18px;">Criar conta</button>
+    <p class="field-hint" style="margin-bottom:12px;">Remover acesso desativa a conta imediatamente e preserva seu histórico de auditoria. Você pode reativá-la depois.</p>
     <div id="admin-contas" class="admin-list"></div>
   </section>
 </main>
@@ -1482,6 +1489,7 @@ function limpaAlerta(id){var el=document.getElementById(id);el.className='alert'
 function carregando(id,on){var b=document.getElementById(id);if(!b)return;b.disabled=on;on?b.classList.add('loading'):b.classList.remove('loading');}
 function campoErr(id,msg){var el=document.getElementById(id);if(!el)return;el.textContent=msg;el.className=msg?'field-err show':'field-err';}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function rotuloProtocolo(valor){var m=/^LEGADO-LINHA-(\d+)-[a-f0-9]{12}$/.exec(String(valor||''));return m?'Registro antigo · linha '+m[1]:(valor||'Sem protocolo');}
 
 // CONTROLES DE INCREMENTO/DECREMENTO TÁTEIS
 function decrementWidget(id) {
@@ -1741,25 +1749,37 @@ function carregarAdminSolicitacoes(){
 }
 function renderAdminSolicitacoes(){
   var q=normalizarBusca(document.getElementById('admin-busca').value),f=document.getElementById('admin-filtro').value;
+  var totalPendentes=S.adminSolicitacoes.filter(function(a){return a.status==='Pendente';}).length;
   var itens=S.adminSolicitacoes.map(function(v,i){return {v:v,i:i};}).filter(function(x){
-    return (!f||x.v.status===f)&&(!q||normalizarBusca([x.v.protocolo,x.v.monitor,x.v.data,x.v.origem].join(' ')).indexOf(q)!==-1);
+    return (!f||x.v.status===f)&&(!q||normalizarBusca([x.v.protocolo,x.v.monitor,x.v.data,dataBr(x.v.data),x.v.origem].join(' ')).indexOf(q)!==-1);
+  });
+  itens.sort(function(a,b){
+    var ap=a.v.status==='Pendente',bp=b.v.status==='Pendente';
+    if(ap!==bp)return ap?-1:1;
+    if(ap&&bp)return String(b.v.data||'').localeCompare(String(a.v.data||''));
+    return a.i-b.i;
   });
   var el=document.getElementById('admin-solicitacoes');
-  if(!itens.length){el.innerHTML='<p class="aux-empty">Nenhuma solicitação encontrada.</p>';return;}
-  el.innerHTML=itens.map(function(x){var a=x.v,i=x.i;
-    var botoes=a.status==='Pendente'&&a.protocolo&&podeAdmin('decidir')?'<div class="admin-actions"><button class="btn btn-p btn-sm" type="button" onclick="decidirAdmin('+i+',\'Confirmado\')">Aprovar</button><button class="btn btn-o btn-sm" type="button" onclick="decidirAdmin('+i+',\'Negado\')">Negar</button></div>':'';
-    return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(a.data||'Sem data')+' · '+esc(a.horario||'')+' · '+esc(a.monitor||'Monitor não informado')+'</h3><span class="badge">'+esc(a.status||'Sem status')+'</span></div>'+
-      '<p><strong>'+esc(a.protocolo||'Sem protocolo')+'</strong> · '+esc(String(a.grupo))+' pessoas · '+esc(a.tipo||'')+' · '+esc(a.origem||'')+'</p>'+
+  var resumo='<div class="admin-pending-summary">'+totalPendentes+' solicitação'+(totalPendentes===1?'':'ões')+' pendente'+(totalPendentes===1?'':'s')+' de decisão</div>';
+  if(!itens.length){el.innerHTML=resumo+'<p class="aux-empty">Nenhuma solicitação encontrada neste filtro.</p>';return;}
+  el.innerHTML=resumo+itens.map(function(x){var a=x.v,i=x.i;
+    var ativa=['Pendente','Confirmado','Aguardando Auxiliares'].indexOf(a.status)!==-1;
+    var botoes=a.protocolo?'<div class="admin-actions"><button class="btn btn-o btn-sm" type="button" onclick="abrirDetalheAdmin('+i+')">Ver detalhes</button>'+(podeAdmin('decidir')?
+      (a.status==='Pendente'?'<button class="btn btn-p btn-sm" type="button" onclick="decidirAdmin('+i+',\'Confirmado\')">Aprovar</button><button class="btn btn-o btn-sm" type="button" onclick="decidirAdmin('+i+',\'Negado\')">Negar</button>':'')+
+      (ativa?'<button class="btn btn-danger btn-sm" type="button" onclick="decidirAdmin('+i+',\'Cancelado\')">Cancelar</button>':''):'')+'</div>':'';
+    return '<article class="admin-item'+(a.protocolo?' abrivel':'')+(a.status==='Pendente'?' pendente':'')+'"'+(a.protocolo?' tabindex="0" aria-label="Ver detalhes da solicitação '+esc(rotuloProtocolo(a.protocolo))+'" onclick="if(!event.target.closest(\'button\'))abrirDetalheAdmin('+i+')" onkeydown="if(event.target===this&&(event.key===\'Enter\'||event.key===\' \')){event.preventDefault();abrirDetalheAdmin('+i+')}"':'')+'><div class="admin-item-head"><h3>'+esc(dataBr(a.data))+' · '+esc(a.horario||'')+' · '+esc(a.monitor||'Monitor não informado')+'</h3><span class="badge'+(a.status==='Pendente'?' b-pendente':'')+'">'+esc(a.status||'Sem status')+'</span></div>'+
+      '<p><strong>'+esc(rotuloProtocolo(a.protocolo))+'</strong> · '+esc(String(a.grupo))+' pessoas · '+esc(a.tipo||'')+' · '+esc(a.origem||'')+'</p>'+
       '<p>Contato: '+esc(a.telefone||'—')+' · '+esc(a.email||'—')+'</p>'+
       (a.auxiliares?'<p>Auxiliares: '+esc(a.auxiliares)+'</p>':'')+(a.motivo?'<p>Motivo: '+esc(a.motivo)+'</p>':'')+botoes+'</article>';
   }).join('');
 }
+function abrirDetalheAdmin(indice){var a=S.adminSolicitacoes[indice];if(a&&a.protocolo)abrirDetalhe(a.protocolo);}
 function decidirAdmin(indice,decisao){
   var a=S.adminSolicitacoes[indice];if(!a||!a.protocolo)return;
   var motivo='';
-  if(decisao==='Negado'){motivo=prompt('Informe o motivo da negativa para '+a.protocolo+':')||'';if(!motivo.trim())return;}
-  else if(!confirm('Aprovar a solicitação '+a.protocolo+'?'))return;
-  gs('adminDecidir',{token:S.adminToken,protocolo:a.protocolo,decisao:decisao,motivo:motivo}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Solicitação '+esc(a.protocolo)+' atualizada.','ok');carregarAdminSolicitacoes();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+  if(decisao==='Negado'||decisao==='Cancelado'){motivo=prompt('Informe o motivo '+(decisao==='Negado'?'da negativa':'do cancelamento')+' para '+rotuloProtocolo(a.protocolo)+':')||'';if(!motivo.trim())return;}
+  else if(!confirm('Aprovar a solicitação '+rotuloProtocolo(a.protocolo)+'?'))return;
+  gs('adminDecidir',{token:S.adminToken,protocolo:a.protocolo,decisao:decisao,motivo:motivo}).then(function(r){if(!r.ok)return adminErro(r);fecharDetalhe();alerta('admin-alert',esc(rotuloProtocolo(a.protocolo))+' atualizado para '+esc(r.status)+'.','ok');carregarAdminSolicitacoes();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
 }
 function carregarAdminDatas(){
   gs('adminDatas',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);var e=document.getElementById('admin-datas');e.innerHTML=(r.lista||[]).length?(r.lista||[]).map(function(d,i){return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(d.data)+'</h3><button class="btn btn-o btn-sm" style="width:auto" type="button" onclick="desbloquearDataAdmin(\''+esc(d.data)+'\')">Desbloquear</button></div><p>'+esc(d.motivo||'Sem motivo')+'</p></article>';}).join(''):'<p class="aux-empty">Nenhuma data bloqueada.</p>';}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
@@ -1805,7 +1825,7 @@ function renderAdminContas(){
   document.getElementById('admin-contas').innerHTML=S.adminContas.map(function(a,i){
     var gestor=a.permissoes.indexOf('gerirAdmins')!==-1;
     return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(a.nome)+'</h3><span class="badge">'+(a.ativo?'Ativo':'Inativo')+(gestor?' · Gestor de acessos':'')+'</span></div><p>'+esc(a.cpf)+' · '+esc(a.email)+'</p>'+
-      (gestor?'':'<div class="admin-perms" style="margin-top:12px;">'+permissoesAdminHtml('admin-perm-'+i,a.permissoes)+'</div><div class="admin-actions"><button class="btn btn-p btn-sm" type="button" onclick="atualizarAdmin('+i+')">Salvar permissões</button>'+(a.ativo?'<button class="btn btn-o btn-sm" type="button" onclick="desativarAdmin('+i+')">Desativar</button>':'')+'</div>')+'</article>';
+      (gestor?'':'<div class="admin-form" style="margin-top:12px;"><label>Nome<input id="admin-nome-'+i+'" type="text" value="'+esc(a.nome)+'" autocomplete="off"/></label><label>E-mail<input id="admin-email-'+i+'" type="email" value="'+esc(a.email)+'" autocomplete="off"/></label></div><div class="admin-perms">'+permissoesAdminHtml('admin-perm-'+i,a.permissoes)+'</div><div class="admin-actions"><button class="btn btn-p btn-sm" type="button" onclick="atualizarAdmin('+i+')">Salvar alterações</button>'+(a.ativo?'<button class="btn btn-o btn-sm" type="button" onclick="desativarAdmin('+i+')">Remover acesso</button>':'<button class="btn btn-o btn-sm" type="button" onclick="reativarAdmin('+i+')">Reativar acesso</button>')+'</div>')+'</article>';
   }).join('');
 }
 function criarAdmin(){
@@ -1814,11 +1834,17 @@ function criarAdmin(){
 }
 function atualizarAdmin(i){
   var a=S.adminContas[i];if(!a)return;
-  gs('adminAtualizarAdmin',{token:S.adminToken,cpf:a.cpf,permissoes:lerPermissoesAdmin('admin-perm-'+i)}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Permissões salvas.','ok');carregarAdminContas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+  var nome=document.getElementById('admin-nome-'+i).value.trim(),email=document.getElementById('admin-email-'+i).value.trim();
+  if(!nome||!email)return adminErro({erro:'Informe nome e e-mail.'});
+  gs('adminAtualizarAdmin',{token:S.adminToken,cpf:a.cpf,nome:nome,email:email,permissoes:lerPermissoesAdmin('admin-perm-'+i)}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Alterações salvas.','ok');carregarAdminContas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
 }
 function desativarAdmin(i){
-  var a=S.adminContas[i];if(!a||!confirm('Desativar a conta de '+a.nome+'?'))return;
-  gs('adminDesativarAdmin',{token:S.adminToken,cpf:a.cpf}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Conta desativada.','ok');carregarAdminContas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+  var a=S.adminContas[i];if(!a||!confirm('Remover o acesso de '+a.nome+'? A conta ficará inativa, inclusive em sessões abertas.'))return;
+  gs('adminDesativarAdmin',{token:S.adminToken,cpf:a.cpf}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Acesso removido.','ok');carregarAdminContas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function reativarAdmin(i){
+  var a=S.adminContas[i];if(!a||!confirm('Reativar o acesso de '+a.nome+' com as permissões exibidas?'))return;
+  gs('adminReativarAdmin',{token:S.adminToken,cpf:a.cpf}).then(function(r){if(!r.ok)return adminErro(r);alerta('admin-alert','Acesso reativado.','ok');carregarAdminContas();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
 }
 function dataBr(iso){if(!iso)return '—';var p=iso.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:iso;}
 function graficoRelatorio(titulo,dados){
@@ -1961,8 +1987,10 @@ function renderCard(a,mostrarCancelar){
   var badgePapel=a.isAuxiliar?'<span class="badge b-auxiliar">🤝 Auxiliar</span>':'<span class="badge b-principal">📋 Principal</span>';
   return '<div class="'+bc+'" onclick="abrirDetalhe(\''+esc(a.protocolo||'')+'\')">' +
     '<div style="flex:1">' +
-    '<div class="ag-proto">'+esc(a.protocolo||'—')+'</div>' +
-    '<div class="ag-meta">'+esc(a.data||'—')+' · '+esc(String(a.tamanho||'?'))+' pessoa(s) · '+esc(a.tipo||'—')+'</div>' +
+    '<div class="ag-proto">'+esc(rotuloProtocolo(a.protocolo))+'</div>' +
+    '<div class="ag-meta">'+esc(a.data||'—')+' · '+esc(a.horario||'—')+' · '+esc(String(a.tamanho||'?'))+' pessoa(s)</div>' +
+    '<div class="ag-meta">'+esc(a.tipo||'—')+' · Origem: '+esc(a.origem||'—')+'</div>' +
+    (a.nomeAgencia?'<div class="ag-meta">Agência: '+esc(a.nomeAgencia)+'</div>':'')+
     auxInfo + motivoHtml + inviteHtml + cancelBtn +
     '</div>' +
     '<div class="ag-badges"><span class="badge b-'+sl+'">'+esc(a.status||'Pendente')+'</span>'+badgePapel+'</div>' +
@@ -1970,10 +1998,10 @@ function renderCard(a,mostrarCancelar){
 }
 
 function cancelarSolicitacao(protocolo){
-  if(!confirm('Tem certeza que deseja cancelar a solicitação '+protocolo+'?'))return;
+  if(!confirm('Tem certeza que deseja cancelar '+rotuloProtocolo(protocolo)+'?'))return;
   gs('cancelar',{token:S.token,protocolo:protocolo}).then(function(r){
     if(!r.ok)return alerta('d-alert',r.erro,'err');
-    alerta('d-alert','Solicitação '+protocolo+' cancelada com sucesso.','ok');
+    alerta('d-alert',esc(rotuloProtocolo(protocolo))+' cancelado com sucesso.','ok');
     fecharDetalhe();
     carregarHistorico();
   }).catch(function(){alerta('d-alert','Falha de comunicação.','err');});
@@ -2174,7 +2202,7 @@ function abrirDetalhe(protocolo){
   try{window.parent.postMessage({type:'scrollToTop'},'*');}catch(e){}
   try{setTimeout(forcarRedimensionamento,100);}catch(e){}
   document.getElementById('modal-detalhe').classList.add('open');
-  gs('detalharSolicitacao',{token:S.token,protocolo:protocolo}).then(function(r){
+  gs('detalharSolicitacao',{token:S.papel==='admin'?S.adminToken:S.token,protocolo:protocolo}).then(function(r){
     if(!r.ok){body.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);">'+esc(r.erro)+'</div>';return;}
     renderDetalhe(r.solicitacao);
   }).catch(function(){body.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);">Falha de comunicação.</div>';});
@@ -2182,7 +2210,7 @@ function abrirDetalhe(protocolo){
 function fecharDetalhe(e){if(e&&e.target!==document.getElementById('modal-detalhe'))return;document.getElementById('modal-detalhe').classList.remove('open');}
 function renderDetalhe(sol){
   var sl=(sol.status||'pendente').toLowerCase().replace(/\s/g,'');
-  var papelBadge=sol.isAuxiliar?'<span class="badge b-auxiliar">🤝 Você foi auxiliar</span>':'<span class="badge b-principal">📋 Você foi o principal</span>';
+  var papelBadge=sol.isAdmin?'':sol.isAuxiliar?'<span class="badge b-auxiliar">🤝 Você foi auxiliar</span>':'<span class="badge b-principal">📋 Você foi o principal</span>';
   var antecel=sol.antecedencia&&sol.antecedencia!=='—'?sol.antecedencia+' dia(s)':'—';
   var diasSel=sol.diasSS&&sol.diasSS!=='—'?sol.diasSS+' dia(s)':'—';
   var motivoHtml=((sl==='negado'||sl==='cancelado')&&sol.motivo)?('<div class="detalhe-motivo">'+esc(sol.motivo)+'</div>'):'';
@@ -2220,7 +2248,7 @@ function renderDetalhe(sol){
 
   // Botões de Aceite/Recusa pendente para auxiliar logado
   var inviteButtonsHtml = '';
-  if (S.papel!=='delegado' && sol.isAuxiliar && sl === 'aguardandoauxiliares') {
+  if (S.papel==='monitor' && sol.isAuxiliar && sl === 'aguardandoauxiliares') {
     var meuNome = S.monitor.nome;
     if (meuNome && sol.aceites && sol.aceites[meuNome] === 'Pendente') {
       inviteButtonsHtml = '<div style="margin-top:12px;background:var(--warn-bg);border:1.5px solid var(--warn-bd);border-radius:var(--r);padding:12px;text-align:center;">' +
@@ -2235,7 +2263,10 @@ function renderDetalhe(sol){
 
   // Botão de cancelamento opcional dentro do modal de detalhes (somente para o principal)
   var cancelBtnHtml = '';
-  if (S.papel!=='delegado' && (sl === 'pendente' || sl === 'confirmado' || sl === 'aguardandoauxiliares') && sol.isPrincipal && podeCancelar(sol.data, sol.horario)) {
+  if (S.papel==='admin' && (sl === 'pendente' || sl === 'confirmado' || sl === 'aguardandoauxiliares') && podeAdmin('decidir')) {
+    var indiceAdmin=S.adminSolicitacoes.findIndex(function(a){return a.protocolo===sol.protocolo;});
+    if(indiceAdmin!==-1)cancelBtnHtml='<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" type="button" onclick="decidirAdmin('+indiceAdmin+',\'Cancelado\')" style="width:auto;">Cancelar solicitação</button></div>';
+  } else if (S.papel==='monitor' && (sl === 'pendente' || sl === 'confirmado' || sl === 'aguardandoauxiliares') && sol.isPrincipal && podeCancelar(sol.data, sol.horario)) {
     cancelBtnHtml = '<div style="margin-top:12px;">' +
       '<button class="btn btn-danger btn-sm" onclick="cancelarSolicitacao(\''+esc(sol.protocolo)+'\')" style="width:auto;font-size:.78rem;padding:6px 16px;margin:0 !important;">Cancelar Agendamento</button>' +
       '</div>';
@@ -2243,7 +2274,7 @@ function renderDetalhe(sol){
 
   document.getElementById('detalhe-body').innerHTML=
   '<div class="detalhe-proto">'+
-    '<span class="proto">'+esc(sol.protocolo)+'</span>'+
+    '<span class="proto">'+esc(rotuloProtocolo(sol.protocolo))+'</span>'+
     '<div style="display:flex;gap:5px;flex-wrap:wrap;">'+
       '<span class="badge b-'+sl+'">'+esc(sol.status||'Pendente')+'</span>'+
       papelBadge+

@@ -39,6 +39,7 @@ Marque cada item somente depois de observar o resultado no portal de teste e na 
 | Capacidade simultânea | Com dois monitores de teste, tente enviar grupos de 30 e 25 pessoas no mesmo período. Apenas um pedido deve ser aceito quando a soma ultrapassaria 50. |
 | Cancelamento | O principal consegue cancelar dentro do prazo; auxiliar não consegue. Pedido confirmado ou pendente cancelado libera vagas na consulta seguinte. |
 | Busca e detalhes | Histórico, filtros, detalhes e nomes de auxiliares permanecem legíveis. |
+| Pedido antigo sem protocolo | Aparece como `Registro antigo · linha N`, com data, horário, tipo, origem e agência quando houver. Abre os detalhes sem gravar automaticamente a coluna U. Se a linha for movida na planilha, atualize a página antes de tentar abrir novamente. |
 | Sair da conta | Remove a sessão e volta ao login. Atualizar a página não deve reabrir o painel. |
 | Trocar senha logado | Sem código confirmado, a senha não muda. Envie e confirme o código pelo e-mail já cadastrado; depois salve a nova senha e entre novamente. |
 | Busca de auxiliares | Digite duas letras, selecione um nome, apague a busca e confirme que o selecionado continua visível. |
@@ -54,12 +55,16 @@ Use somente contas e pedidos de teste. Crie um segundo administrador com permiss
 | Permissões | Uma conta sem determinada permissão não vê a aba/ação e recebe erro se tentar chamar a operação diretamente. Somente o gestor cria, altera permissões ou desativa administradores. |
 | Primeiro acesso administrativo | A conta criada pelo gestor está sem hash; confirma código enviado ao seu e-mail, cria a senha e consegue entrar. |
 | Solicitações | Busca e filtro por status mostram os pedidos corretos. Aprovar ou negar funciona apenas em `Pendente`; negar exige motivo. `Aguardando Auxiliares` não pode ser aprovado. |
+| Detalhes administrativos | Clique no cartão ou em **Ver detalhes**. Confira dados do grupo, agência, contato, auxiliares e status. Datas aparecem em `dd/mm/aaaa`. |
+| Pendências | Sem aplicar filtro, os pedidos `Pendente` aparecem primeiro, com contagem e destaque. Após decisão ou cancelamento, a contagem diminui ao atualizar a lista. |
+| Cancelamento administrativo | Um pedido `Confirmado`, `Pendente` ou `Aguardando Auxiliares` pode ser cancelado com motivo obrigatório. Confira o novo status no painel do administrador, na conta do monitor e na planilha; uma segunda tentativa é rejeitada. |
 | Bloqueio de data | Bloqueie uma data com motivo, confira no calendário do monitor e depois desbloqueie. Uma data impossível, como 30/02, é rejeitada. Pedidos já existentes precisam de tratamento manual. |
 | Monitores | A busca encontra nome/CPF/cidade e mostra contato. O administrador sem permissão de agendar em nome não vê essa ação. |
 | Agendar em nome | Entre no espaço de um monitor de teste, envie um pedido e volte ao painel administrativo. O pedido deve aparecer no histórico quando o próprio monitor entrar, com o CPF dele na planilha e autoria administrativa no log. |
 | Auxiliares em agendamento delegado | O pedido fica `Aguardando Auxiliares`. Só passa a `Pendente` quando todos aceitarem pela própria conta. |
 | Redefinir acesso | O administrador apenas remove o hash; a sessão anterior do monitor deixa de funcionar. O monitor usa **Meu Primeiro Acesso** e código no seu e-mail para criar outra senha. |
 | Auditoria | Consulte o log após login, leitura, tentativa negada, agendamento, decisão, bloqueio e redefinição. Confira horário, ator, alvo e resultado. Confirme que não há senhas, códigos ou tokens. |
+| Gestão de administradores | O gestor edita nome, e-mail e permissões; ao remover acesso, a conta deixa de entrar, mas continua listada para auditoria. Reative a conta e confira que apenas as permissões salvas aparecem. |
 | Relatório | Escolha um período com pedidos confirmados e outros status. Compare indicadores, gráficos e tabelas com a planilha: perfil soma visitantes confirmados, monitores contam visitas como principal. |
 | PDF/impressão | Clique em **Imprimir ou salvar em PDF**, escolha **Salvar como PDF** no diálogo e abra o arquivo. Confira cabeçalho, período, tabelas, gráficos, quebras de página e ausência de menus/botões; imprima uma página de teste se necessário. |
 
