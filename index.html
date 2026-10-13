@@ -682,6 +682,153 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
 .pwd-toggle-btn:hover {
   color: var(--c1);
 }
+
+/* Help and Tutorial Modals & Badges */
+.help-section {
+  margin-bottom: 14px;
+  background: var(--n5);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  border-left: 3.5px solid var(--c2);
+}
+.help-section h4 {
+  font-size: .85rem;
+  font-weight: 800;
+  color: var(--c1);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.help-section p {
+  font-size: .81rem;
+  color: var(--n1);
+  line-height: 1.5;
+  margin: 0;
+}
+.help-steps {
+  margin: 6px 0 0 18px;
+  padding: 0;
+  font-size: .8rem;
+  color: var(--n1);
+  line-height: 1.55;
+}
+.help-steps li {
+  margin-bottom: 4px;
+}
+.help-contact-box {
+  background: var(--c6);
+  border: 1.5px solid var(--c4);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+}
+.help-contact-box .contact-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.help-contact-box strong {
+  display: block;
+  font-size: .83rem;
+  color: var(--c1);
+  margin-bottom: 3px;
+}
+.help-contact-box p {
+  font-size: .78rem;
+  color: var(--n1);
+  margin: 0;
+  line-height: 1.45;
+}
+.help-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: .78rem;
+}
+.help-status-list > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-help-trigger {
+  font-size: .78rem;
+  color: var(--c2);
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-weight: 700;
+}
+.btn-help-trigger:hover {
+  color: var(--c1);
+}
+
+/* Tutorial / Onboarding Modal */
+.tutorial-progress-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.tutorial-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--n4);
+  transition: all var(--t);
+}
+.tutorial-dot.active {
+  background: var(--c2);
+  transform: scale(1.3);
+}
+.tutorial-card {
+  text-align: center;
+  padding: 4px 6px;
+}
+.tutorial-icon {
+  font-size: 2.6rem;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.tutorial-card h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--c1);
+  margin-bottom: 8px;
+}
+.tutorial-card p {
+  font-size: .83rem;
+  color: var(--n1);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.tutorial-highlight {
+  background: var(--n5);
+  border: 1px dashed var(--c4);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  font-size: .79rem;
+  text-align: left;
+  margin-bottom: 14px;
+  color: var(--c0);
+  line-height: 1.45;
+}
+.tutorial-nav-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.tutorial-nav-btns button {
+  flex: 1;
+  margin: 0 !important;
+}
 </style>
 <style id="visual-stitch-adaptado">
 /* Camada visual inspirada na proposta do Stitch. Mantém o HTML e o JavaScript originais. */
@@ -841,10 +988,12 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
         <hr class="div"/>
         <button class="btn btn-ghost" onclick="abrirPA()">Meu Primeiro Acesso</button>
         <button class="btn btn-ghost" onclick="abrirRecuperarSenha()" style="margin-top:6px;font-size:.78rem;">Esqueci minha senha</button>
+        <button type="button" class="btn btn-ghost" onclick="abrirAjudaLogin()" style="margin-top:8px;font-size:.78rem;color:var(--c2);font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;"><span>❓</span> Preciso de ajuda com o acesso</button>
       </div>
       <!-- PRIMEIRO ACESSO: EMAIL OU CPF -->
       <div id="v-pa" style="display:none;">
-        <p style="font-size:.8rem;color:var(--n2);margin-bottom:13px;line-height:1.5">Informe o e-mail cadastrado previamente na Fundação Florestal (ou CPF) para confirmar seu cadastro na base de monitores credenciados.</p>
+        <p style="font-size:.8rem;color:var(--n2);margin-bottom:8px;line-height:1.5">Informe o e-mail cadastrado previamente na Fundação Florestal (ou CPF) para confirmar seu cadastro na base de monitores credenciados.</p>
+        <p style="margin-bottom:12px;font-size:.77rem;"><button type="button" class="btn-help-trigger" onclick="abrirAjudaLogin()">❓ Dúvidas sobre o primeiro acesso? Clique aqui</button></p>
         <div class="fg"><label for="i-cpf-pa">E-mail cadastrado (Fundação Florestal)</label><input id="i-cpf-pa" type="text" placeholder="seu@email.com (ou CPF)" maxlength="80" autocomplete="off" onkeydown="if(event.key==='Enter')verificarCPF()"/><span class="field-err" id="e-cpf-pa"></span></div>
         <button class="btn btn-p" id="btn-verCPF" onclick="verificarCPF()"><span class="lbl">Continuar</span><span class="spin"></span></button>
         <button class="btn btn-o" style="margin-top:10px;" onclick="fecharPA()">← Voltar para o Login</button>
@@ -909,7 +1058,8 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
       </div>
       <!-- RECUPERAÇÃO: IDENTIFICAÇÃO -->
       <div id="v-recuperar" style="display:none;">
-        <p style="font-size:.8rem;color:var(--n2);margin-bottom:13px;line-height:1.5">Informe seu e-mail cadastrado (e CPF, se possuir) para redefinir sua senha.</p>
+        <p style="font-size:.8rem;color:var(--n2);margin-bottom:8px;line-height:1.5">Informe seu e-mail cadastrado (e CPF, se possuir) para redefinir sua senha.</p>
+        <p style="margin-bottom:12px;font-size:.77rem;"><button type="button" class="btn-help-trigger" onclick="abrirAjudaLogin()">❓ Dúvidas para redefinir sua senha? Clique aqui</button></p>
         <div class="fg"><label for="i-email-rec">E-mail cadastrado</label><input id="i-email-rec" type="email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')verificarRecuperacao()"/></div>
         <div class="fg"><label for="i-cpf-rec">CPF (opcional)</label><input id="i-cpf-rec" type="text" inputmode="numeric" placeholder="000.000.000-00 (opcional)" maxlength="14" oninput="maskCPF(this)" onkeydown="if(event.key==='Enter')verificarRecuperacao()"/></div>
         <button class="btn btn-p" id="btn-rec-verificar" onclick="verificarRecuperacao()"><span class="lbl">Enviar código</span><span class="spin"></span></button>
@@ -945,6 +1095,21 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
   <div class="dash-buttons-row">
     <button class="btn btn-o btn-sm btn-dash-action" id="btn-editar-perfil" onclick="abrirPerfilModal()" style="font-size:.78rem;padding:10px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:6px;background:var(--white);margin:0;">Editar meus dados</button>
     <button class="btn btn-ghost btn-dash-action" id="btn-toggle-busca" onclick="toggleBusca()" style="font-size:.8rem;padding:10px;border:1px solid var(--n4);border-radius:var(--r);background:var(--white);margin:0;">Buscar solicitações antigas</button>
+    <button class="btn btn-ghost btn-dash-action" id="btn-ajuda-dash" onclick="abrirAjudaMonitor()" style="font-size:.8rem;padding:10px;border:1.5px solid var(--c5);border-radius:var(--r);background:var(--white);margin:0;color:var(--c1);font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;"><span>❓</span> Preciso de ajuda</button>
+  </div>
+
+  <!-- BANNER TUTORIAL RÁPIDO -->
+  <div id="dash-tutorial-banner" class="alert alert-info" style="display:none;margin-bottom:14px;padding:12px 14px;background:var(--c7);border:1.5px solid var(--c5);border-radius:var(--r);">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div style="font-size:.82rem;color:var(--c1);display:flex;align-items:center;gap:8px;">
+        <span style="font-size:1.2rem;">💡</span>
+        <span><strong>Novo no sistema?</strong> Veja o passo a passo de como agendar e acompanhar suas visitas.</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-p btn-sm" style="padding:6px 12px;font-size:.75rem;min-height:32px;" onclick="iniciarTutorialInterativo(true)">Ver tutorial rápido</button>
+        <button class="btn btn-o btn-sm" style="padding:6px 10px;font-size:.75rem;min-height:32px;" onclick="dispensarBannerTutorial()">Dispensar</button>
+      </div>
+    </div>
   </div>
 
   <div id="busca-panel" class="busca-panel" style="display:none;margin-bottom:18px;">
@@ -1082,7 +1247,11 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
           <li>Cada monitor é responsável pelo seu grupo. As orientações básicas devem ser passadas <strong>antes do início do passeio</strong>.</li>
           <li><strong>Não é permitido</strong> estacionamento nas margens da Rodovia Rio-Santos.</li>
           <li>A trilha tem limite de até <strong>50 pessoas por período</strong> (manhã / tarde).</li>
+          <li style="color:var(--c1);font-weight:600;">Em caso de dúvidas sobre regras de agendamento ou falhas no sistema, contate diretamente a <strong>Secretaria de Turismo (SETUR)</strong>.</li>
         </ul>
+        <div style="margin-top:10px;text-align:right;">
+          <button type="button" class="btn-help-trigger" onclick="abrirAjudaMonitor()">❓ Abrir Guia Rápido do Monitor</button>
+        </div>
       </div>
     </div>
 
@@ -1219,6 +1388,162 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
     </div>
   </div>
 </main>
+
+<!-- MODAL AJUDA LOGIN -->
+<div class="overlay" id="modal-ajuda-login" onclick="fecharAjudaLogin(event)">
+  <div class="modal-detalhe" onclick="event.stopPropagation()" style="max-width:520px;">
+    <div class="modal-detalhe-hd">
+      <h3>❓ Ajuda com o Acesso</h3>
+      <button onclick="fecharAjudaLogin()" title="Fechar">✕</button>
+    </div>
+    <div class="modal-detalhe-body">
+      <div class="help-section">
+        <h4>🌲 Como Fazer o Primeiro Acesso?</h4>
+        <p>Seu acesso já está pré-cadastrado no sistema com base na lista oficial enviada à <strong>Fundação Florestal</strong>.</p>
+        <ol class="help-steps">
+          <li>Clique no botão <strong>"Meu Primeiro Acesso"</strong> na tela inicial.</li>
+          <li>Digite o <strong>e-mail informado à Fundação Florestal</strong> (o CPF é opcional).</li>
+          <li>Você receberá um <strong>código de segurança de 6 dígitos</strong> no seu e-mail (válido por 10 minutos).</li>
+          <li>Confirme o código, confira seus dados cadastrais e crie sua senha pessoal de acesso.</li>
+        </ol>
+      </div>
+      <div class="help-section">
+        <h4>🔑 Esqueceu sua Senha?</h4>
+        <p>Clique em <strong>"Esqueci minha senha"</strong>, informe seu e-mail cadastrado e você receberá um código de 6 dígitos para redefinir sua senha com segurança.</p>
+      </div>
+      <div class="help-section">
+        <h4>✉️ Não recebeu o código de confirmação?</h4>
+        <p>Verifique sua pasta de <strong>Spam / Lixo Eletrônico</strong>. Se não localizar, confira se digitou exatamente o e-mail previamente fornecido à Fundação Florestal.</p>
+      </div>
+      <div class="help-contact-box">
+        <div class="contact-icon">🏛️</div>
+        <div>
+          <strong>Dúvidas ou Falhas no Sistema?</strong>
+          <p>Em caso de divergência cadastral ou falhas no sistema, entre em contato diretamente com a <strong>Secretaria de Turismo de São Sebastião (SETUR)</strong>.</p>
+        </div>
+      </div>
+      <button class="btn btn-p" style="margin-top:16px;width:100%;" onclick="fecharAjudaLogin()">Entendi</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GUIA DO MONITOR (DASHBOARD) -->
+<div class="overlay" id="modal-ajuda-monitor" onclick="fecharAjudaMonitor(event)">
+  <div class="modal-detalhe" onclick="event.stopPropagation()" style="max-width:580px;">
+    <div class="modal-detalhe-hd">
+      <h3>📖 Guia Rápido do Monitor</h3>
+      <button onclick="fecharAjudaMonitor()" title="Fechar">✕</button>
+    </div>
+    <div class="modal-detalhe-body">
+      <div class="help-section">
+        <h4>1. Como Agendar uma Visita</h4>
+        <p>Clique em <strong>"+ Nova Solicitação"</strong> no painel. Escolha a data desejada no calendário e selecione o turno da visita (manhã ou tarde). As vagas são limitadas a 50 pessoas por período.</p>
+      </div>
+      <div class="help-section">
+        <h4>2. Regra de Grupos e Auxiliares</h4>
+        <ul class="help-steps">
+          <li><strong>Grupos de até 15 pessoas:</strong> Apenas 1 monitor (você pode ir sozinho). Caso vá acompanhado, marque "Sim" na pergunta de monitor auxiliar e selecione o colega parceiro.</li>
+          <li><strong>Grupos de 16 a 30 pessoas:</strong> É <strong>obrigatório</strong> selecionar ao menos 1 monitor auxiliar credenciado.</li>
+          <li><strong>Capacidade máxima:</strong> Limite de até 50 pessoas por agendamento.</li>
+        </ul>
+      </div>
+      <div class="help-section">
+        <h4>3. Convites de Monitor Auxiliar</h4>
+        <p>Quando outro monitor credenciado indicar você como auxiliar, um card destacado em amarelo aparecerá no topo do seu painel para você <strong>Aceitar</strong> ou <strong>Recusar</strong>. O pedido só vai para análise da SETUR após todos os auxiliares aceitarem.</p>
+      </div>
+      <div class="help-section">
+        <h4>4. Entendendo os Status da Visita</h4>
+        <div class="help-status-list">
+          <div><span class="badge b-aguardandoauxiliares">Aguardando Auxiliares</span> Aguardando aceite do(s) monitor(es) parceiro(s).</div>
+          <div><span class="badge b-pendente">Pendente</span> Todos aceitaram; em análise pela equipe da SETUR.</div>
+          <div><span class="badge b-confirmado">Confirmado</span> Visita autorizada! Compareça no dia e hora marcados.</div>
+          <div><span class="badge b-cancelado">Cancelado / Negado</span> Solicitação encerrada (motivo detalhado no card).</div>
+        </div>
+      </div>
+      <div class="help-section">
+        <h4>5. Mensagens / Caixa Postal</h4>
+        <p>Utilize a aba <strong>"Mensagens e sugestões"</strong> para tirar dúvidas sobre pedidos ou enviar feedbacks diretamente à equipe da SETUR.</p>
+      </div>
+      <div class="help-contact-box">
+        <div class="contact-icon">🏛️</div>
+        <div>
+          <strong>Dúvidas ou Falhas no Sistema?</strong>
+          <p>Em caso de dúvidas operacionais ou falhas no sistema, entre em contato diretamente com a <strong>Secretaria de Turismo de São Sebastião (SETUR)</strong>.</p>
+        </div>
+      </div>
+      <div class="tutorial-nav-btns">
+        <button class="btn btn-o" onclick="iniciarTutorialInterativo(true)">Ver Tutorial Passo a Passo</button>
+        <button class="btn btn-p" onclick="fecharAjudaMonitor()">Fechar Guia</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TUTORIAL INTERATIVO ONBOARDING -->
+<div class="overlay" id="modal-tutorial-onboarding" onclick="fecharTutorialOnboarding(event)">
+  <div class="modal-detalhe" onclick="event.stopPropagation()" style="max-width:480px;">
+    <div class="modal-detalhe-hd">
+      <h3 id="tut-header-title">Passo 1 de 3: Bem-vindo(a)!</h3>
+      <button onclick="concluirTutorial()" title="Fechar">✕</button>
+    </div>
+    <div class="modal-detalhe-body">
+      <div class="tutorial-progress-bar">
+        <div class="tutorial-dot active" id="tut-dot-1"></div>
+        <div class="tutorial-dot" id="tut-dot-2"></div>
+        <div class="tutorial-dot" id="tut-dot-3"></div>
+      </div>
+
+      <!-- PASSO 1 -->
+      <div class="tutorial-card" id="tut-passo-1">
+        <div class="tutorial-icon">🗓️</div>
+        <h3>Novo Agendamento</h3>
+        <p>No painel, clique em <strong>"+ Nova Solicitação"</strong>. Escolha a data desejada no calendário interativo e o horário de entrada.</p>
+        <div class="tutorial-highlight">
+          <strong>💡 Dica:</strong> As bolinhas verdes no calendário indicam dias totalmente livres. A trilha recebe no máximo 50 pessoas por período (manhã ou tarde).
+        </div>
+        <div class="tutorial-nav-btns">
+          <button class="btn btn-ghost" onclick="concluirTutorial()">Pular tutorial</button>
+          <button class="btn btn-p" onclick="mostrarPassoTutorial(2)">Próximo passo ➜</button>
+        </div>
+      </div>
+
+      <!-- PASSO 2 -->
+      <div class="tutorial-card" id="tut-passo-2" style="display:none;">
+        <div class="tutorial-icon">👥</div>
+        <h3>Tamanho do Grupo & Auxiliares</h3>
+        <p>Cada monitor credenciado pode conduzir até <strong>15 visitantes</strong>.</p>
+        <div class="tutorial-highlight">
+          <strong>Regras de proporção:</strong><br>
+          • <strong>Até 15 pessoas:</strong> Você pode guiar sozinho.<br>
+          • <strong>De 16 a 30 pessoas:</strong> É obrigatório adicionar ao menos 1 monitor auxiliar credenciado.<br>
+          • O monitor auxiliar receberá um convite no painel dele para confirmar presença.
+        </div>
+        <div class="tutorial-nav-btns">
+          <button class="btn btn-o" onclick="mostrarPassoTutorial(1)">⬅ Voltar</button>
+          <button class="btn btn-p" onclick="mostrarPassoTutorial(3)">Próximo passo ➜</button>
+        </div>
+      </div>
+
+      <!-- PASSO 3 -->
+      <div class="tutorial-card" id="tut-passo-3" style="display:none;">
+        <div class="tutorial-icon">✅</div>
+        <h3>Acompanhamento & Suporte</h3>
+        <p>Todas as suas visitas ficam salvas no histórico. Quando aprovadas pela coordenação, o status muda para <strong>Confirmado</strong>.</p>
+        <div class="help-contact-box" style="margin-bottom:16px;text-align:left;">
+          <div class="contact-icon">🏛️</div>
+          <div>
+            <strong>Dúvidas ou Falhas no Sistema?</strong>
+            <p>Contate a <strong>Secretaria de Turismo de São Sebastião (SETUR)</strong> para suporte com seu cadastro ou agendamentos.</p>
+          </div>
+        </div>
+        <div class="tutorial-nav-btns">
+          <button class="btn btn-o" onclick="mostrarPassoTutorial(2)">⬅ Voltar</button>
+          <button class="btn btn-p" onclick="concluirTutorial()">Concluir e Começar!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL SUCESSO -->
 <div class="overlay" id="modal"><div class="modal"><div class="modal-icon">✅</div><h3>Solicitação Registrada!</h3><p>Sua solicitação foi registrada com sucesso.<br>Guarde o número do protocolo abaixo.</p><div class="proto-box" id="modal-proto">—</div><p style="font-size:.76rem;margin-bottom:22px">Acompanhe o status no painel. Nossa equipe confirmará em breve.</p><button class="btn btn-p" onclick="fecharModal()"><span class="lbl">Voltar ao Painel</span></button></div></div>
@@ -1760,6 +2085,80 @@ function iniciarSessao(token,mon,delegado){
   setCookie('pm_token',token,6);setCookie('pm_monitor',JSON.stringify(mon),6);
   setCookie('pm_role',S.papel,6);
   tela('dash');carregarHistorico();buscarDatasBlq();iniciarTimerAtiv();carregarMonitoresAux();verificarNotificacoes();if(!delegado)carregarCaixa('monitor');
+  if(!delegado)verificarTutorialPrimeiraVez();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AJUDA CONTEXTUAL E TUTORIAL ONBOARDING
+// ═══════════════════════════════════════════════════════════════
+function abrirAjudaLogin(){
+  document.getElementById('modal-ajuda-login').classList.add('open');
+}
+function fecharAjudaLogin(e){
+  if(e && e.target && e.target.id!=='modal-ajuda-login')return;
+  document.getElementById('modal-ajuda-login').classList.remove('open');
+}
+
+function abrirAjudaMonitor(){
+  document.getElementById('modal-ajuda-monitor').classList.add('open');
+}
+function fecharAjudaMonitor(e){
+  if(e && e.target && e.target.id!=='modal-ajuda-monitor')return;
+  document.getElementById('modal-ajuda-monitor').classList.remove('open');
+}
+
+function mostrarPassoTutorial(passo){
+  [1, 2, 3].forEach(function(i){
+    var el = document.getElementById('tut-passo-' + i);
+    var dot = document.getElementById('tut-dot-' + i);
+    if(el) el.style.display = (i === passo) ? '' : 'none';
+    if(dot) dot.classList.toggle('active', i === passo);
+  });
+  var tit = document.getElementById('tut-header-title');
+  if(tit){
+    tit.textContent = 'Passo ' + passo + ' de 3: ' + (passo === 1 ? 'Como Agendar' : (passo === 2 ? 'Monitores Auxiliares' : 'Acompanhamento & Suporte'));
+  }
+}
+
+function iniciarTutorialInterativo(forcar){
+  fecharAjudaMonitor();
+  mostrarPassoTutorial(1);
+  document.getElementById('modal-tutorial-onboarding').classList.add('open');
+}
+
+function fecharTutorialOnboarding(e){
+  if(e && e.target && e.target.id!=='modal-tutorial-onboarding')return;
+  concluirTutorial();
+}
+
+function concluirTutorial(){
+  document.getElementById('modal-tutorial-onboarding').classList.remove('open');
+  try {
+    localStorage.setItem('pm_tutorial_visto', '1');
+  } catch(e){}
+  var b = document.getElementById('dash-tutorial-banner');
+  if(b) b.style.display = 'none';
+}
+
+function dispensarBannerTutorial(){
+  try {
+    localStorage.setItem('pm_tutorial_visto', '1');
+  } catch(e){}
+  var b = document.getElementById('dash-tutorial-banner');
+  if(b) b.style.display = 'none';
+}
+
+function verificarTutorialPrimeiraVez(){
+  try {
+    var visto = localStorage.getItem('pm_tutorial_visto');
+    if(!visto){
+      var b = document.getElementById('dash-tutorial-banner');
+      if(b) b.style.display = '';
+      setTimeout(function(){
+        iniciarTutorialInterativo(false);
+      }, 600);
+    }
+  } catch(e){}
 }
 function iniciarAdmin(token,admin){
   S.papel='admin';S.token=token;S.adminToken=token;S.admin=admin;S.monitor=null;

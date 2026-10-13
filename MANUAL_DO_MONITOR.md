@@ -144,3 +144,9 @@ Você pode acessar o portal no seu celular como se fosse um aplicativo instalado
 * **No Android (Google Chrome):** Acesse a página do agendamento, toque nos três pontinhos no canto superior direito do navegador e selecione **"Adicionar à tela inicial"** ou **"Instalar aplicativo"**.
 * **No iPhone (Safari):** Abra a página, toque no botão de compartilhar (ícone com quadrado e seta para cima) e escolha **"Adicionar à Tela de Início"**.
 * Um ícone com o nome **"Portal Monitor"** será criado na tela do seu aparelho para acesso rápido com 1 toque!
+
+---
+
+## 9. Suporte e Contato com a Secretaria de Turismo (SETUR)
+
+Em caso de dúvidas cadastrais, divergência no e-mail informado à Fundação Florestal, dificuldades de acesso ou identificação de falhas no sistema, entre em contato diretamente com a **Secretaria de Turismo de São Sebastião (SETUR)** pelos canais oficiais de atendimento institucional. A equipe prestará todo o auxílio necessário para regularizar seu acesso e garantir a continuidade de suas visitas guiadas.
