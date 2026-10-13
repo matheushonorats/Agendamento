@@ -198,6 +198,26 @@ test('login administrativo usa aba separada e exige permissão no servidor', () 
   assert.equal(a.ctx._adminSolicitacoes({token:a.token}).code,'FORBIDDEN');
 });
 
+test('login administrativo não sofre bloqueio por tentativas e aceita hash com email e cpf', () => {
+  const a=ambiente();
+  a.sheets.Administradores=[['CPF','E-mail','Nome','Senha Hash','Ativo','Permissões'],
+    ['52998224725','admin@example.test','Gestor',a.ctx._hashSenha('admin@example.test','NovaSenha123'),'Sim',JSON.stringify(['verSolicitacoes'])]];
+
+  for (let i = 0; i < 10; i++) {
+    const falha = a.ctx._login({ cpf: 'admin@example.test', senha: 'SenhaErrada' });
+    assert.equal(falha.ok, false);
+    assert.equal(falha.code, 'INVALID_CREDENTIALS');
+  }
+
+  const sucesso = a.ctx._login({ cpf: 'admin@example.test', senha: 'NovaSenha123' });
+  assert.equal(sucesso.ok, true);
+  assert.equal(sucesso.papel, 'admin');
+
+  const sucessoCpf = a.ctx._login({ cpf: '52998224725', senha: 'NovaSenha123' });
+  assert.equal(sucessoCpf.ok, true);
+  assert.equal(sucessoCpf.papel, 'admin');
+});
+
 test('administrador agenda em nome do monitor sem decidir pelo auxiliar', () => {
   const a=ambiente();const admin=incluirAdmin(a);
   const delegado=a.ctx._adminAcessarMonitor({token:admin.token,cpf:'12345678909'});

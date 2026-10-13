@@ -447,6 +447,8 @@ function _criarSenha(p) {
         if(String(admins[a][4]||'').trim().toLowerCase()!=='sim'||admins[a][3])return _err('Acesso indisponível.','HAS_PASSWORD');
         if(!_consumirTicket(p.ticket,email || cpf,'primeiro'))return _err('Confirmação expirada.','UNAUTHORIZED');
         adminSheet.getRange(a+1,4).setValue(_hashSenha(aEmail,senha));
+        _resetRL(aCpf);
+        if(aEmail) _resetRL(aEmail);
         return {ok:true,msg:'Senha administrativa criada. Faça login.'};
       }
     }
@@ -1206,6 +1208,8 @@ function _redefinirSenha(p) {
       if(String(admins[a][4]||'').trim().toLowerCase()!=='sim')return _err('Conta inativa.','INACTIVE');
       if(!_consumirTicket(p.ticket,email || cpf,'recuperar'))return _err('Confirmação expirada.','UNAUTHORIZED');
       adminSheet.getRange(a+1,4).setValue(_hashSenha(aEmail,senha));
+      _resetRL(aCpf);
+      if(aEmail) _resetRL(aEmail);
       return {ok:true,msg:'Senha redefinida com sucesso!'};
     }
   }}
@@ -1515,18 +1519,25 @@ function _tentarLoginAdmin(loginInput, senha) {
   var cpfInput = loginInput.indexOf('@') === -1 ? _normCPF(loginInput) : '';
   for (var i = 1; i < rows.length; i++) {
     var cpf = _normCPF(String(rows[i][0] || ''));
-    if (cpfInput !== cpf && email !== String(rows[i][1] || '').trim().toLowerCase()) continue;
-    if (String(rows[i][4] || '').trim().toLowerCase() !== 'sim') return _err('Conta administrativa inativa.', 'INACTIVE');
-    var rl = _checkRateLimit(cpf);
-    if (rl.bloqueado) return _err(rl.msg, 'LOCKED');
-    if (_hashSenha(cpf, senha) !== String(rows[i][3] || '').trim()) {
-      _incrementaRL(cpf);
-      return _err('Credenciais incorretas. Tentativas restantes: ' + _tentativasRestantes(cpf), 'INVALID_CREDENTIALS');
+    var aEmail = String(rows[i][1] || '').trim().toLowerCase();
+    if ((cpfInput && cpfInput === cpf) || (email && email === aEmail)) {
+      if (String(rows[i][4] || '').trim().toLowerCase() !== 'sim') return _err('Conta administrativa inativa.', 'INACTIVE');
+      // Administradores não sofrem bloqueio por tentativas (rate limit / lockout desativado para adm)
+      _resetRL(cpf);
+      if (aEmail) _resetRL(aEmail);
+
+      var hashSalvo = String(rows[i][3] || '').trim();
+      if (!hashSalvo) return _err('Senha não cadastrada. Use "Meu Primeiro Acesso".', 'NO_PASSWORD');
+      if (!_hashSenhaValida(hashSalvo, aEmail, cpf, senha)) {
+        return _err('Credenciais incorretas.', 'INVALID_CREDENTIALS');
+      }
+
+      _resetRL(cpf);
+      if (aEmail) _resetRL(aEmail);
+      var token = _novoToken();
+      CacheService.getScriptCache().put('ATK_' + token, JSON.stringify({cpf:cpf, email:aEmail}), CFG.TOKEN_HORAS * 3600);
+      return {ok:true,papel:'admin',token:token,admin:{nome:_san(rows[i][2] || 'Administrador'),email:_san(rows[i][1]),permissoes:_permissoesAdmin(rows[i][5])}};
     }
-    _resetRL(cpf);
-    var token = _novoToken();
-    CacheService.getScriptCache().put('ATK_' + token, JSON.stringify({cpf:cpf}), CFG.TOKEN_HORAS * 3600);
-    return {ok:true,papel:'admin',token:token,admin:{nome:_san(rows[i][2] || 'Administrador'),email:_san(rows[i][1]),permissoes:_permissoesAdmin(rows[i][5])}};
   }
   return null;
 }
@@ -1540,7 +1551,11 @@ function _validaTokenAdmin(token) {
   if (!sheet) return null;
   var rows = sheet.getDataRange().getValues();
   for (var i=1;i<rows.length;i++) {
-    if (_normCPF(String(rows[i][0] || '')) === sessao.cpf && String(rows[i][4] || '').trim().toLowerCase() === 'sim') {
+    var rowCpf = _normCPF(String(rows[i][0] || ''));
+    var rowEmail = String(rows[i][1] || '').trim().toLowerCase();
+    var matchCpf = sessao.cpf && rowCpf && rowCpf === sessao.cpf;
+    var matchEmail = sessao.email && rowEmail && rowEmail === sessao.email.toLowerCase();
+    if ((matchCpf || matchEmail || (!sessao.email && !sessao.cpf && rowCpf === sessao.cpf)) && String(rows[i][4] || '').trim().toLowerCase() === 'sim') {
       sessao.permissoes=_permissoesAdmin(rows[i][5]);return sessao;
     }
   }

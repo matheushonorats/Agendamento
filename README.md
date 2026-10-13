@@ -4,9 +4,11 @@ Este repositório contém o código-fonte do **Portal do Monitor**, um sistema d
 
 O projeto usa **Google Apps Script** no servidor (`Código.gs`), uma planilha de dados e HTML/CSS/JavaScript (`index.html`) incorporado à página de turismo.
 
+Para um guia operacional direto voltado aos monitores, consulte o [Manual do Monitor](MANUAL_DO_MONITOR.md).
+
 ## Painel administrativo
 
-O mesmo formulário de login encaminha cada pessoa ao painel de monitor ou de administração conforme sua conta. Os administradores ficam na aba separada `Administradores`; o gestor inicial é criado por `configurarAdministradorInicial`, conforme o [roteiro de teste e implantação](PROCEDIMENTO_DE_TESTE.md). Apenas esse gestor pode criar, desativar e definir as permissões das outras contas. Uma opção sem permissão fica oculta no painel e a operação também é bloqueada no servidor.
+O mesmo formulário de login encaminha cada pessoa ao painel de monitor ou de administração conforme sua conta. Os administradores ficam na aba separada `Administradores`; o gestor inicial é criado por `configurarAdministradorInicial`, conforme o [roteiro de teste e implantação](PROCEDIMENTO_DE_TESTE.md). As contas administrativas são isentas de bloqueio por limite de tentativas (*rate limit/lockout* desativado para administradores), permitindo login imediato sem bloqueio de cache e com suporte à validação de senha por e-mail ou CPF. Apenas o gestor pode criar, desativar e definir as permissões das outras contas. Uma opção sem permissão fica oculta no painel e a operação também é bloqueada no servidor.
 
 O painel permite consultar detalhes e decidir solicitações pendentes, cancelar pedidos ativos com motivo, bloquear datas, consultar monitores, redefinir o acesso de um monitor e agendar em nome dele. Pendências aparecem primeiro, com contagem e destaque. Registros antigos sem protocolo recebem uma referência de leitura para abrir detalhes sem alterar a planilha. Esse agendamento pertence à conta do monitor, que o vê em seu histórico; monitores auxiliares ainda precisam aceitar o convite. Redefinir o acesso apaga o hash da senha e exige novo primeiro acesso com código enviado ao e-mail cadastrado. A senha em texto não é guardada na planilha.
 
@@ -57,7 +59,8 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 * **Registros antigos:** consultas não modificam mais a planilha. Protocolos existentes, inclusive os antigos em formato hexadecimal, permanecem válidos. Células vazias são preenchidas somente pela rotina manual `migrarProtocolosEmBranco`, após backup e conferência da prévia.
 
 ### 7. Acesso, Autenticação e Resiliência de E-mail
-* **Foco em E-mail e Flexibilização de CPF/RG:** A identificação principal dos monitores é realizada preferencialmente pelo e-mail cadastrado. CPF e RG foram tornados opcionais para comportar listas de entidades credenciadoras que não possuem esses dados. Contas legadas com senhas hash vinculadas ao CPF continuam sendo autenticadas com total retrocompatibilidade via verificação dual.
+* **Foco em E-mail e Flexibilização de CPF/RG:** A identificação principal dos monitores é realizada pelo e-mail previamente cadastrado junto à Fundação Florestal. CPF e RG tornaram-se opcionais para comportar cadastros sem esses dados. Contas legadas com senhas hash vinculadas ao CPF continuam sendo autenticadas com total retrocompatibilidade via verificação dual.
+* **Isenção de Bloqueio para Administradores:** Contas administrativas (`Administradores`) não sofrem bloqueio por tentativas (*rate limit / lockout* desativado para adm). Qualquer bloqueio residual em cache é limpo automaticamente e a validação de senha aceita indistintamente hashes criados por CPF ou por e-mail (resolvendo alterações de senha administrativa via Primeiro Acesso ou Recuperação).
 * **Resiliência no Primeiro Acesso:** Se o envio do código de confirmação por e-mail falhar no servidor do Google (por restrições de permissão do Apps Script ou esgotamento de quota), o sistema não bloqueia o usuário; um ticket direto é emitido para permitir a definição de senha e validação do cadastro com segurança.
 * **Visibilidade de Senha:** Todos os campos de senha (login, criação de senha, recuperação e perfil) contam com botão de alternância de visibilidade (ícone de olho).
 * O aceite de auxiliares só pode alterar solicitações no estado `Aguardando Auxiliares`.
