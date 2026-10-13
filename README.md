@@ -56,11 +56,17 @@ Controla rigidamente o fluxo de visitantes com base na duração média estimada
 * **Formato dos novos protocolos:** `SS-ANO-NÚMERO`, com verificação de unicidade antes de gravar.
 * **Registros antigos:** consultas não modificam mais a planilha. Protocolos existentes, inclusive os antigos em formato hexadecimal, permanecem válidos. Células vazias são preenchidas somente pela rotina manual `migrarProtocolosEmBranco`, após backup e conferência da prévia.
 
-### 7. Acesso e publicação segura
-* Primeiro acesso, recuperação e troca de senha no perfil exigem código enviado ao e-mail já cadastrado. O projeto de Apps Script precisa de autorização para envio por `MailApp`.
+### 7. Acesso, Autenticação e Resiliência de E-mail
+* **Foco em E-mail e Flexibilização de CPF/RG:** A identificação principal dos monitores é realizada preferencialmente pelo e-mail cadastrado. CPF e RG foram tornados opcionais para comportar listas de entidades credenciadoras que não possuem esses dados. Contas legadas com senhas hash vinculadas ao CPF continuam sendo autenticadas com total retrocompatibilidade via verificação dual.
+* **Resiliência no Primeiro Acesso:** Se o envio do código de confirmação por e-mail falhar no servidor do Google (por restrições de permissão do Apps Script ou esgotamento de quota), o sistema não bloqueia o usuário; um ticket direto é emitido para permitir a definição de senha e validação do cadastro com segurança.
+* **Visibilidade de Senha:** Todos os campos de senha (login, criação de senha, recuperação e perfil) contam com botão de alternância de visibilidade (ícone de olho).
 * O aceite de auxiliares só pode alterar solicitações no estado `Aguardando Auxiliares`.
 * Novas solicitações verificam capacidade, duplicidade e protocolo dentro de um bloqueio do Apps Script.
 * O roteiro de testes, migração e retorno à versão anterior está em [PROCEDIMENTO_DE_TESTE.md](PROCEDIMENTO_DE_TESTE.md). A cópia de produção e a publicação não ocorrem automaticamente por mudanças neste repositório.
+
+### 8. Identidade Visual e Cabeçalho Unificado
+* **Tipografia Clássica:** O título "Espaço do Monitor" na barra superior (`.appbar`) utiliza tipografia serifada elegante (`Georgia, 'Times New Roman', serif`), mantida de forma consistente antes e após a autenticação em todas as telas.
+* **Cabeçalho Limpo:** O banner intermediário de imagem e os ícones redundantes foram removidos da barra superior, proporcionando maior foco no formulário e no conteúdo útil do portal.
 
 ---
 

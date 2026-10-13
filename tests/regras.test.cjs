@@ -155,17 +155,33 @@ test('CPF do auxiliar permite aceite após mudança do nome cadastrado', () => {
   assert.equal(JSON.parse(a.sheets['Respostas ao formulário 1'][1][21])['Bia Monitor'],'Aceito');
 });
 
-test('migração mostra prévia e preserva protocolos antigos', () => {
+test('migração numera todos por ano e criação, preserva referências e pode ser repetida', () => {
   const a=ambiente();
-  a.sheets['Respostas ao formulário 1'].push(linha({protocolo:''}));
-  a.sheets['Respostas ao formulário 1'].push(linha({protocolo:'0880c035'}));
-  const previa=a.ctx.migrarProtocolosEmBranco();
-  assert.equal(previa.total,1);
-  assert.equal(a.sheets['Respostas ao formulário 1'][1][20],'');
-  assert.equal(a.ctx.executarMigracaoProtocolosEmBranco().atualizados,1);
-  assert.match(a.sheets['Respostas ao formulário 1'][1][20],/^SS-\d{4}-\d{6}$/);
+  const dados=[
+    ['2025-01-02T10:00:00','SS-2025-734512'],
+    ['2024-06-01T10:00:00','0880c035'],
+    ['2025-01-01T10:00:00',''],
+    ['2024-06-01T09:00:00','SS-2024-123456']
+  ];
+  for(const [data,protocolo] of dados){const r=linha({protocolo});r[0]=data;a.sheets['Respostas ao formulário 1'].push(r);}
+  const antigoSemCodigo=a.ctx._referenciaSolicitacao(a.sheets['Respostas ao formulário 1'][3],3);
+  const previa=a.ctx.padronizarProtocolosSequenciais();
+  assert.equal(previa.total,4);
+  assert.equal(previa.atualizar,4);
   assert.equal(a.sheets['Respostas ao formulário 1'][2][20],'0880c035');
-  assert.equal(a.ctx.migrarProtocolosEmBranco().total,0);
+  assert.equal(a.ctx.padronizarProtocolosSequenciais(true).atualizados,4);
+  assert.equal(a.sheets['Respostas ao formulário 1'][1][20],'SS-2025-000002');
+  assert.equal(a.sheets['Respostas ao formulário 1'][2][20],'SS-2024-000002');
+  assert.equal(a.sheets['Respostas ao formulário 1'][3][20],'SS-2025-000001');
+  assert.equal(a.sheets['Respostas ao formulário 1'][4][20],'SS-2024-000001');
+  assert.equal(a.ctx._resolverProtocoloConsulta('0880c035'),'SS-2024-000002');
+  assert.equal(a.ctx._resolverProtocoloConsulta(antigoSemCodigo),'SS-2025-000001');
+  assert.equal(a.ctx._resolverProtocoloConsulta('SS-2025-734512'),'SS-2025-000002');
+  assert.equal(a.ctx._detalharSolicitacao({token:a.token,protocolo:'0880c035'}).solicitacao.protocolo,'SS-2024-000002');
+  assert.equal(a.ctx.padronizarProtocolosSequenciais().atualizar,0);
+  assert.equal(a.ctx.padronizarProtocolosSequenciais(true).atualizados,0);
+  assert.equal(a.ctx._proximoProtocoloSequencial('2025-07-01',a.sheets['Respostas ao formulário 1']),'SS-2025-000003');
+  assert.equal(a.sheets.Protocolos_Anteriores.length,5);
 });
 
 function incluirAdmin(a, permissoes=['verSolicitacoes','decidir','bloquearDatas','verMonitores','resetarSenha','agendarEmNome','verRelatorios','gerirAdmins']) {

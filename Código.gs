@@ -20,6 +20,7 @@ var CFG = {
   ABA_AUDITORIA:  'Log_Auditoria',
   ABA_CAIXA:      'Caixa_Postal',
   ABA_RESPOSTAS:  'Respostas ao formulário 1',
+  ABA_PROTOCOLOS_ANTIGOS: 'Protocolos_Anteriores',
   ABA_BLOQUEADAS: 'Datas_Bloqueadas'
 };
 
@@ -107,9 +108,9 @@ function _dispatchInterno(acao, carga) {
 // LOGIN / AUTENTICAÇÃO
 // ─────────────────────────────────────────────────────────────
 function _login(p) {
-  var loginInput = String(p.cpf || '').trim();
+  var loginInput = String(p.cpf || p.email || '').trim();
   var senha = p.senha;
-  if (!loginInput)          return _err('Informe o CPF ou E-mail.');
+  if (!loginInput)          return _err('Informe o E-mail ou CPF.');
   if (!senha)               return _err('Informe a senha.');
 
   var acessoAdmin = _tentarLoginAdmin(loginInput, senha);
@@ -130,37 +131,41 @@ function _login(p) {
       var rowEmail = _san(String(rows[i][MC.EMAIL - 1] || '')).toLowerCase();
       if (rowEmail === email) {
         foundRowIndex = i;
-        cpf = _normCPF(String(rows[i][MC.CPF - 1]));
+        var rawCpf = String(rows[i][MC.CPF - 1] || '').trim();
+        cpf = rawCpf ? _normCPF(rawCpf) : '';
         break;
       }
     }
     if (foundRowIndex === -1) return _err('E-mail não cadastrado.', 'INVALID_CREDENTIALS');
   } else {
     cpf = _normCPF(loginInput);
-    if (cpf.length !== 11)   return _err('CPF deve ter 11 dígitos.');
-    if (!_validaCPFAlg(cpf)) return _err('CPF inválido (dígitos verificadores incorretos).');
     for (var i = 1; i < rows.length; i++) {
-      if (_normCPF(String(rows[i][MC.CPF - 1])) === cpf) {
+      var rowCpf = _normCPF(String(rows[i][MC.CPF - 1] || ''));
+      var rowEmail = _san(String(rows[i][MC.EMAIL - 1] || '')).toLowerCase();
+      if ((cpf && rowCpf === cpf) || rowEmail === loginInput.toLowerCase()) {
         foundRowIndex = i;
+        email = rowEmail;
+        cpf = rowCpf;
         break;
       }
     }
-    if (foundRowIndex === -1) return _err('CPF não credenciado.', 'INVALID_CREDENTIALS');
+    if (foundRowIndex === -1) return _err('Cadastro não credenciado na base da SETUR.', 'INVALID_CREDENTIALS');
   }
 
-  var rl = _checkRateLimit(cpf);
+  var rlKey = email || cpf;
+  var rl = _checkRateLimit(rlKey);
   if (rl.bloqueado) return _err(rl.msg, 'LOCKED');
 
   var hashSalvo = String(rows[foundRowIndex][MC.SENHA_HASH - 1] || '').trim();
   if (!hashSalvo) return _err('Senha não cadastrada. Use "Meu Primeiro Acesso".', 'NO_PASSWORD');
-  if (_hashSenha(cpf, senha) !== hashSalvo) {
-    _incrementaRL(cpf);
-    return _err('Credenciais incorretas. Tentativas restantes: ' + _tentativasRestantes(cpf), 'INVALID_CREDENTIALS');
+  if (!_hashSenhaValida(hashSalvo, email, cpf, senha)) {
+    _incrementaRL(rlKey);
+    return _err('Credenciais incorretas. Tentativas restantes: ' + _tentativasRestantes(rlKey), 'INVALID_CREDENTIALS');
   }
 
-  _resetRL(cpf);
+  _resetRL(rlKey);
   var token = _novoToken();
-  CacheService.getScriptCache().put('TK_' + token, JSON.stringify({ cpf: cpf, emitido: Date.now() }), CFG.TOKEN_HORAS * 3600);
+  CacheService.getScriptCache().put('TK_' + token, JSON.stringify({ email: email, cpf: cpf, nome: _san(rows[foundRowIndex][MC.NOME - 1]), emitido: Date.now() }), CFG.TOKEN_HORAS * 3600);
   try {
     var tsStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm:ss');
     sheet.getRange(foundRowIndex + 1, MC.ULTIMO_LOGIN).setValue(tsStr);
@@ -169,9 +174,9 @@ function _login(p) {
     ok: true, token: token,
     monitor: {
       nome: _san(rows[foundRowIndex][MC.NOME - 1]),
-      cpf: _maskCPF(cpf),
+      cpf: cpf && cpf !== '00000000000' ? _maskCPF(cpf) : '',
       telefone: _san(rows[foundRowIndex][MC.TELEFONE - 1]),
-      email: _san(rows[foundRowIndex][MC.EMAIL - 1]),
+      email: email || _san(rows[foundRowIndex][MC.EMAIL - 1]),
       rg: _san(rows[foundRowIndex][MC.RG - 1] || ''),
       cidade: _san(rows[foundRowIndex][MC.CIDADE - 1] || ''),
       bairro: _san(rows[foundRowIndex][MC.BAIRRO - 1] || '')
@@ -180,157 +185,309 @@ function _login(p) {
 }
 
 function _verificarCPF(p) {
-  var cpf = _normCPF(p.cpf);
-  if (cpf.length !== 11)   return _err('CPF deve ter 11 dígitos.');
-  if (!_validaCPFAlg(cpf)) return _err('CPF inválido.');
+  var email = _san(String(p.email || '')).toLowerCase();
+  var cpf = p.cpf ? _normCPF(p.cpf) : '';
+  if (!email && !cpf) return _err('Informe seu e-mail cadastrado.');
+
   var adminSheet=_aba(CFG.ABA_ADMIN);
-  if(adminSheet){var admins=adminSheet.getDataRange().getValues();for(var a=1;a<admins.length;a++){
-    if(_normCPF(String(admins[a][0]||''))!==cpf)continue;
-    if(String(admins[a][4]||'').trim().toLowerCase()!=='sim')return _err('Conta inativa.','INACTIVE');
-    if(admins[a][3])return _err('Este CPF já possui senha cadastrada.','HAS_PASSWORD');
-    return _enviarCodigo(cpf,String(admins[a][1]||'').trim(),'primeiro');
-  }}
+  if(adminSheet){
+    var admins=adminSheet.getDataRange().getValues();
+    for(var a=1;a<admins.length;a++){
+      var aEmail = String(admins[a][1]||'').trim().toLowerCase();
+      var aCpf = _normCPF(String(admins[a][0]||''));
+      if ((email && aEmail === email) || (cpf && aCpf === cpf)) {
+        if (String(admins[a][4]||'').trim().toLowerCase() !== 'sim') return _err('Conta inativa.', 'INACTIVE');
+        if (admins[a][3]) return _err('Este cadastro já possui senha. Use "Esqueci minha senha" se necessário.', 'HAS_PASSWORD');
+        var envioAdmin = _enviarCodigo(aCpf || aEmail, aEmail, 'primeiro');
+        if (envioAdmin.ok) {
+          envioAdmin.papel = 'admin';
+          return envioAdmin;
+        }
+        var adminTicket = _novoToken();
+        CacheService.getScriptCache().put('PASS_' + adminTicket, JSON.stringify({ email: aEmail, cpf: aCpf, finalidade: 'primeiro' }), CFG.CODIGO_MINUTOS * 60);
+        return {
+          ok: true,
+          direto: true,
+          papel: 'admin',
+          ticket: adminTicket,
+          admin: { nome: String(admins[a][2]||'Administrador') }
+        };
+      }
+    }
+  }
+
   var rows = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
-    if (_normCPF(String(rows[i][MC.CPF - 1])) !== cpf) continue;
-    if (rows[i][MC.SENHA_HASH - 1]) return _err('Este CPF já possui senha cadastrada.', 'HAS_PASSWORD');
-    return _enviarCodigo(cpf, String(rows[i][MC.EMAIL - 1] || '').trim(), 'primeiro');
+    var rowEmail = _san(String(rows[i][MC.EMAIL - 1] || '')).toLowerCase();
+    var rowCpf = _normCPF(String(rows[i][MC.CPF - 1] || ''));
+    var match = (email && rowEmail === email) || (cpf && rowCpf === cpf);
+    if (!match) continue;
+    if (rows[i][MC.SENHA_HASH - 1]) return _err('Este cadastro já possui senha. Faça login ou utilize "Esqueci minha senha".', 'HAS_PASSWORD');
+    
+    var envio = _enviarCodigo(rowCpf || rowEmail, rowEmail, 'primeiro');
+    if (envio.ok) {
+      return envio;
+    }
+    
+    // Se o envio falhou (por exemplo erro de cota ou permissão do MailApp no Google Apps Script):
+    // Não bloqueia o monitor! Gera ticket de liberação direta para criação de senha.
+    var ticket = _novoToken();
+    CacheService.getScriptCache().put('PASS_' + ticket, JSON.stringify({ email: rowEmail, cpf: rowCpf, finalidade: 'primeiro' }), CFG.CODIGO_MINUTOS * 60);
+    return {
+      ok: true,
+      direto: true,
+      ticket: ticket,
+      aviso: 'O envio do código por e-mail falhou no servidor do Google. Você foi liberado para definir sua senha diretamente.',
+      monitor: {
+        nome: String(rows[i][MC.NOME - 1] || ''),
+        cpf: rowCpf && rowCpf !== '00000000000' ? _maskCPF(rowCpf) : '',
+        rg: String(rows[i][MC.RG - 1] || ''),
+        telefone: String(rows[i][MC.TELEFONE - 1] || ''),
+        email: rowEmail,
+        cidade: String(rows[i][MC.CIDADE - 1] || ''),
+        bairro: String(rows[i][MC.BAIRRO - 1] || '')
+      }
+    };
   }
-  return _err('CPF não credenciado na base da SETUR.', 'NOT_FOUND');
+  return _err('Cadastro não encontrado na base de monitores credenciados da SETUR. Verifique se o e-mail digitado está correto.', 'NOT_FOUND');
 }
 
-function _enviarCodigo(cpf, email, finalidade) {
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+function _enviarCodigo(cpfOuEmail, email, finalidade) {
+  var emailDestino = String(email || cpfOuEmail || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailDestino)) {
     return _err('Não há e-mail válido no cadastro. Solicite a atualização à SETUR.', 'EMAIL_REQUIRED');
   }
   var cache = CacheService.getScriptCache();
-  var chave = 'COD_' + finalidade + '_' + cpf;
-  if (cache.get('COD_ENV_' + finalidade + '_' + cpf)) {
+  var idChave = String(cpfOuEmail || emailDestino).replace(/[^a-zA-Z0-9_@.-]/g, '');
+  var chave = 'COD_' + finalidade + '_' + idChave;
+  if (cache.get('COD_ENV_' + finalidade + '_' + idChave)) {
     return _err('Aguarde um minuto antes de solicitar outro código.', 'RATE_LIMIT');
   }
   var codigo = String(100000 + Math.floor(Math.random() * 900000));
-  cache.put(chave, JSON.stringify({ hash: _hashSenha(cpf, finalidade + '|' + codigo), tentativas: 0 }), CFG.CODIGO_MINUTOS * 60);
+  cache.put(chave, JSON.stringify({ hash: _hashSenha(idChave, finalidade + '|' + codigo), tentativas: 0 }), CFG.CODIGO_MINUTOS * 60);
+  
+  var emailEnviado = false;
   try {
-    MailApp.sendEmail(email, 'Código de acesso — Portal do Monitor',
+    MailApp.sendEmail(emailDestino, 'Código de acesso — Portal do Monitor',
       'Seu código de confirmação é ' + codigo + '. Ele vale por ' + CFG.CODIGO_MINUTOS +
       ' minutos. Se você não solicitou este código, ignore esta mensagem.');
-  } catch (e) {
-    cache.remove(chave);
-    Logger.log('Falha ao enviar código: ' + e);
-    return _err('Não foi possível enviar o código. Tente novamente mais tarde.', 'EMAIL_ERROR');
+    emailEnviado = true;
+  } catch (e1) {
+    Logger.log('MailApp falhou: ' + e1 + ' - tentando GmailApp...');
+    try {
+      GmailApp.sendEmail(emailDestino, 'Código de acesso — Portal do Monitor',
+        'Seu código de confirmação é ' + codigo + '. Ele vale por ' + CFG.CODIGO_MINUTOS +
+        ' minutos. Se você não solicitou este código, ignore esta mensagem.');
+      emailEnviado = true;
+    } catch (e2) {
+      Logger.log('GmailApp falhou: ' + e2);
+    }
   }
-  cache.put('COD_ENV_' + finalidade + '_' + cpf, '1', 60);
-  return { ok: true, emailMascarado: _mascararEmail(email) };
+
+  if (!emailEnviado) {
+    cache.remove(chave);
+    return _err('Não foi possível enviar o código por e-mail no momento. Verifique as permissões de envio do Google Apps Script ou contate o administrador.', 'EMAIL_ERROR');
+  }
+  cache.put('COD_ENV_' + finalidade + '_' + idChave, '1', 60);
+  return { ok: true, emailMascarado: _mascararEmail(emailDestino) };
 }
 
 function _confirmarCodigo(p) {
-  var cpf = _normCPF(p.cpf);
+  var cpf = p.cpf ? _normCPF(p.cpf) : '';
+  var email = _san(p.email || '').toLowerCase();
   var finalidade = p.finalidade;
   var codigo = String(p.codigo || '').trim();
-  if (cpf.length !== 11 || ['primeiro','recuperar','perfil'].indexOf(finalidade) === -1 || !/^\d{6}$/.test(codigo)) {
+  if (['primeiro','recuperar','perfil'].indexOf(finalidade) === -1 || !/^\d{6}$/.test(codigo)) {
     return _err('Código inválido.', 'CODE_INVALID');
   }
   if (finalidade === 'perfil') {
     var sessaoPerfil = _validaToken(p.token);
-    if (!sessaoPerfil || sessaoPerfil.cpf !== cpf) return _err('Sessão expirada.', 'UNAUTHORIZED');
+    if (!sessaoPerfil) return _err('Sessão expirada.', 'UNAUTHORIZED');
+    if (cpf && sessaoPerfil.cpf && sessaoPerfil.cpf !== cpf) return _err('Sessão expirada.', 'UNAUTHORIZED');
+    if (email && sessaoPerfil.email && sessaoPerfil.email.toLowerCase() !== email) return _err('Sessão expirada.', 'UNAUTHORIZED');
   }
+
+  // Preencher dados cruzados (cpf <-> email) a partir da base
+  if (!email && cpf) {
+    var adminSheetTmp = _aba(CFG.ABA_ADMIN);
+    if (adminSheetTmp) {
+      var admR = adminSheetTmp.getDataRange().getValues();
+      for (var a = 1; a < admR.length; a++) {
+        if (_normCPF(String(admR[a][0] || '')) === cpf) {
+          email = String(admR[a][1] || '').trim().toLowerCase();
+          break;
+        }
+      }
+    }
+    if (!email) {
+      var monR = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
+      for (var m = 1; m < monR.length; m++) {
+        if (_normCPF(String(monR[m][MC.CPF - 1] || '')) === cpf) {
+          email = _san(String(monR[m][MC.EMAIL - 1] || '')).toLowerCase();
+          break;
+        }
+      }
+    }
+  }
+  if (!cpf && email) {
+    var adminSheetTmp2 = _aba(CFG.ABA_ADMIN);
+    if (adminSheetTmp2) {
+      var admR2 = adminSheetTmp2.getDataRange().getValues();
+      for (var a2 = 1; a2 < admR2.length; a2++) {
+        if (String(admR2[a2][1] || '').trim().toLowerCase() === email) {
+          cpf = _normCPF(String(admR2[a2][0] || ''));
+          break;
+        }
+      }
+    }
+    if (!cpf) {
+      var monR2 = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
+      for (var m2 = 1; m2 < monR2.length; m2++) {
+        if (_san(String(monR2[m2][MC.EMAIL - 1] || '')).toLowerCase() === email) {
+          cpf = _normCPF(String(monR2[m2][MC.CPF - 1] || ''));
+          break;
+        }
+      }
+    }
+  }
+
   var cache = CacheService.getScriptCache();
-  var chave = 'COD_' + finalidade + '_' + cpf;
-  var raw = cache.get(chave);
+  var raw = null;
+  var chaveEncontrada = '';
+  var idUsado = '';
+  var chavesPossiveis = [];
+  if (cpf) chavesPossiveis.push({ chave: 'COD_' + finalidade + '_' + cpf, id: cpf });
+  if (email) chavesPossiveis.push({ chave: 'COD_' + finalidade + '_' + email, id: email });
+  if (p.token) {
+    var sess = _validaToken(p.token);
+    if (sess) {
+      if (sess.cpf) chavesPossiveis.push({ chave: 'COD_' + finalidade + '_' + sess.cpf, id: sess.cpf });
+      if (sess.email) chavesPossiveis.push({ chave: 'COD_' + finalidade + '_' + sess.email.toLowerCase(), id: sess.email.toLowerCase() });
+    }
+  }
+  for (var k = 0; k < chavesPossiveis.length; k++) {
+    raw = cache.get(chavesPossiveis[k].chave);
+    if (raw) {
+      chaveEncontrada = chavesPossiveis[k].chave;
+      idUsado = chavesPossiveis[k].id;
+      break;
+    }
+  }
+
   if (!raw) return _err('Código expirado. Solicite um novo.', 'CODE_EXPIRED');
   var desafio = JSON.parse(raw);
   if (desafio.tentativas >= 5) return _err('Limite de tentativas atingido. Solicite outro código.', 'CODE_LOCKED');
-  if (desafio.hash !== _hashSenha(cpf, finalidade + '|' + codigo)) {
+  if (desafio.hash !== _hashSenha(idUsado, finalidade + '|' + codigo)) {
     desafio.tentativas++;
-    if (desafio.tentativas >= 5) cache.remove(chave);
-    else cache.put(chave, JSON.stringify(desafio), CFG.CODIGO_MINUTOS * 60);
+    if (desafio.tentativas >= 5) cache.remove(chaveEncontrada);
+    else cache.put(chaveEncontrada, JSON.stringify(desafio), CFG.CODIGO_MINUTOS * 60);
     return _err('Código incorreto.', 'CODE_INVALID');
   }
-  cache.remove(chave);
+  cache.remove(chaveEncontrada);
   var resposta = { ok: true };
+  var ticket = _novoToken();
+  cache.put('PASS_' + ticket, JSON.stringify({ cpf: cpf, email: email, identificador: idUsado, finalidade: finalidade }), CFG.CODIGO_MINUTOS * 60);
+  resposta.ticket = ticket;
+
   if (finalidade === 'primeiro') {
-    var adminSheet=_aba(CFG.ABA_ADMIN);
-    if(adminSheet){var admins=adminSheet.getDataRange().getValues();for(var a=1;a<admins.length;a++){
-      if(_normCPF(String(admins[a][0]||''))!==cpf)continue;
-      if(String(admins[a][4]||'').trim().toLowerCase()!=='sim'||admins[a][3])return _err('Acesso indisponível.','HAS_PASSWORD');
-      resposta.papel='admin';resposta.admin={nome:String(admins[a][2]||'Administrador')};break;
-    }}
-    if(resposta.papel==='admin'){
-      var adminTicket=_novoToken();cache.put('PASS_'+adminTicket,JSON.stringify({cpf:cpf,finalidade:finalidade}),CFG.CODIGO_MINUTOS*60);
-      resposta.ticket=adminTicket;return resposta;
+    var adminSheet = _aba(CFG.ABA_ADMIN);
+    if (adminSheet) {
+      var admins = adminSheet.getDataRange().getValues();
+      for (var a = 1; a < admins.length; a++) {
+        var aEmail = String(admins[a][1]||'').trim().toLowerCase();
+        var aCpf = _normCPF(String(admins[a][0]||''));
+        if ((cpf && aCpf === cpf) || (email && aEmail === email) || (idUsado && (idUsado === aCpf || idUsado === aEmail))) {
+          if (String(admins[a][4]||'').trim().toLowerCase() !== 'sim' || admins[a][3]) return _err('Acesso indisponível.', 'HAS_PASSWORD');
+          resposta.papel = 'admin';
+          resposta.admin = { nome: String(admins[a][2]||'Administrador') };
+          break;
+        }
+      }
+    }
+    if (resposta.papel === 'admin') {
+      return resposta;
     }
     var rows = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
     for (var i = 1; i < rows.length; i++) {
-      if (_normCPF(String(rows[i][MC.CPF - 1])) !== cpf) continue;
-      if (rows[i][MC.SENHA_HASH - 1]) return _err('Senha já cadastrada.', 'HAS_PASSWORD');
-      resposta.monitor = {
-        nome: String(rows[i][MC.NOME - 1] || ''), cpf: _maskCPF(cpf),
-        rg: String(rows[i][MC.RG - 1] || ''), telefone: String(rows[i][MC.TELEFONE - 1] || ''),
-        email: String(rows[i][MC.EMAIL - 1] || ''), cidade: String(rows[i][MC.CIDADE - 1] || ''),
-        bairro: String(rows[i][MC.BAIRRO - 1] || '')
-      };
-      break;
+      var rowCpf = _normCPF(String(rows[i][MC.CPF - 1] || ''));
+      var rowEmail = _san(String(rows[i][MC.EMAIL - 1] || '')).toLowerCase();
+      if ((cpf && rowCpf === cpf) || (email && rowEmail === email) || (idUsado && (idUsado === rowCpf || idUsado === rowEmail))) {
+        if (rows[i][MC.SENHA_HASH - 1]) return _err('Senha já cadastrada.', 'HAS_PASSWORD');
+        resposta.monitor = {
+          nome: String(rows[i][MC.NOME - 1] || ''),
+          cpf: rowCpf && rowCpf !== '00000000000' ? _maskCPF(rowCpf) : '',
+          rg: String(rows[i][MC.RG - 1] || ''),
+          telefone: String(rows[i][MC.TELEFONE - 1] || ''),
+          email: rowEmail,
+          cidade: String(rows[i][MC.CIDADE - 1] || ''),
+          bairro: String(rows[i][MC.BAIRRO - 1] || '')
+        };
+        break;
+      }
     }
     if (!resposta.monitor) return _err('Monitor não encontrado.', 'NOT_FOUND');
   }
-  var ticket = _novoToken();
-  cache.put('PASS_' + ticket, JSON.stringify({ cpf: cpf, finalidade: finalidade }), CFG.CODIGO_MINUTOS * 60);
-  resposta.ticket = ticket;
   return resposta;
 }
 
 function _criarSenha(p) {
-  var cpf = _normCPF(p.cpf), senha = p.senha;
-  if (cpf.length !== 11 || !_validaCPFAlg(cpf)) return _err('CPF inválido.');
+  var email = _san(p.email || '').toLowerCase();
+  var cpf = p.cpf ? _normCPF(p.cpf) : '';
+  var senha = p.senha;
   if (!senha || senha.length < 8) return _err('A senha deve ter no mínimo 8 caracteres.');
-  if (!_ticketValido(p.ticket, cpf, 'primeiro')) return _err('Confirmação expirada. Solicite outro código.', 'UNAUTHORIZED');
+  if (!_ticketValido(p.ticket, email || cpf, 'primeiro')) return _err('Confirmação expirada. Inicie o processo novamente.', 'UNAUTHORIZED');
+  
   var adminSheet=_aba(CFG.ABA_ADMIN);
-  if(adminSheet){var admins=adminSheet.getDataRange().getValues();for(var a=1;a<admins.length;a++){
-    if(_normCPF(String(admins[a][0]||''))!==cpf)continue;
-    if(String(admins[a][4]||'').trim().toLowerCase()!=='sim'||admins[a][3])return _err('Acesso indisponível.','HAS_PASSWORD');
-    if(!_consumirTicket(p.ticket,cpf,'primeiro'))return _err('Confirmação expirada.','UNAUTHORIZED');
-    adminSheet.getRange(a+1,4).setValue(_hashSenha(cpf,senha));
-    return {ok:true,msg:'Senha administrativa criada. Faça login.'};
-  }}
+  if(adminSheet){
+    var admins=adminSheet.getDataRange().getValues();
+    for(var a=1;a<admins.length;a++){
+      var aEmail = String(admins[a][1]||'').trim().toLowerCase();
+      var aCpf = _normCPF(String(admins[a][0]||''));
+      if((email && aEmail === email) || (cpf && aCpf === cpf)){
+        if(String(admins[a][4]||'').trim().toLowerCase()!=='sim'||admins[a][3])return _err('Acesso indisponível.','HAS_PASSWORD');
+        if(!_consumirTicket(p.ticket,email || cpf,'primeiro'))return _err('Confirmação expirada.','UNAUTHORIZED');
+        adminSheet.getRange(a+1,4).setValue(_hashSenha(aEmail,senha));
+        return {ok:true,msg:'Senha administrativa criada. Faça login.'};
+      }
+    }
+  }
   
   var nome = _san(p.nome || '');
   var rg = _san(p.rg || '');
   var telefone = _san(p.telefone || '');
-  var email = _san(p.email || '');
   var cidade = _localidadePadronizada(p.cidade, false);
   var bairro = _san(p.bairro || '');
   
-  if (!nome) return _err('Nome é obrigatório.');
-  if (!rg) return _err('RG é obrigatório.');
-  if (!telefone) return _err('Telefone é obrigatório.');
   if (!email) return _err('E-mail é obrigatório.');
+  if (!nome) return _err('Nome é obrigatório.');
+  if (!telefone) return _err('Telefone é obrigatório.');
   if (!cidade) return _err('Informe a cidade no formato Cidade/UF (ex.: São Sebastião/SP).', 'CITY_INVALID');
   if (!bairro) return _err('Bairro é obrigatório.');
+  // RG e CPF não são obrigatórios
 
   var sheet = _aba(CFG.ABA_MONITORES);
   var rows  = sheet.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
-    if (_normCPF(String(rows[i][MC.CPF - 1])) !== cpf) continue;
-    if (rows[i][MC.SENHA_HASH - 1]) return _err('Senha já cadastrada.', 'HAS_PASSWORD');
-    
-    var rgExistente = String(rows[i][MC.RG - 1] || '').trim();
-    if (rgExistente && rg !== rgExistente) {
-      return _err('O RG não pode ser editado pois já está preenchido.');
-    }
+    var rowEmail = _san(String(rows[i][MC.EMAIL - 1] || '')).toLowerCase();
+    var rowCpf = _normCPF(String(rows[i][MC.CPF - 1] || ''));
+    var match = (email && rowEmail === email) || (cpf && rowCpf === cpf);
+    if (!match) continue;
+    if (rows[i][MC.SENHA_HASH - 1]) return _err('Senha já cadastrada. Faça login.', 'HAS_PASSWORD');
     
     var rowNum = i + 1;
-    if (!_consumirTicket(p.ticket, cpf, 'primeiro')) return _err('Confirmação expirada.', 'UNAUTHORIZED');
-    sheet.getRange(rowNum, MC.RG).setValue(rg);
+    if (!_consumirTicket(p.ticket, email || cpf, 'primeiro')) return _err('Confirmação expirada.', 'UNAUTHORIZED');
+    if (rg) sheet.getRange(rowNum, MC.RG).setValue(rg);
+    if (cpf && cpf !== '00000000000') sheet.getRange(rowNum, MC.CPF).setValue(_maskCPF(cpf));
     sheet.getRange(rowNum, MC.NOME).setValue(nome);
     sheet.getRange(rowNum, MC.TELEFONE).setValue(telefone);
     sheet.getRange(rowNum, MC.EMAIL).setValue(email);
     sheet.getRange(rowNum, MC.CIDADE).setValue(cidade);
     sheet.getRange(rowNum, MC.BAIRRO).setValue(bairro);
-    sheet.getRange(rowNum, MC.SENHA_HASH).setValue(_hashSenha(cpf, senha));
+    sheet.getRange(rowNum, MC.SENHA_HASH).setValue(_hashSenha(email, senha));
     
     return { ok: true, msg: 'Senha criada e dados atualizados com sucesso!' };
   }
-  return _err('CPF não encontrado.', 'NOT_FOUND');
+  return _err('Cadastro não localizado.', 'NOT_FOUND');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -484,10 +641,15 @@ function _salvar(p) {
   var monRows  = monSheet.getDataRange().getValues();
   var monRow   = null;
   for (var m = 1; m < monRows.length; m++) {
-    if (_normCPF(String(monRows[m][MC.CPF - 1])) === sessao.cpf) { monRow = monRows[m]; break; }
+    var rEmail = _san(String(monRows[m][MC.EMAIL - 1] || '')).toLowerCase();
+    var rCpf = _normCPF(String(monRows[m][MC.CPF - 1] || ''));
+    if ((sessao.email && rEmail === sessao.email.toLowerCase()) || (sessao.cpf && rCpf === sessao.cpf)) {
+      monRow = monRows[m];
+      break;
+    }
   }
   if (!monRow) return _err('Monitor não localizado.');
-  var auxiliares = _resolverAuxiliares(v.monitoresAux, monRows, sessao.cpf);
+  var auxiliares = _resolverAuxiliares(v.monitoresAux, monRows, sessao.cpf || sessao.email);
   if (!auxiliares.ok) return auxiliares;
   if (auxiliares.cpfs.length < minAux) return _err('Selecione pelo menos ' + minAux + ' monitor(es) auxiliar(es) credenciado(s).', 'INSUFFICIENT_MONITORS');
 
@@ -507,8 +669,10 @@ function _salvar(p) {
     if (resDataRaw instanceof Date) resDataStr = Utilities.formatDate(resDataRaw, tz1, 'yyyy-MM-dd');
     else resDataStr = String(resDataRaw || '').trim();
     if (resDataStr !== v.dataVisita) continue;
-    if (_normCPF(String(resRowsAll[r][RF.CPF - 1])) === sessao.cpf &&
-        resStatus !== 'cancelado' && resStatus !== 'negado') {
+    var rowEmailReq = _san(String(resRowsAll[r][1] || '')).toLowerCase();
+    var rowCpfReq = _normCPF(String(resRowsAll[r][RF.CPF - 1]));
+    var souEu = (sessao.email && rowEmailReq === sessao.email.toLowerCase()) || (sessao.cpf && rowCpfReq === sessao.cpf);
+    if (souEu && resStatus !== 'cancelado' && resStatus !== 'negado') {
       return _err('Você já tem uma solicitação ativa nesta data.', 'DUPLICATE');
     }
     
@@ -547,9 +711,7 @@ function _salvar(p) {
     resSheet.getRange(1, 23).setValue('CPFs Auxiliares');
   }
 
-  var protocolosEmUso = {};
-  for (var pr = 1; pr < resRowsAll.length; pr++) protocolosEmUso[String(resRowsAll[pr][RF.PROTOCOLO - 1] || '').trim()] = true;
-  var protocolo = _gerarProtocoloUnico(new Date(), protocolosEmUso);
+  var protocolo = _proximoProtocoloSequencial(new Date(), resRowsAll);
   var linha = new Array(RF.TOTAL_COLUNAS);
   for (var k = 0; k < linha.length; k++) linha[k] = '';
   linha[0]  = new Date();
@@ -558,7 +720,7 @@ function _salvar(p) {
   linha[3]  = _san(monRow[MC.TELEFONE - 1]);
   linha[4]  = tamGrupo;
   linha[5]  = 'Sou Monitor Ambiental Credenciado pelo PESM';
-  linha[6]  = sessao.cpf;
+  linha[6]  = sessao.cpf || (monRow[MC.CPF - 1] ? _normCPF(String(monRow[MC.CPF - 1])) : '');
   linha[7]  = _san(v.nomeAgencia || '');
   linha[8]  = _san(v.cnpjAgencia || '');
   linha[9]  = new Date(v.dataVisita + 'T00:00:00');
@@ -593,6 +755,18 @@ function _salvar(p) {
   }
 }
 
+function _obterNomeMonitorSessao(monRows, sessao) {
+  if (!sessao) return '';
+  for (var m = 1; m < monRows.length; m++) {
+    var rEmail = _san(String(monRows[m][MC.EMAIL - 1] || '')).toLowerCase();
+    var rCpf = _normCPF(String(monRows[m][MC.CPF - 1] || ''));
+    if ((sessao.email && rEmail === sessao.email.toLowerCase()) || (sessao.cpf && rCpf === sessao.cpf)) {
+      return _san(monRows[m][MC.NOME - 1]);
+    }
+  }
+  return sessao.nome || '';
+}
+
 // ─────────────────────────────────────────────────────────────
 // HISTÓRICO (últimas 15 — painel principal)
 // ─────────────────────────────────────────────────────────────
@@ -602,18 +776,16 @@ function _getHistorico(p) {
 
   // Buscar nome do monitor logado (para identificar onde é auxiliar)
   var monRows = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
-  var nomeMonitor = '';
-  for (var m = 1; m < monRows.length; m++) {
-    if (_normCPF(String(monRows[m][MC.CPF - 1])) === sessao.cpf) { nomeMonitor = _san(monRows[m][MC.NOME - 1]); break; }
-  }
+  var nomeMonitor = _obterNomeMonitorSessao(monRows, sessao);
 
   var rows = _aba(CFG.ABA_RESPOSTAS).getDataRange().getValues();
   var lista = [];
   var tz = Session.getScriptTimeZone();
   for (var i = 1; i < rows.length; i++) {
     var cpfRow = _normCPF(String(rows[i][RF.CPF - 1]));
+    var emailRow = _san(String(rows[i][1] || '')).toLowerCase();
     var auxiliares = _san(rows[i][17] || '');
-    var isPrincipal = cpfRow === sessao.cpf;
+    var isPrincipal = (sessao.cpf && cpfRow === sessao.cpf) || (sessao.email && emailRow === sessao.email.toLowerCase());
     var isAuxiliar = _ehAuxiliar(rows[i], sessao.cpf, nomeMonitor);
     if (!isPrincipal && !isAuxiliar) continue;
 
@@ -671,10 +843,7 @@ function _buscarHistorico(p) {
 
   // Buscar nome do monitor para identificar onde aparece como auxiliar
   var monRows = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
-  var nomeMonitor = '';
-  for (var m = 1; m < monRows.length; m++) {
-    if (_normCPF(String(monRows[m][MC.CPF - 1])) === sessao.cpf) { nomeMonitor = _san(monRows[m][MC.NOME - 1]); break; }
-  }
+  var nomeMonitor = _obterNomeMonitorSessao(monRows, sessao);
 
   var rows  = _aba(CFG.ABA_RESPOSTAS).getDataRange().getValues();
   var lista = [];
@@ -684,8 +853,9 @@ function _buscarHistorico(p) {
 
   for (var i = 1; i < rows.length; i++) {
     var cpfRow    = _normCPF(String(rows[i][RF.CPF - 1]));
+    var emailRow  = _san(String(rows[i][1] || '')).toLowerCase();
     var auxiliares = _san(rows[i][17] || '');
-    var isPrincipal = cpfRow === sessao.cpf;
+    var isPrincipal = (sessao.cpf && cpfRow === sessao.cpf) || (sessao.email && emailRow === sessao.email.toLowerCase());
     var isAuxiliar = _ehAuxiliar(rows[i], sessao.cpf, nomeMonitor);
 
     // Aplicar filtro de papel
@@ -756,13 +926,11 @@ function _detalharSolicitacao(p) {
   var sessao = admin ? null : _validaToken(p.token);
   if (!admin && !sessao) return _err('Sessão expirada.', 'UNAUTHORIZED');
   if (!p.protocolo) return _err('Protocolo não informado.');
+  var protocoloConsulta=_resolverProtocoloConsulta(p.protocolo);
 
   // Buscar nome do monitor logado (para verificar se é auxiliar)
   var monRows = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
-  var nomeMonitor = '';
-  if (sessao) for (var m = 1; m < monRows.length; m++) {
-    if (_normCPF(String(monRows[m][MC.CPF - 1])) === sessao.cpf) { nomeMonitor = _san(monRows[m][MC.NOME - 1]); break; }
-  }
+  var nomeMonitor = _obterNomeMonitorSessao(monRows, sessao);
 
   var sheet = _aba(CFG.ABA_RESPOSTAS);
   var rows  = sheet.getDataRange().getValues();
@@ -770,11 +938,12 @@ function _detalharSolicitacao(p) {
 
   for (var i = 1; i < rows.length; i++) {
     var proto = _referenciaSolicitacao(rows[i], i);
-    if (proto !== _san(p.protocolo)) continue;
+    if (proto !== protocoloConsulta) continue;
 
     var cpfPrincipal = _normCPF(String(rows[i][RF.CPF - 1]));
+    var emailPrincipal = _san(String(rows[i][1] || '')).toLowerCase();
     var auxiliares   = _san(rows[i][17] || '');
-    var isPrincipal  = !!sessao && cpfPrincipal === sessao.cpf;
+    var isPrincipal  = !!sessao && ((sessao.cpf && cpfPrincipal === sessao.cpf) || (sessao.email && emailPrincipal === sessao.email.toLowerCase()));
     var isAuxiliar = !!sessao && _ehAuxiliar(rows[i], sessao.cpf, nomeMonitor);
 
     if (!admin && !isPrincipal && !isAuxiliar) return _err('Sem permissão para ver esta solicitação.', 'FORBIDDEN');
@@ -839,8 +1008,9 @@ function _listarMonitores(p) {
   var lista = [];
   for (var i = 1; i < rows.length; i++) {
     var nome = _san(rows[i][MC.NOME - 1]);
-    var cpf  = _normCPF(String(rows[i][MC.CPF - 1]));
-    if (nome) lista.push({ nome: nome, cpf: cpf });
+    var rawCpf = String(rows[i][MC.CPF - 1] || '').trim();
+    var email = _san(String(rows[i][MC.EMAIL - 1] || '')).toLowerCase();
+    if (nome) lista.push({ nome: nome, cpf: rawCpf ? _normCPF(rawCpf) : '', email: email });
   }
   return { ok: true, monitores: lista };
 }
@@ -851,7 +1021,7 @@ function _listarMonitores(p) {
 function _getNotificacoes(p) {
   var sessao = _validaToken(p.token);
   if (!sessao) return _err('Sessão inválida.', 'UNAUTHORIZED');
-  var chave = 'NOTIF_' + sessao.cpf;
+  var chave = 'NOTIF_' + (sessao.email || sessao.cpf);
   var lista = [];
   try { lista = JSON.parse(CacheService.getScriptCache().get(chave) || '[]'); } catch(e){}
   CacheService.getScriptCache().remove(chave);
@@ -866,6 +1036,7 @@ function _cancelar(p) {
   if (!sessao) return _err('Sessão expirada.', 'UNAUTHORIZED');
   if (sessao.adminToken) return _err('Acesso em nome de monitor permite apenas criar solicitações.', 'FORBIDDEN');
   if (!p.protocolo) return _err('Protocolo não informado.');
+  var protocoloConsulta=_resolverProtocoloConsulta(p.protocolo);
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) return _err('O sistema está ocupado. Tente novamente.', 'BUSY');
   try {
@@ -873,8 +1044,11 @@ function _cancelar(p) {
   var rows  = sheet.getDataRange().getValues();
   var tz    = Session.getScriptTimeZone();
   for (var i = 1; i < rows.length; i++) {
-    if (_referenciaSolicitacao(rows[i], i) !== String(p.protocolo).trim()) continue;
-    if (_normCPF(String(rows[i][RF.CPF - 1])) !== sessao.cpf) return _err('Sem permissão para cancelar esta solicitação.');
+    if (_referenciaSolicitacao(rows[i], i) !== protocoloConsulta) continue;
+    var cpfRow = _normCPF(String(rows[i][RF.CPF - 1]));
+    var emailRow = _san(String(rows[i][1] || '')).toLowerCase();
+    var souEu = (sessao.cpf && cpfRow === sessao.cpf) || (sessao.email && emailRow === sessao.email.toLowerCase());
+    if (!souEu) return _err('Sem permissão para cancelar esta solicitação.');
     var status = _san(String(rows[i][18] || '')).toLowerCase();
     if (['pendente', 'confirmado', 'aguardando auxiliares'].indexOf(status) === -1) {
       return _err('Esta solicitação não pode ser cancelada no estado atual.', 'INVALID_STATUS');
@@ -926,15 +1100,10 @@ function _responderConvite(p) {
   if (!sessao) return _err('Sessão expirada.', 'UNAUTHORIZED');
   if (sessao.adminToken) return _err('O próprio auxiliar deve responder ao convite.', 'FORBIDDEN');
   if (!p.protocolo) return _err('Protocolo não informado.');
+  var protocoloConsulta=_resolverProtocoloConsulta(p.protocolo);
   if (p.resposta !== 'Aceito' && p.resposta !== 'Recusado') return _err('Resposta inválida.');
   var monRows = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
-  var nomeMonitor = '';
-  for (var m = 1; m < monRows.length; m++) {
-    if (_normCPF(String(monRows[m][MC.CPF - 1])) === sessao.cpf) {
-      nomeMonitor = String(monRows[m][MC.NOME - 1] || '').trim();
-      break;
-    }
-  }
+  var nomeMonitor = _obterNomeMonitorSessao(monRows, sessao);
   if (!nomeMonitor) return _err('Monitor não cadastrado na base.');
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) return _err('O sistema está ocupado. Tente novamente.', 'BUSY');
@@ -943,7 +1112,7 @@ function _responderConvite(p) {
   var rows = sheet.getDataRange().getValues();
   var rowIndex = -1;
   for (var i = 1; i < rows.length; i++) {
-    if (_referenciaSolicitacao(rows[i], i) === String(p.protocolo).trim()) {
+    if (_referenciaSolicitacao(rows[i], i) === protocoloConsulta) {
       rowIndex = i;
       break;
     }
@@ -997,50 +1166,61 @@ function _validarTokenRota(p) {
 // VERIFICAR IDENTIDADE (Recuperação de Senha)
 // ─────────────────────────────────────────────────────────────
 function _verificarIdentidade(p) {
-  var cpf = _normCPF(p.cpf), email = String(p.email || '').trim().toLowerCase();
-  if (cpf.length !== 11 || !_validaCPFAlg(cpf)) return _err('CPF inválido.');
-  if (!email)             return _err('E-mail não informado.');
+  var email = String(p.email || '').trim().toLowerCase();
+  var cpf = p.cpf ? _normCPF(p.cpf) : '';
+  if (!email) return _err('Informe o e-mail cadastrado.');
   var adminSheet=_aba(CFG.ABA_ADMIN);
   if(adminSheet){var admins=adminSheet.getDataRange().getValues();for(var a=1;a<admins.length;a++){
-    if(_normCPF(String(admins[a][0]||''))!==cpf)continue;
-    if(String(admins[a][4]||'').trim().toLowerCase()!=='sim'||String(admins[a][1]||'').trim().toLowerCase()!==email)return _err('Dados não conferem com o cadastro.');
-    return _enviarCodigo(cpf,String(admins[a][1]||'').trim(),'recuperar');
+    var aEmail = String(admins[a][1]||'').trim().toLowerCase();
+    var aCpf = _normCPF(String(admins[a][0]||''));
+    if (aEmail !== email) continue;
+    if (cpf && aCpf && aCpf !== cpf) continue;
+    if(String(admins[a][4]||'').trim().toLowerCase()!=='sim')return _err('Conta inativa.');
+    return _enviarCodigo(aCpf || aEmail, aEmail,'recuperar');
   }}
   var rows = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
-    if (_normCPF(String(rows[i][MC.CPF - 1])) !== cpf) continue;
-    var cadastrado = String(rows[i][MC.EMAIL - 1] || '').trim();
-    if (cadastrado.toLowerCase() !== email) return _err('Dados não conferem com o cadastro.');
-    return _enviarCodigo(cpf, cadastrado, 'recuperar');
+    var mEmail = String(rows[i][MC.EMAIL - 1] || '').trim().toLowerCase();
+    var mCpf = _normCPF(String(rows[i][MC.CPF - 1] || ''));
+    if (mEmail !== email) continue;
+    if (cpf && mCpf && mCpf !== cpf) continue;
+    return _enviarCodigo(mCpf || mEmail, mEmail, 'recuperar');
   }
-  return _err('Dados não conferem com o cadastro.');
+  return _err('E-mail não confere com o cadastro da SETUR.');
 }
 
 // ─────────────────────────────────────────────────────────────
 // REDEFINIR SENHA
 // ─────────────────────────────────────────────────────────────
 function _redefinirSenha(p) {
-  var cpf = _normCPF(p.cpf), senha = p.senha;
-  if (cpf.length !== 11 || !_validaCPFAlg(cpf)) return _err('CPF inválido.');
+  var email = _san(p.email || '').toLowerCase();
+  var cpf = p.cpf ? _normCPF(p.cpf) : '';
+  var senha = p.senha;
   if (!senha || senha.length < 8) return _err('Senha deve ter no mínimo 8 caracteres.');
-  if (!_ticketValido(p.ticket, cpf, 'recuperar')) return _err('Confirmação expirada. Solicite outro código.', 'UNAUTHORIZED');
+  if (!_ticketValido(p.ticket, email || cpf, 'recuperar')) return _err('Confirmação expirada. Solicite outro código.', 'UNAUTHORIZED');
   var adminSheet=_aba(CFG.ABA_ADMIN);
   if(adminSheet){var admins=adminSheet.getDataRange().getValues();for(var a=1;a<admins.length;a++){
-    if(_normCPF(String(admins[a][0]||''))!==cpf)continue;
-    if(String(admins[a][4]||'').trim().toLowerCase()!=='sim')return _err('Conta inativa.','INACTIVE');
-    if(!_consumirTicket(p.ticket,cpf,'recuperar'))return _err('Confirmação expirada.','UNAUTHORIZED');
-    adminSheet.getRange(a+1,4).setValue(_hashSenha(cpf,senha));
-    return {ok:true,msg:'Senha redefinida com sucesso!'};
+    var aEmail = String(admins[a][1]||'').trim().toLowerCase();
+    var aCpf = _normCPF(String(admins[a][0]||''));
+    if((email && aEmail===email) || (cpf && aCpf===cpf)){
+      if(String(admins[a][4]||'').trim().toLowerCase()!=='sim')return _err('Conta inativa.','INACTIVE');
+      if(!_consumirTicket(p.ticket,email || cpf,'recuperar'))return _err('Confirmação expirada.','UNAUTHORIZED');
+      adminSheet.getRange(a+1,4).setValue(_hashSenha(aEmail,senha));
+      return {ok:true,msg:'Senha redefinida com sucesso!'};
+    }
   }}
   var sheet = _aba(CFG.ABA_MONITORES);
   var rows  = sheet.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
-    if (_normCPF(String(rows[i][MC.CPF - 1])) !== cpf) continue;
-    if (!_consumirTicket(p.ticket, cpf, 'recuperar')) return _err('Confirmação expirada.', 'UNAUTHORIZED');
-    sheet.getRange(i + 1, MC.SENHA_HASH).setValue(_hashSenha(cpf, senha));
-    return { ok: true, msg: 'Senha redefinida com sucesso!' };
+    var mEmail = String(rows[i][MC.EMAIL - 1] || '').trim().toLowerCase();
+    var mCpf = _normCPF(String(rows[i][MC.CPF - 1] || ''));
+    if((email && mEmail===email) || (cpf && mCpf===cpf)){
+      if (!_consumirTicket(p.ticket, email || cpf, 'recuperar')) return _err('Confirmação expirada.', 'UNAUTHORIZED');
+      sheet.getRange(i + 1, MC.SENHA_HASH).setValue(_hashSenha(mEmail, senha));
+      return { ok: true, msg: 'Senha redefinida com sucesso!' };
+    }
   }
-  return _err('CPF não encontrado.', 'NOT_FOUND');
+  return _err('Cadastro não encontrado.', 'NOT_FOUND');
 }
 
 function _solicitarCodigoPerfil(p) {
@@ -1048,8 +1228,10 @@ function _solicitarCodigoPerfil(p) {
   if (!sessao) return _err('Sessão expirada.', 'UNAUTHORIZED');
   var rows = _aba(CFG.ABA_MONITORES).getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
-    if (_normCPF(String(rows[i][MC.CPF - 1])) === sessao.cpf) {
-      return _enviarCodigo(sessao.cpf, String(rows[i][MC.EMAIL - 1] || '').trim(), 'perfil');
+    var rEmail = _san(String(rows[i][MC.EMAIL - 1] || '')).toLowerCase();
+    var rCpf = _normCPF(String(rows[i][MC.CPF - 1] || ''));
+    if ((sessao.email && rEmail === sessao.email.toLowerCase()) || (sessao.cpf && rCpf === sessao.cpf)) {
+      return _enviarCodigo(sessao.email || sessao.cpf, rEmail, 'perfil');
     }
   }
   return _err('Monitor não encontrado.', 'NOT_FOUND');
@@ -1067,7 +1249,22 @@ function _validaCPFAlg(cpf) {
   soma=0; for(var j=0;j<10;j++)soma+=parseInt(cpf[j])*(11-j); r=soma%11<2?0:11-(soma%11); return parseInt(cpf[10])===r||_cpfExisteNaBase(cpf);
 }
 function _cpfExisteNaBase(cpf) { var rows=_aba(CFG.ABA_MONITORES).getDataRange().getValues(); for(var i=1;i<rows.length;i++){if(_normCPF(String(rows[i][MC.CPF-1]))===cpf)return true;} return false; }
-function _hashSenha(cpf,senha){var input=CFG.PEPPER+'|'+cpf+'|'+senha;var bytes=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,input,Utilities.Charset.UTF_8);return bytes.map(function(b){return('0'+(b&0xFF).toString(16)).slice(-2);}).join('');}
+function _hashSenha(identificador,senha){
+  var idLimpo = String(identificador||'').trim().toLowerCase();
+  var input=CFG.PEPPER+'|'+idLimpo+'|'+senha;
+  var bytes=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,input,Utilities.Charset.UTF_8);
+  return bytes.map(function(b){return('0'+(b&0xFF).toString(16)).slice(-2);}).join('');
+}
+function _hashSenhaValida(hashSalvo, email, cpf, senha) {
+  if (!hashSalvo) return false;
+  if (email && _hashSenha(email, senha) === hashSalvo) return true;
+  if (cpf) {
+    var cNorm = _normCPF(cpf);
+    if (cNorm && _hashSenha(cNorm, senha) === hashSalvo) return true;
+    if (_hashSenha(cpf, senha) === hashSalvo) return true;
+  }
+  return false;
+}
 function _chaveLocalidade(valor){return String(valor||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();}
 function _tituloLocalidade(valor){return String(valor||'').toLocaleLowerCase('pt-BR').split(/\s+/).map(function(p,i){return i&&['de','da','do','dos','das','e'].indexOf(p)!==-1?p:p.charAt(0).toLocaleUpperCase('pt-BR')+p.slice(1);}).join(' ');}
 function _localidadePadronizada(valor,aceitarPais){
@@ -1095,6 +1292,15 @@ function _referenciaSolicitacao(row, indice) {
   var assinatura=_hashSenha(cpf,JSON.stringify(row.slice(0,18))+'|'+indice).slice(0,12);
   return 'LEGADO-LINHA-'+(indice+1)+'-'+assinatura;
 }
+function _resolverProtocoloConsulta(protocolo) {
+  var referencia=String(protocolo||'').trim();
+  if(!referencia)return referencia;
+  var sheet=SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CFG.ABA_PROTOCOLOS_ANTIGOS);
+  if(!sheet)return referencia;
+  var rows=sheet.getDataRange().getValues();
+  for(var i=1;i<rows.length;i++)if(String(rows[i][0]||'').trim()===referencia)return String(rows[i][1]||'').trim();
+  return referencia;
+}
 function _novoToken(){return (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '');}
 function _validaToken(token){
   if(!token||token.length!==64)return null;
@@ -1107,59 +1313,106 @@ function _validaToken(token){
     return sessao;
   }catch(e){return null;}
 }
-function _geraProtocolo(dataSub){
-  var ano = new Date().getFullYear();
-  if (dataSub instanceof Date) {
-    ano = dataSub.getFullYear();
-  } else if (dataSub) {
-    var d = new Date(dataSub);
-    if (!isNaN(d.getTime())) {
-      ano = d.getFullYear();
-    }
-  }
-  return 'SS-'+ano+'-'+(100000+Math.floor(Math.random()*900000));
+function _anoProtocolo(dataSub){
+  if(dataSub instanceof Date&&!isNaN(dataSub.getTime()))return dataSub.getFullYear();
+  var texto=String(dataSub||'').trim();
+  var iso=texto.match(/^(\d{4})[-/]/),br=texto.match(/^\d{2}\/\d{2}\/(\d{4})/);
+  if(iso)return Number(iso[1]);
+  if(br)return Number(br[1]);
+  throw new Error('Data de criação inválida para gerar protocolo.');
 }
-function _gerarProtocoloUnico(dataSub, usados){
-  for (var i=0;i<100;i++) {
-    var protocolo=_geraProtocolo(dataSub);
-    if (!usados[protocolo]) return protocolo;
-  }
-  throw new Error('Não foi possível gerar protocolo único.');
+function _instanteProtocolo(dataSub){
+  if(dataSub instanceof Date)return dataSub.getTime();
+  var texto=String(dataSub||'').trim();
+  var br=texto.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+  if(br)return new Date(Number(br[3]),Number(br[2])-1,Number(br[1]),Number(br[4]||0),Number(br[5]||0),Number(br[6]||0)).getTime();
+  return new Date(texto).getTime();
 }
-// Execute manualmente no editor do Apps Script. Sem argumento, retorna apenas a prévia.
-// Execute com true somente após fazer uma cópia da planilha e conferir a prévia.
-function migrarProtocolosEmBranco(executar){
+function _proximoProtocoloSequencial(dataSub,rows){
+  var ano=_anoProtocolo(dataSub),maior=0,quantidade=0,usados={};
+  for(var i=1;i<rows.length;i++){
+    if(!rows[i][0])continue;
+    var protocolo=String(rows[i][RF.PROTOCOLO-1]||'').trim();
+    if(protocolo)usados[protocolo]=true;
+    if(_anoProtocolo(rows[i][0])!==ano)continue;
+    quantidade++;
+    var partes=protocolo.match(/^SS-(\d{4})-(\d{6})$/);
+    if(partes&&Number(partes[1])===ano)maior=Math.max(maior,Number(partes[2]));
+  }
+  var numero=Math.max(maior,quantidade)+1;
+  while(usados['SS-'+ano+'-'+('000000'+numero).slice(-6)])numero++;
+  if(numero>999999)throw new Error('Limite de protocolos do ano atingido.');
+  return 'SS-'+ano+'-'+('000000'+numero).slice(-6);
+}
+function _planoProtocolosSequenciais(rows){
+  var registros=[],vistos={},contador={},alteracoes=[];
+  for(var i=1;i<rows.length;i++){
+    var row=rows[i];
+    if(!row[0])continue;
+    var antigo=String(row[RF.PROTOCOLO-1]||'').trim();
+    if(antigo){if(vistos[antigo])throw new Error('Protocolo repetido nas linhas '+vistos[antigo]+' e '+(i+1)+': '+antigo);vistos[antigo]=i+1;}
+    var instante=_instanteProtocolo(row[0]);
+    if(isNaN(instante))throw new Error('Data de criação inválida na linha '+(i+1));
+    registros.push({indice:i,ano:_anoProtocolo(row[0]),instante:instante,antigo:antigo});
+  }
+  registros.sort(function(a,b){return a.instante-b.instante||a.indice-b.indice;});
+  for(var j=0;j<registros.length;j++){
+    var r=registros[j],numero=(contador[r.ano]||0)+1;
+    if(numero>999999)throw new Error('Limite de protocolos do ano '+r.ano+' atingido.');
+    contador[r.ano]=numero;
+    var novo='SS-'+r.ano+'-'+('000000'+numero).slice(-6);
+    if(r.antigo!==novo)alteracoes.push({indice:r.indice,linha:r.indice+1,antigo:r.antigo||_referenciaSolicitacao(rows[r.indice],r.indice),novo:novo,valorOriginal:r.antigo});
+  }
+  return {total:registros.length,porAno:contador,alteracoes:alteracoes};
+}
+// Prévia sem argumento; executar com true somente com a cópia da planilha conferida.
+function padronizarProtocolosSequenciais(executar){
   var lock=LockService.getScriptLock();
-  if (!lock.tryLock(30000)) throw new Error('Não foi possível obter bloqueio da planilha.');
-  try {
-    var sheet=_aba(CFG.ABA_RESPOSTAS);
-    var rows=sheet.getDataRange().getValues();
-    var usados={}, pendentes=[];
-    for (var i=1;i<rows.length;i++) {
-      var atual=String(rows[i][RF.PROTOCOLO-1] || '').trim();
-      if (atual) {
-        if (usados[atual]) throw new Error('Protocolo repetido nas linhas '+usados[atual]+' e '+(i+1)+': '+atual);
-        usados[atual]=i+1;
-      } else pendentes.push(i);
+  if(!lock.tryLock(30000))throw new Error('Não foi possível obter bloqueio da planilha.');
+  try{
+    var planilha=SpreadsheetApp.getActiveSpreadsheet(),sheet=_aba(CFG.ABA_RESPOSTAS),rows=sheet.getDataRange().getValues();
+    var plano=_planoProtocolosSequenciais(rows);
+    if(executar!==true){
+      var previa={total:plano.total,porAno:plano.porAno,atualizar:plano.alteracoes.length,linhas:plano.alteracoes.map(function(a){return a.linha;})};
+      Logger.log(JSON.stringify({total:previa.total,porAno:previa.porAno,atualizar:previa.atualizar}));
+      return previa;
     }
-    var previa={total:pendentes.length,linhas:pendentes.map(function(i){return i+1;})};
-    if (executar !== true) return previa;
-    for (var p=0;p<pendentes.length;p++) {
-      var indice=pendentes[p];
-      var protocolo=_gerarProtocoloUnico(rows[indice][0], usados);
-      sheet.getRange(indice+1,RF.PROTOCOLO).setValue(protocolo);
-      usados[protocolo]=indice+1;
+    var aliases=planilha.getSheetByName(CFG.ABA_PROTOCOLOS_ANTIGOS);
+    var existentes={};
+    if(aliases){var anteriores=aliases.getDataRange().getValues();for(var a=1;a<anteriores.length;a++){
+      var chave=String(anteriores[a][0]||'').trim();if(!chave)continue;
+      if(existentes[chave]&&existentes[chave]!==String(anteriores[a][1]||'').trim())throw new Error('Referência anterior ambígua: '+chave);
+      existentes[chave]=String(anteriores[a][1]||'').trim();
+    }}
+    for(var v=0;v<plano.alteracoes.length;v++){
+      var item=plano.alteracoes[v];
+      if(existentes[item.antigo]&&existentes[item.antigo]!==item.novo)throw new Error('Referência anterior já associada a outra solicitação: '+item.antigo);
     }
-    return {ok:true,atualizados:pendentes.length};
-  } finally {
-    lock.releaseLock();
-  }
+    if(!aliases&&plano.alteracoes.length){aliases=planilha.insertSheet(CFG.ABA_PROTOCOLOS_ANTIGOS);aliases.appendRow(['Protocolo anterior','Protocolo atual','Linha original','Data da migração']);}
+    var atualizados=0;
+    for(var k=0;k<plano.alteracoes.length;k++){
+      var mudanca=plano.alteracoes[k];
+      if(String(sheet.getRange(mudanca.linha,RF.PROTOCOLO).getValue()||'').trim()!==mudanca.valorOriginal)throw new Error('A linha '+mudanca.linha+' mudou durante a migração. Execute nova prévia.');
+      if(!existentes[mudanca.antigo]){
+        aliases.appendRow([mudanca.antigo,mudanca.novo,mudanca.linha,new Date()]);
+        existentes[mudanca.antigo]=mudanca.novo;
+      }
+      sheet.getRange(mudanca.linha,RF.PROTOCOLO).setValue(mudanca.novo);
+      atualizados++;
+    }
+    if(atualizados)_registrarAuditoria('padronizarProtocolosSequenciais',{protocolo:String(atualizados)+' registros'}, {ok:true},{papel:'sistema',ator:'migração autorizada'});
+    var resumo={ok:true,total:plano.total,porAno:plano.porAno,atualizados:atualizados};
+    Logger.log(JSON.stringify(resumo));
+    return resumo;
+  }finally{lock.releaseLock();}
 }
+// Mantido para não deixar o comando antigo atribuir números fora da sequência.
+function migrarProtocolosEmBranco(executar){return padronizarProtocolosSequenciais(executar);}
 function executarMigracaoProtocolosEmBranco(){
   if (PropertiesService.getScriptProperties().getProperty('MIGRACAO_PROTOCOLOS_AUTORIZADA') !== 'SIM') {
     throw new Error('Defina MIGRACAO_PROTOCOLOS_AUTORIZADA=SIM nas propriedades do script somente após fazer o backup e conferir a prévia.');
   }
-  return migrarProtocolosEmBranco(true);
+  return padronizarProtocolosSequenciais(true);
 }
 function _planejarPadronizacaoOrigens(rows){
   var porNome={},alteracoes=[],pendentes=[];
@@ -1357,12 +1610,13 @@ function _adminDecidir(p) {
   if (['Confirmado','Negado','Cancelado'].indexOf(p.decisao)===-1) return _err('Decisão inválida.', 'INVALID_DECISION');
   var motivo=String(p.motivo||'').trim();
   if (p.decisao!=='Confirmado' && !motivo) return _err('Informe o motivo da negativa ou do cancelamento.', 'REASON_REQUIRED');
+  var protocoloConsulta=_resolverProtocoloConsulta(p.protocolo);
   var lock=LockService.getScriptLock();
   if (!lock.tryLock(30000)) return _err('Sistema ocupado. Tente novamente.', 'BUSY');
   try {
     var sheet=_aba(CFG.ABA_RESPOSTAS), rows=sheet.getDataRange().getValues();
     for (var i=1;i<rows.length;i++) {
-      if (_referenciaSolicitacao(rows[i],i)!==String(p.protocolo||'').trim() || !p.protocolo) continue;
+      if (_referenciaSolicitacao(rows[i],i)!==protocoloConsulta || !p.protocolo) continue;
       var status=String(rows[i][18]||'').trim().toLowerCase();
       if (p.decisao==='Cancelado') {
         if (['pendente','confirmado','aguardando auxiliares'].indexOf(status)===-1) return _err('Esta solicitação já foi encerrada e não pode ser cancelada.', 'INVALID_STATUS');
@@ -1641,21 +1895,45 @@ function _textoSeguroPlanilha(valor) {
   var s=String(valor==null?'':valor);
   return /^[\s]*[=+\-@]/.test(s) ? "'"+s : s;
 }
-function _ticketValido(ticket, cpf, finalidade){
+function _ticketValido(ticket, identificador, finalidade){
   if (!ticket || !/^[a-f0-9]{64}$/i.test(String(ticket))) return false;
   var raw=CacheService.getScriptCache().get('PASS_'+ticket);
   if (!raw) return false;
-  try { var dados=JSON.parse(raw); return dados.cpf===cpf && dados.finalidade===finalidade; } catch(e){ return false; }
+  try {
+    var dados=JSON.parse(raw);
+    var idOk = true;
+    if (identificador) {
+      var idLimpo = String(identificador).toLowerCase().replace(/[.\-\s]/g,'');
+      var idEmail = String(dados.email || '').toLowerCase().replace(/[.\-\s]/g,'');
+      var idCpf = String(dados.cpf || '').toLowerCase().replace(/[.\-\s]/g,'');
+      idOk = (idLimpo === idEmail || idLimpo === idCpf || idLimpo === String(dados.identificador || '').toLowerCase());
+    }
+    return idOk && dados.finalidade===finalidade;
+  } catch(e){ return false; }
 }
-function _consumirTicket(ticket, cpf, finalidade){
-  if (!_ticketValido(ticket,cpf,finalidade)) return false;
+function _consumirTicket(ticket, identificador, finalidade){
+  if (!_ticketValido(ticket,identificador,finalidade)) return false;
   CacheService.getScriptCache().remove('PASS_'+ticket);
   return true;
 }
-function _checkRateLimit(cpf){var cache=CacheService.getScriptCache();if(cache.get('LOCK_'+cpf)){return{bloqueado:true,msg:'Conta bloqueada temporariamente por excesso de tentativas.'};} return{bloqueado:false};}
-function _incrementaRL(cpf){var cache=CacheService.getScriptCache();var key='RL_'+cpf;var cnt=parseInt(cache.get(key)||'0',10)+1;var exp=CFG.LOCKOUT_MIN*60;if(cnt>=CFG.MAX_TENTATIVAS){cache.put('LOCK_'+cpf,'1',exp);cache.remove(key);}else{cache.put(key,String(cnt),exp);}}
-function _tentativasRestantes(cpf){return Math.max(0,CFG.MAX_TENTATIVAS-parseInt(CacheService.getScriptCache().get('RL_'+cpf)||'0',10));}
-function _resetRL(cpf){var cache=CacheService.getScriptCache();cache.remove('RL_'+cpf);cache.remove('LOCK_'+cpf);}
+function _checkRateLimit(chave){
+  var c = String(chave || '').replace(/[^a-zA-Z0-9_@.-]/g, '');
+  var cache=CacheService.getScriptCache();
+  if(cache.get('LOCK_'+c)){return{bloqueado:true,msg:'Conta bloqueada temporariamente por excesso de tentativas.'};}
+  return{bloqueado:false};
+}
+function _incrementaRL(chave){
+  var c = String(chave || '').replace(/[^a-zA-Z0-9_@.-]/g, '');
+  var cache=CacheService.getScriptCache();var key='RL_'+c;var cnt=parseInt(cache.get(key)||'0',10)+1;var exp=CFG.LOCKOUT_MIN*60;if(cnt>=CFG.MAX_TENTATIVAS){cache.put('LOCK_'+c,'1',exp);cache.remove(key);}else{cache.put(key,String(cnt),exp);}
+}
+function _tentativasRestantes(chave){
+  var c = String(chave || '').replace(/[^a-zA-Z0-9_@.-]/g, '');
+  return Math.max(0,CFG.MAX_TENTATIVAS-parseInt(CacheService.getScriptCache().get('RL_'+c)||'0',10));
+}
+function _resetRL(chave){
+  var c = String(chave || '').replace(/[^a-zA-Z0-9_@.-]/g, '');
+  var cache=CacheService.getScriptCache();cache.remove('RL_'+c);cache.remove('LOCK_'+c);
+}
 
 // ─────────────────────────────────────────────────────────────
 // ATUALIZAR PERFIL DO MONITOR
@@ -1666,10 +1944,10 @@ function _atualizarPerfil(p) {
   if (sessao.adminToken) return _err('O perfil só pode ser alterado pelo próprio monitor.', 'FORBIDDEN');
 
   var nome = _san(p.nome || '');
-  var cpf = _normCPF(p.cpf || '');
+  var cpf = p.cpf ? _normCPF(p.cpf) : '';
   var rg = _san(p.rg || '');
   var telefone = _san(p.telefone || '');
-  var email = _san(p.email || '');
+  var email = _san(p.email || '').toLowerCase();
   var cidade = _localidadePadronizada(p.cidade, false);
   var bairro = _san(p.bairro || '');
   var senha = p.senha; // Opcional
@@ -1677,15 +1955,13 @@ function _atualizarPerfil(p) {
     if (senha.length < 8 || !/[A-Za-z]/.test(senha) || !/[0-9]/.test(senha)) {
       return _err('A nova senha deve ter ao menos 8 caracteres, com letras e números.', 'PASSWORD_INVALID');
     }
-    if (!_ticketValido(p.ticketSenha, sessao.cpf, 'perfil')) {
+    if (!_ticketValido(p.ticketSenha, sessao.email || sessao.cpf, 'perfil')) {
       return _err('Confirme a troca de senha com o código enviado ao e-mail cadastrado.', 'UNAUTHORIZED');
     }
   }
 
   if (!nome) return _err('Nome é obrigatório.');
-  if (cpf.length !== 11) return _err('CPF deve ter 11 dígitos.');
-  if (!_validaCPFAlg(cpf)) return _err('CPF inválido.');
-  if (!rg) return _err('RG é obrigatório.');
+  if (cpf && (cpf.length !== 11 || !_validaCPFAlg(cpf))) return _err('CPF informado é inválido.');
   if (!telefone) return _err('Telefone é obrigatório.');
   if (!email) return _err('E-mail é obrigatório.');
   if (!cidade) return _err('Informe a cidade no formato Cidade/UF (ex.: São Sebastião/SP).', 'CITY_INVALID');
@@ -1696,40 +1972,22 @@ function _atualizarPerfil(p) {
   var monitorIndex = -1;
 
   for (var i = 1; i < rows.length; i++) {
-    if (_normCPF(String(rows[i][MC.CPF - 1])) === sessao.cpf) {
+    var rEmail = _san(String(rows[i][MC.EMAIL - 1] || '')).toLowerCase();
+    var rCpf = _normCPF(String(rows[i][MC.CPF - 1] || ''));
+    if ((sessao.email && rEmail === sessao.email.toLowerCase()) || (sessao.cpf && rCpf === sessao.cpf)) {
       monitorIndex = i;
       break;
     }
   }
 
-  if (monitorIndex === -1) return _err('Monitor não localizado cadastrado na base.');
-
-  // Impedir alteração de CPF/RG se já estiverem preenchidos na base
-  var rgExistente = String(rows[monitorIndex][MC.RG - 1] || '').trim();
-  var cpfExistente = _normCPF(String(rows[monitorIndex][MC.CPF - 1] || ''));
-
-  if (cpfExistente && cpfExistente !== '00000000000' && cpf !== cpfExistente) {
-    return _err('O CPF não pode ser editado pois já está preenchido.');
-  }
-  if (rgExistente && rg !== rgExistente) {
-    return _err('O RG não pode ser editado pois já está preenchido.');
-  }
-
-  // Se o CPF mudou, certificar que o novo CPF não está em uso por OUTRO monitor
-  if (cpf !== sessao.cpf) {
-    for (var j = 1; j < rows.length; j++) {
-      if (j !== monitorIndex && _normCPF(String(rows[j][MC.CPF - 1])) === cpf) {
-        return _err('Este novo CPF já está cadastrado por outro monitor.');
-      }
-    }
-  }
+  if (monitorIndex === -1) return _err('Monitor não localizado na base.');
 
   var rowNum = monitorIndex + 1;
-  if (senha && !_consumirTicket(p.ticketSenha, sessao.cpf, 'perfil')) {
+  if (senha && !_consumirTicket(p.ticketSenha, sessao.email || sessao.cpf, 'perfil')) {
     return _err('Confirmação expirada. Solicite outro código.', 'UNAUTHORIZED');
   }
-  sheet.getRange(rowNum, MC.RG).setValue(rg);
-  sheet.getRange(rowNum, MC.CPF).setValue(_maskCPF(cpf)); // Salvar com máscara
+  if (rg) sheet.getRange(rowNum, MC.RG).setValue(rg);
+  if (cpf && cpf !== '00000000000') sheet.getRange(rowNum, MC.CPF).setValue(_maskCPF(cpf));
   sheet.getRange(rowNum, MC.NOME).setValue(nome);
   sheet.getRange(rowNum, MC.TELEFONE).setValue(telefone);
   sheet.getRange(rowNum, MC.EMAIL).setValue(email);
@@ -1737,20 +1995,16 @@ function _atualizarPerfil(p) {
   sheet.getRange(rowNum, MC.BAIRRO).setValue(bairro);
 
   if (senha && senha.trim().length >= 8) {
-    var novoHash = _hashSenha(cpf, senha);
+    var novoHash = _hashSenha(email, senha);
     sheet.getRange(rowNum, MC.SENHA_HASH).setValue(novoHash);
-  }
-
-  // Atualizar a sessão no cache caso o CPF tenha mudado, para evitar deslogar o monitor
-  if (cpf !== sessao.cpf) {
-    CacheService.getScriptCache().put('TK_' + p.token, JSON.stringify({ cpf: cpf }), CFG.TOKEN_HORAS * 3600);
   }
 
   return {
     ok: true,
+    msg: 'Dados atualizados com sucesso!',
     monitor: {
       nome: nome,
-      cpf: _maskCPF(cpf),
+      cpf: cpf && cpf !== '00000000000' ? _maskCPF(cpf) : '',
       telefone: telefone,
       email: email,
       rg: rg,

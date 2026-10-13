@@ -32,15 +32,14 @@ body::-webkit-scrollbar-thumb:hover{background:var(--n3);}
 
 /* ═══════════════ APPBAR ═══════════════ */
 .appbar{background:var(--c1);height:56px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:500;box-shadow:0 2px 12px rgba(0,0,0,.25);flex-shrink:0;}
-.brand{display:flex;align-items:center;gap:10px;color:var(--white);font-weight:700;font-size:.82rem;user-select:none;}
-/* ✏️ LOGO PEQUENO NO CABEÇALHO */
-.brand-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
-.brand-icon img{width:100%;height:100%;object-fit:contain;}
+.brand{display:flex;align-items:center;gap:10px;color:var(--white);font-weight:700;font-family:Georgia,'Times New Roman',serif;user-select:none;}
+#brand-name{font-family:Georgia,'Times New Roman',serif;font-size:1.35rem;font-weight:700;letter-spacing:-.01em;color:var(--white);}
+.brand-icon,#brand-icon-wrap{display:none!important;}
 .btn-logout{background:transparent;border:1px solid rgba(255,255,255,.55);color:var(--white);padding:8px 14px;border-radius:var(--r-sm);font-size:.82rem;font-weight:600;cursor:pointer;transition:var(--t);display:none;font-family:var(--font);}
 .btn-logout:hover{background:rgba(255,255,255,.22);}
 
 /* ✏️ FAIXA DE LOGO/IMAGEM DE CABEÇALHO */
-#header-banner{display:none;width:100%;background:var(--white);text-align:center;padding:10px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+#header-banner{display:none!important;width:100%;background:var(--white);text-align:center;padding:10px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
 #header-banner img{max-height:70px;object-fit:contain;max-width:100%;}
 
 /* ═══════════════ TELAS ═══════════════ */
@@ -684,6 +683,120 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
   color: var(--c1);
 }
 </style>
+<style id="visual-stitch-adaptado">
+/* Camada visual inspirada na proposta do Stitch. Mantém o HTML e o JavaScript originais. */
+@media screen {
+  :root {
+    --c0:#13241d;--c1:#143d32;--c2:#22594a;--c3:#2e7864;--c4:#52a38b;
+    --c5:#a3d9c9;--c6:#dceee7;--c7:#eef8f5;
+    --n1:#32443c;--n2:#62756d;--n3:#65776f;--n4:#d4ded9;--n5:#f3f6f3;
+    --danger:#b63232;--danger-bg:#fff5f5;--danger-bd:#f2c7c7;
+    --warn:#a95712;--warn-bg:#fffbf2;--warn-bd:#f3d9b2;
+    --ok:#176947;--ok-bg:#f0fdf7;--ok-bd:#bde5d1;
+    --info:#245d84;--info-bg:#f0f7fc;--info-bd:#c8dfef;
+    --font:'Segoe UI',Roboto,Arial,sans-serif;
+    --r-sm:6px;--r:10px;--r-lg:14px;--r-xl:18px;
+    --sh-xs:0 1px 3px rgba(14,42,34,.05);
+    --sh-s:0 3px 12px rgba(14,42,34,.07);
+    --sh-m:0 8px 24px rgba(14,42,34,.08);
+    --sh-l:0 16px 38px rgba(14,42,34,.12);
+  }
+  body {background:#f7f7f2;color:var(--n1);line-height:1.55;}
+  .appbar {height:64px;padding:0 24px;background:var(--c1);box-shadow:0 2px 12px rgba(14,42,34,.14);}
+  .brand {gap:12px;font-family:Georgia,'Times New Roman',serif;}
+  .brand-icon,#brand-icon-wrap {display:none!important;}
+  #brand-name {font-family:Georgia,'Times New Roman',serif;font-size:1.35rem;font-weight:700;letter-spacing:-.01em;color:var(--white);}
+  #header-banner {display:none!important;}
+  .btn-logout {border-color:rgba(255,255,255,.45);min-height:40px;padding:8px 15px;}
+
+  .fg {margin-bottom:20px;}
+  .fg label {color:var(--c0);letter-spacing:.055em;margin-bottom:8px;}
+  .fg input,.fg select,.fg textarea {min-height:46px;padding:10px 14px;background:#fff;}
+  .fg input:focus,.fg select:focus,.fg textarea:focus,
+  .admin-toolbar input:focus,.admin-toolbar select:focus,
+  .busca-row input:focus {border-color:var(--c2);outline:0;box-shadow:0 0 0 3px rgba(34,89,74,.13);}
+  .btn {min-height:44px;}
+  .btn-p {background:var(--c2);box-shadow:0 3px 9px rgba(20,61,50,.13);}
+  .btn-p:hover {background:var(--c1);box-shadow:0 5px 12px rgba(20,61,50,.18);}
+  .btn-o {border-color:var(--n4);}
+  .btn-o:hover {background:var(--c7);border-color:var(--c4);}
+  .btn-filtro {padding:7px 13px;}
+  .alert {border:1px solid transparent;border-radius:var(--r);padding:12px 15px;}
+  .alert-err {border-color:var(--danger-bd);}
+  .alert-ok {border-color:var(--ok-bd);}
+  .alert-info {border-color:var(--info-bd);}
+  .alert-warn {border-color:var(--warn-bd);}
+
+  .login-card {max-width:430px;border:1px solid #e5ece8;box-shadow:var(--sh-l);}
+  .login-hero {background:var(--c1);padding:34px 28px 28px;}
+  .login-hero h1 {font-family:Georgia,'Times New Roman',serif;font-size:1.42rem;letter-spacing:-.01em;}
+  .login-body {padding:28px 30px 34px;}
+  #s-dash,.admin-screen {padding-top:32px;}
+  .welcome {background:var(--c1);padding:25px 28px;margin-bottom:23px;border-radius:var(--r-lg);box-shadow:var(--sh-s);}
+  .w-text h2,.admin-head h2,.sec-hd h3,.form-card h2 {
+    font-family:Georgia,'Times New Roman',serif;font-weight:700;letter-spacing:-.015em;
+  }
+  .w-text h2 {font-size:1.38rem;}
+  .w-text p {font-size:.82rem;opacity:.86;}
+  .info-grid {gap:14px;margin-bottom:23px;}
+  .info-card {padding:17px 19px;border:1px solid #e5ece8;box-shadow:var(--sh-xs);}
+  .info-card .lbl {color:var(--n2);}
+  .info-card .val {font-size:.95rem;color:var(--c0);}
+  .sec-hd {margin:30px 0 13px;gap:12px;}
+  .sec-hd h3 {font-size:1.18rem;}
+  .ag-list-wrap {gap:13px;}
+  #ag-list {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,350px),1fr));gap:13px;}
+  .ag-card {height:100%;background:#fff;border:1px solid #dfe7e2;border-left:1px solid #dfe7e2;
+    border-radius:var(--r-lg);padding:18px 19px;box-shadow:var(--sh-xs);}
+  .ag-card:hover {border-color:#a8c7b9;box-shadow:var(--sh-s);transform:translateY(-1px);}
+  .ag-card.s-confirmado,.ag-card.s-cancelado,.ag-card.s-negado {border-left-color:#dfe7e2;}
+  .ag-card.s-pendente,.ag-card.s-aguardandoauxiliares {border-left:3px solid var(--warn);}
+  .ag-card.has-invite {background:var(--warn-bg) !important;border:1px solid var(--warn-bd) !important;
+    border-left:3px solid var(--warn) !important;box-shadow:var(--sh-xs) !important;}
+  .ag-proto {color:var(--c2);}
+  .ag-meta {color:var(--n2);}
+  .badge {border-radius:999px;padding:4px 9px;letter-spacing:.01em;}
+  .busca-panel,.mail-box {background:#fff;border:1px solid #e3ebe6;border-radius:var(--r-lg);box-shadow:var(--sh-xs);}
+  .busca-panel {padding:18px 20px;border-left:1px solid #e3ebe6;}
+
+  .form-card {padding:34px 36px;border:1px solid #e5ece8;box-shadow:var(--sh-m);}
+  .form-card h2 {font-size:1.48rem;color:var(--c0);}
+  .form-card .sub {font-size:.88rem;}
+  .sec-title {color:var(--c1);border-bottom-color:#dce9e2;margin-top:30px;}
+  .orientacoes-box {background:#f1f7f3;border-color:#d3e6db;padding:15px 18px;}
+  .orientacoes-hd span,.orientacoes-hd .arrow {color:var(--c1);}
+  .aux-label {border-color:var(--n4);}
+
+  .admin-head {border-bottom:1px solid #bdd2c5;padding-bottom:20px;margin-bottom:20px;}
+  .admin-head h2 {font-size:1.42rem;}
+  .admin-nav {gap:8px;border-bottom-color:#d4ded9;}
+  .admin-nav button {padding:12px 15px;}
+  .admin-item {padding:18px 20px;border:1px solid #dfe7e2;border-left:3px solid var(--c2);
+    border-radius:var(--r);box-shadow:var(--sh-xs);}
+  .admin-item.pendente {border-left-color:var(--warn);background:#fffdf8;}
+  .admin-pending-summary {padding:13px 16px;border-color:var(--warn-bd);}
+  .admin-toolbar {gap:12px;margin-bottom:16px;}
+  .admin-toolbar input,.admin-toolbar select,.admin-toolbar button,.admin-form input {min-height:44px;}
+  .report-doc {border-color:#dfe7e2;border-radius:var(--r);box-shadow:var(--sh-xs);}
+  .report-stat {border-top-color:var(--c2);background:#f3f7f4;}
+  .report-table th {background:#eef4ef;}
+}
+@media screen and (max-width:600px) {
+  .appbar {height:58px;padding:0 14px;}
+  #brand-name {font-size:1.15rem;}
+  #s-dash,.admin-screen {padding:20px 14px 38px;}
+  .welcome {padding:20px 18px;}
+  .w-text h2 {font-size:1.22rem;}
+  .info-grid {gap:10px;}
+  .info-card {padding:14px;}
+  .form-card {padding:22px 18px;}
+  .login-body {padding:24px 20px 28px;}
+  .admin-item {padding:15px;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .ag-card,.info-card,.btn {transition:none!important;}
+}
+</style>
 <script>if(window.parent!==window)document.documentElement.classList.add('is-embedded');</script>
 </head>
 <body>
@@ -729,18 +842,18 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
         <button class="btn btn-ghost" onclick="abrirPA()">Meu Primeiro Acesso</button>
         <button class="btn btn-ghost" onclick="abrirRecuperarSenha()" style="margin-top:6px;font-size:.78rem;">Esqueci minha senha</button>
       </div>
-      <!-- PRIMEIRO ACESSO: CPF -->
+      <!-- PRIMEIRO ACESSO: EMAIL OU CPF -->
       <div id="v-pa" style="display:none;">
-        <p style="font-size:.8rem;color:var(--n2);margin-bottom:13px;line-height:1.5">Informe seu CPF para confirmar seu cadastro na base de monitores credenciados.</p>
-        <div class="fg"><label for="i-cpf-pa">CPF</label><input id="i-cpf-pa" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" autocomplete="off" oninput="maskCPF(this)"/><span class="field-err" id="e-cpf-pa"></span></div>
-        <button class="btn btn-p" id="btn-verCPF" onclick="verificarCPF()"><span class="lbl">Enviar código</span><span class="spin"></span></button>
+        <p style="font-size:.8rem;color:var(--n2);margin-bottom:13px;line-height:1.5">Informe seu e-mail cadastrado (ou CPF) para confirmar seu cadastro na base de monitores credenciados.</p>
+        <div class="fg"><label for="i-cpf-pa">E-mail ou CPF cadastrado</label><input id="i-cpf-pa" type="text" placeholder="seu@email.com ou CPF" maxlength="80" autocomplete="off" onkeydown="if(event.key==='Enter')verificarCPF()"/><span class="field-err" id="e-cpf-pa"></span></div>
+        <button class="btn btn-p" id="btn-verCPF" onclick="verificarCPF()"><span class="lbl">Continuar</span><span class="spin"></span></button>
         <button class="btn btn-o" style="margin-top:10px;" onclick="fecharPA()">← Voltar para o Login</button>
       </div>
       <div id="v-pa-codigo" style="display:none;">
         <p class="verification-intro">Enviamos um código de 6 dígitos para <strong id="pa-email-destino"></strong>. Ele vale por 10 minutos.</p>
         <div class="fg"><label for="i-codigo-pa">Código de confirmação</label><input id="i-codigo-pa" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" onkeydown="if(event.key==='Enter')confirmarCodigoPA()"/></div>
         <button class="btn btn-p" id="btn-codigo-pa" onclick="confirmarCodigoPA()"><span class="lbl">Confirmar código</span><span class="spin"></span></button>
-        <button class="btn btn-o" style="margin-top:10px;" onclick="abrirPA()">Usar outro CPF</button>
+        <button class="btn btn-o" style="margin-top:10px;" onclick="abrirPA()">Usar outro e-mail ou CPF</button>
       </div>
       <!-- PRIMEIRO ACESSO: CRIAR SENHA -->
       <div id="v-pa-senha" style="display:none;">
@@ -757,11 +870,11 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
 
           <div class="g2">
             <div class="fg">
-              <label for="i-pa-cpf">CPF</label>
-              <input id="i-pa-cpf" type="text" disabled />
+              <label for="i-pa-cpf">CPF (Opcional)</label>
+              <input id="i-pa-cpf" type="text" placeholder="000.000.000-00" oninput="maskCPF(this)" />
             </div>
             <div class="fg">
-              <label for="i-pa-rg">RG *</label>
+              <label for="i-pa-rg">RG (Opcional)</label>
               <input id="i-pa-rg" type="text" placeholder="Seu RG" />
             </div>
           </div>
@@ -1228,14 +1341,12 @@ var P = {
   subtitulo:    'SETUR | Prefeitura de São Sebastião / SP', // Subtítulo do login
 
   // ✏️ Logo pequena no canto do cabeçalho (appbar):
-  //    Cole a URL de uma imagem (PNG/SVG) com fundo transparente, tamanho ideal ~64x64px.
-  //    Deixe '' para exibir o ícone padrão (pino de localização verde).
-  logoUrl: 'https://pmss.sfo3.digitaloceanspaces.com/users/shared/logo/peixe-1777307916.webp',
+  //    Deixe '' para ocultar (solicitado remoção do peixe).
+  logoUrl: '',
 
-  // ✏️ Imagem de banner entre o cabeçalho e o conteúdo (aparece quando logado):
-  //    Ideal para o brasão/logo da Prefeitura. Tamanho recomendado: 600x80px.
-  //    Deixe '' para não exibir nenhum banner.
-  bannerUrl: 'https://pmss.sfo3.digitaloceanspaces.com/users/shared/logo/bitmap-1779371837.png',
+  // ✏️ Imagem de banner entre o cabeçalho e o conteúdo:
+  //    Deixe '' para ocultar (solicitado remoção do banner).
+  bannerUrl: '',
 
   // ✏️ Logo grande na tela de login (hero):
   //    Cole a URL de uma imagem. Tamanho ideal: 250x100px, fundo transparente.
@@ -1671,52 +1782,125 @@ function voltarAdmin(){
 function abrirPA(){limpaAlerta('alerta-login');S.ticketSenha='';['v-login','v-recuperar','v-recuperar-codigo','v-recuperar-nova','v-pa-codigo','v-pa-senha'].forEach(function(i){document.getElementById(i).style.display='none';});document.getElementById('v-pa').style.display='';document.getElementById('i-cpf-pa').value='';campoErr('e-cpf-pa','');}
 function fecharPA(){document.getElementById('v-login').style.display='';S.ticketSenha='';['v-pa','v-pa-codigo','v-pa-senha','v-recuperar','v-recuperar-codigo','v-recuperar-nova'].forEach(function(i){document.getElementById(i).style.display='none';});limpaAlerta('alerta-login');}
 function verificarCPF(){
-  limpaAlerta('alerta-login');var cpf=document.getElementById('i-cpf-pa').value;campoErr('e-cpf-pa','');
-  if(cpf.replace(/\D/g,'').length!==11)return campoErr('e-cpf-pa','CPF deve ter 11 dígitos.');
+  limpaAlerta('alerta-login');
+  var val = document.getElementById('i-cpf-pa').value.trim();
+  campoErr('e-cpf-pa','');
+  if(!val) return campoErr('e-cpf-pa','Informe seu e-mail cadastrado ou CPF.');
+  
+  var payload = {};
+  if (val.indexOf('@') !== -1) {
+    payload.email = val.toLowerCase();
+  } else {
+    var apenasDig = val.replace(/\D/g,'');
+    if (apenasDig.length === 11) {
+      payload.cpf = apenasDig;
+    } else {
+      payload.email = val.toLowerCase();
+    }
+  }
+
   carregando('btn-verCPF',true);
-  gs('verificarCPF',{cpf:cpf}).then(function(r){
+  gs('verificarCPF', payload).then(function(r){
     carregando('btn-verCPF',false);
-    if(!r.ok)return alerta('alerta-login',r.erro);
-    S.cpfPA=cpf;document.getElementById('pa-email-destino').textContent=r.emailMascarado;
-    document.getElementById('v-pa').style.display='none';
-    document.getElementById('v-pa-codigo').style.display='';
-    document.getElementById('i-codigo-pa').value='';
-  }).catch(function(){carregando('btn-verCPF',false);alerta('alerta-login','Falha de comunicação.');});
+    if(!r.ok) return alerta('alerta-login', r.erro);
+    
+    // Se liberado diretamente (ou fallback caso Apps Script não envie e-mail)
+    if(r.direto){
+      S.ticketSenha = r.ticket;
+      S.primeiroAdmin = r.papel === 'admin';
+      var mon = r.monitor || r.admin || {};
+      S.cpfPA = mon.cpf || payload.cpf || '';
+      S.emailPA = mon.email || payload.email || '';
+      document.getElementById('pa-bvindo').textContent = S.primeiroAdmin
+        ? 'Bem-vindo(a), ' + (mon.nome ? mon.nome.split(' ')[0] : 'Admin') + '! Crie sua senha administrativa.'
+        : 'Bem-vindo(a), ' + (mon.nome ? mon.nome.split(' ')[0] : 'Monitor') + '! Confirme seus dados e crie uma senha.';
+      document.getElementById('pa-dados-cadastrais').style.display = S.primeiroAdmin ? 'none' : '';
+      if(!S.primeiroAdmin){
+        ['nome','cpf','rg','tel','email','cidade','bairro'].forEach(function(campo){
+          var chave = campo === 'tel' ? 'telefone' : campo;
+          var el = document.getElementById('i-pa-' + campo);
+          if (el) el.value = mon[chave] || (campo === 'email' ? S.emailPA : '');
+        });
+        document.getElementById('i-pa-cpf').disabled = false;
+        document.getElementById('i-pa-rg').disabled = false;
+      }
+      document.getElementById('v-pa').style.display = 'none';
+      document.getElementById('v-pa-codigo').style.display = 'none';
+      document.getElementById('v-pa-senha').style.display = '';
+      document.getElementById('i-nova').value = '';
+      document.getElementById('i-conf').value = '';
+      if(r.aviso) alerta('alerta-login', r.aviso, 'warn');
+      return;
+    }
+
+    // Fluxo com código de confirmação enviado por e-mail
+    S.cpfPA = payload.cpf || '';
+    S.emailPA = payload.email || '';
+    document.getElementById('pa-email-destino').textContent = r.emailMascarado || val;
+    document.getElementById('v-pa').style.display = 'none';
+    document.getElementById('v-pa-codigo').style.display = '';
+    document.getElementById('i-codigo-pa').value = '';
+  }).catch(function(){
+    carregando('btn-verCPF',false);
+    alerta('alerta-login','Falha de comunicação.');
+  });
 }
 function confirmarCodigoPA(){
   var codigo=document.getElementById('i-codigo-pa').value.trim();
   if(!/^\d{6}$/.test(codigo))return alerta('alerta-login','Digite os 6 dígitos do código.');
   carregando('btn-codigo-pa',true);
-  gs('confirmarCodigo',{cpf:S.cpfPA,finalidade:'primeiro',codigo:codigo}).then(function(r){
-    carregando('btn-codigo-pa',false);if(!r.ok)return alerta('alerta-login',r.erro);
-    S.ticketSenha=r.ticket;S.primeiroAdmin=r.papel==='admin';var mon=r.monitor||r.admin;
-    document.getElementById('pa-bvindo').textContent=S.primeiroAdmin?'Bem-vindo(a), '+mon.nome.split(' ')[0]+'! Crie sua senha administrativa.':'Bem-vindo(a), '+mon.nome.split(' ')[0]+'! Confirme seus dados e crie uma senha.';
+  gs('confirmarCodigo',{cpf:S.cpfPA,email:S.emailPA,finalidade:'primeiro',codigo:codigo}).then(function(r){
+    carregando('btn-codigo-pa',false);
+    if(!r.ok)return alerta('alerta-login',r.erro);
+    S.ticketSenha=r.ticket;
+    S.primeiroAdmin=r.papel==='admin';
+    var mon=r.monitor||r.admin||{};
+    S.cpfPA = mon.cpf || S.cpfPA || '';
+    S.emailPA = mon.email || S.emailPA || '';
+    document.getElementById('pa-bvindo').textContent=S.primeiroAdmin
+      ?'Bem-vindo(a), '+(mon.nome?mon.nome.split(' ')[0]:'Admin')+'! Crie sua senha administrativa.'
+      :'Bem-vindo(a), '+(mon.nome?mon.nome.split(' ')[0]:'Monitor')+'! Confirme seus dados e crie uma senha.';
     document.getElementById('pa-dados-cadastrais').style.display=S.primeiroAdmin?'none':'';
     if(!S.primeiroAdmin){
-      ['nome','cpf','rg','tel','email','cidade','bairro'].forEach(function(campo){var chave=campo==='tel'?'telefone':campo;document.getElementById('i-pa-'+campo).value=mon[chave]||'';});
-      document.getElementById('i-pa-cpf').disabled=true;
-      document.getElementById('i-pa-rg').disabled=!!(mon.rg||'').trim();
+      ['nome','cpf','rg','tel','email','cidade','bairro'].forEach(function(campo){
+        var chave=campo==='tel'?'telefone':campo;
+        var el=document.getElementById('i-pa-'+campo);
+        if(el)el.value=mon[chave]||'';
+      });
+      document.getElementById('i-pa-cpf').disabled=false;
+      document.getElementById('i-pa-rg').disabled=false;
     }
-    document.getElementById('v-pa-codigo').style.display='none';document.getElementById('v-pa-senha').style.display='';
-    document.getElementById('i-nova').value='';document.getElementById('i-conf').value='';
+    document.getElementById('v-pa-codigo').style.display='none';
+    document.getElementById('v-pa-senha').style.display='';
+    document.getElementById('i-nova').value='';
+    document.getElementById('i-conf').value='';
   }).catch(function(){carregando('btn-codigo-pa',false);alerta('alerta-login','Falha de comunicação.');});
 }
 function confirmarSenha(){
-  limpaAlerta('alerta-login');var s1=document.getElementById('i-nova').value,s2=document.getElementById('i-conf').value;campoErr('e-conf','');
+  limpaAlerta('alerta-login');
+  var s1=document.getElementById('i-nova').value,s2=document.getElementById('i-conf').value;
+  campoErr('e-conf','');
   if(S.primeiroAdmin){
     if(!s1||s1.length<8||!/[A-Za-z]/.test(s1)||!/[0-9]/.test(s1))return alerta('alerta-login','Use ao menos 8 caracteres, com letras e números.');
     if(s1!==s2)return campoErr('e-conf','As senhas não coincidem.');
     carregando('btn-criar',true);
-    return gs('criarSenha',{cpf:S.cpfPA,ticket:S.ticketSenha,senha:s1}).then(function(r){carregando('btn-criar',false);if(!r.ok)return alerta('alerta-login',r.erro);S.primeiroAdmin=false;fecharPA();alerta('alerta-login','Senha criada. Faça login.','ok');}).catch(function(){carregando('btn-criar',false);alerta('alerta-login','Falha de comunicação.');});
+    return gs('criarSenha',{cpf:S.cpfPA,email:S.emailPA,ticket:S.ticketSenha,senha:s1}).then(function(r){
+      carregando('btn-criar',false);
+      if(!r.ok)return alerta('alerta-login',r.erro);
+      S.primeiroAdmin=false;fecharPA();
+      alerta('alerta-login','Senha criada. Faça login.','ok');
+    }).catch(function(){carregando('btn-criar',false);alerta('alerta-login','Falha de comunicação.');});
   }
   var nome = document.getElementById('i-pa-nome').value.trim();
+  var cpf = document.getElementById('i-pa-cpf').value.trim();
   var rg = document.getElementById('i-pa-rg').value.trim();
   var tel = document.getElementById('i-pa-tel').value.trim();
   var email = document.getElementById('i-pa-email').value.trim();
   var cidade = document.getElementById('i-pa-cidade').value.trim();
   var bairro = document.getElementById('i-pa-bairro').value.trim();
   if (!nome) return alerta('alerta-login', 'Nome completo é obrigatório.');
-  if (!rg) return alerta('alerta-login', 'RG é obrigatório.');
+  if (cpf && cpf.replace(/\D/g,'').length !== 11) return alerta('alerta-login', 'Se informado, o CPF deve ter 11 dígitos.');
+  // RG é opcional
   if (!tel) return alerta('alerta-login', 'Telefone é obrigatório.');
   if (!email) return alerta('alerta-login', 'E-mail é obrigatório.');
   if (!cidade) return alerta('alerta-login', 'Cidade é obrigatória.');
@@ -1729,7 +1913,22 @@ function confirmarSenha(){
   if(!/[A-Za-z]/.test(s1)||!/[0-9]/.test(s1))return alerta('alerta-login','A senha deve conter letras e números.');
   if(s1!==s2)return campoErr('e-conf','As senhas não coincidem.');
   carregando('btn-criar',true);
-  gs('criarSenha',{cpf:S.cpfPA,ticket:S.ticketSenha,senha:s1,nome:nome,rg:rg,telefone:tel,email:email,cidade:cidade,bairro:bairro}).then(function(r){carregando('btn-criar',false);if(!r.ok)return alerta('alerta-login',r.erro);fecharPA();alerta('alerta-login',r.msg+' Faça login abaixo.','ok');}).catch(function(){carregando('btn-criar',false);alerta('alerta-login','Falha de comunicação.');});
+  gs('criarSenha',{
+    cpf: cpf || S.cpfPA,
+    email: email || S.emailPA,
+    ticket: S.ticketSenha,
+    senha: s1,
+    nome: nome,
+    rg: rg,
+    telefone: tel,
+    cidade: cidade,
+    bairro: bairro
+  }).then(function(r){
+    carregando('btn-criar',false);
+    if(!r.ok)return alerta('alerta-login',r.erro);
+    fecharPA();
+    alerta('alerta-login','Cadastro concluído e senha criada! Faça login com seu e-mail ou CPF.','ok');
+  }).catch(function(){carregando('btn-criar',false);alerta('alerta-login','Falha de comunicação.');});
 }
 function abrirRecuperarSenha(){limpaAlerta('alerta-login');S.ticketSenha='';['v-login','v-pa','v-pa-codigo','v-pa-senha','v-recuperar-codigo','v-recuperar-nova'].forEach(function(i){document.getElementById(i).style.display='none';});document.getElementById('v-recuperar').style.display='';}
 function fecharRecuperarSenha(){document.getElementById('v-login').style.display='';S.ticketSenha='';['v-recuperar','v-recuperar-codigo','v-recuperar-nova','v-pa','v-pa-codigo','v-pa-senha'].forEach(function(i){document.getElementById(i).style.display='none';});limpaAlerta('alerta-login');}
@@ -2209,7 +2408,7 @@ function confirmarCodigoPerfil() {
   var codigo=document.getElementById('i-codigo-perfil').value.trim();
   if(!/^\d{6}$/.test(codigo))return alerta('alerta-perfil','Digite o código de 6 dígitos.');
   carregando('btn-confirmar-codigo-perfil',true);
-  gs('confirmarCodigo',{token:S.token,cpf:S.monitor.cpf,finalidade:'perfil',codigo:codigo}).then(function(r){
+  gs('confirmarCodigo',{token:S.token,cpf:S.monitor.cpf,email:S.monitor.email,finalidade:'perfil',codigo:codigo}).then(function(r){
     carregando('btn-confirmar-codigo-perfil',false);
     if(!r.ok)return alerta('alerta-perfil',r.erro);
     S.ticketSenhaPerfil=r.ticket;
@@ -2232,8 +2431,8 @@ function salvarPerfil() {
   var conf = document.getElementById('i-conf-perf').value;
 
   if (!nome) return alerta('alerta-perfil', 'Nome é obrigatório.');
-  if (cpf.replace(/\D/g,'').length !== 11) return alerta('alerta-perfil', 'CPF deve conter 11 dígitos.');
-  if (!rg) return alerta('alerta-perfil', 'RG é obrigatório.');
+  if (cpf && cpf.replace(/\D/g,'').length !== 11) return alerta('alerta-perfil', 'Se informado, o CPF deve conter 11 dígitos.');
+  // RG é opcional
   if (!tel) return alerta('alerta-perfil', 'Telefone é obrigatório.');
   if (!email) return alerta('alerta-perfil', 'E-mail é obrigatório.');
   if (!cidade) return alerta('alerta-perfil', 'Cidade é obrigatória.');
@@ -2476,11 +2675,20 @@ function carregarMonitoresAux(){
     var cont=document.getElementById('monitores-lista');if(!cont)return;
     if(!r.ok||!r.monitores||!r.monitores.length){cont.innerHTML='<p class="aux-empty">Nenhum outro monitor disponível.</p>';return;}
     var cpfAtual=S.monitor&&S.monitor.cpf?S.monitor.cpf.replace(/\D/g,''):'';
-    var filtrados=r.monitores.filter(function(m){return m.cpf!==cpfAtual;});
+    var emailAtual=S.monitor&&S.monitor.email?S.monitor.email.toLowerCase():'';
+    var filtrados=r.monitores.filter(function(m){
+      var mCpf = (m.cpf || '').replace(/\D/g,'');
+      var mEmail = (m.email || '').toLowerCase();
+      if (cpfAtual && mCpf && mCpf === cpfAtual) return false;
+      if (emailAtual && mEmail && mEmail === emailAtual) return false;
+      return true;
+    });
     if(!filtrados.length){cont.innerHTML='<p class="aux-empty">Nenhum outro monitor disponível.</p>';return;}
     cont.innerHTML=filtrados.map(function(m){
-      return '<label class="aux-label" id="lbl-aux-'+esc(m.cpf)+'">' +
-        '<input type="checkbox" value="'+esc(m.cpf)+'" onchange="toggleAuxStyle(this, \''+esc(m.cpf)+'\')"/> ' +
+      var val = m.cpf || m.nome;
+      var idAux = 'lbl-aux-' + String(val).replace(/[^a-zA-Z0-9_-]/g,'_');
+      return '<label class="aux-label" id="'+idAux+'">' +
+        '<input type="checkbox" value="'+esc(val)+'" onchange="toggleAuxStyle(this, \''+idAux+'\')"/> ' +
         '<span class="custom-chk"></span>' +
         '<span>'+esc(m.nome)+'</span>' +
         '</label>';
