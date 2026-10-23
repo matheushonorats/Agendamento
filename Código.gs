@@ -262,7 +262,7 @@ function _escHtml(s) {
 
 function _enviarEmailPortal(opcoes) {
   var to = String(opcoes.to || '').trim().toLowerCase();
-  if (!/^[^s@]+@[^s@]+.[^s@]+$/.test(to)) return _err('E-mail destinatário inválido.', 'EMAIL_INVALID');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return _err('E-mail destinatário inválido.', 'EMAIL_INVALID');
   var subject = String(opcoes.subject || 'Notificação — Espaço do Monitor').trim();
   var corpoTexto = String(opcoes.corpoTexto || '');
   var corpoHtml = String(opcoes.corpoHtml || '');
@@ -280,7 +280,7 @@ function _enviarEmailPortal(opcoes) {
   if (rodapeTexto) {
     rodapeTextoHtml = '<div style="font-size:12px;color:#4b5563;line-height:1.5;margin:8px 0;">' + _escHtml(rodapeTexto).replace(/\n/g, '<br/>') + '</div>';
   } else {
-    rodapeTextoHtml = '<div style="font-size:12px;color:#4b5563;margin:6px 0;font-weight:600;">Secretaria de Turismo de São Sebastião · Fundação Florestal · PESM</div>';
+    rodapeTextoHtml = '<div style="font-size:12px;color:#4b5563;margin:6px 0;font-weight:600;">Secretaria Municipal de Turismo de São Sebastião/SP</div>';
   }
   
   var htmlCompleto = '<!DOCTYPE html>' +
@@ -289,7 +289,7 @@ function _enviarEmailPortal(opcoes) {
     '<div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">' +
     '<div style="background-color:#13382c;padding:20px 24px;text-align:center;">' +
     '<h1 style="color:#ffffff;font-size:18px;margin:0;font-weight:700;letter-spacing:-0.01em;">Espaço do Monitor · São Sebastião</h1>' +
-    '<p style="color:rgba(255,255,255,0.85);font-size:12px;margin:5px 0 0;">Parque Estadual da Serra do Mar · Fundação Florestal</p>' +
+    '<p style="color:rgba(255,255,255,0.85);font-size:12px;margin:5px 0 0;">Secretaria Municipal de Turismo de São Sebastião/SP</p>' +
     '</div>' +
     '<div style="padding:24px;font-size:14px;line-height:1.6;color:#334155;">' +
     corpoHtml +
@@ -304,7 +304,7 @@ function _enviarEmailPortal(opcoes) {
   if (rodapeTexto) {
     textoCompleto += '\n\n---\n' + rodapeTexto;
   } else {
-    textoCompleto += '\n\n---\nSecretaria de Turismo de São Sebastião · Fundação Florestal · PESM';
+    textoCompleto += '\n\n---\nSecretaria Municipal de Turismo de São Sebastião/SP';
   }
   
   var emailEnviado = false;
@@ -329,7 +329,7 @@ function _enviarEmailPortal(opcoes) {
 
 function _notificarMonitorAuxiliarEmail(auxRow, monInfo) {
   var auxEmail = _san(String(auxRow[MC.EMAIL - 1] || '')).trim().toLowerCase();
-  if (!/^[^s@]+@[^s@]+.[^s@]+$/.test(auxEmail)) return false;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(auxEmail)) return false;
   var auxNome = _san(String(auxRow[MC.NOME - 1] || 'Monitor(a)'));
   var temAcesso = Boolean(auxRow[MC.SENHA_HASH - 1] && String(auxRow[MC.SENHA_HASH - 1]).trim());
   
@@ -342,15 +342,15 @@ function _notificarMonitorAuxiliarEmail(auxRow, monInfo) {
   var secaoOrientacoesTexto = '';
   
   if (temAcesso) {
-    secaoOrientacoesHtml = '<div style="background-color:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:14px 16px;margin:16px 0;">' +
-      '<p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#1e293b;">Como confirmar ou recusar sua participação:</p>' +
-      '<ol style="margin:0;padding-left:20px;font-size:13px;color:#334155;">' +
+    secaoOrientacoesHtml = '<div style="background-color:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:16px 18px;margin:18px 0;">' +
+      '<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#1e293b;">Como confirmar ou recusar sua participação:</p>' +
+      '<ol style="margin:0;padding-left:20px;font-size:13px;color:#334155;line-height:1.7;">' +
       (portalUrl ? '<li style="margin-bottom:6px;">Acesse o <strong>Espaço do Monitor</strong> pelo link: <a href="' + _escHtml(portalUrl) + '" style="color:#2d6a4f;font-weight:600;">' + _escHtml(portalUrl) + '</a></li>' : '<li style="margin-bottom:6px;">Acesse o <strong>Espaço do Monitor</strong>.</li>') +
       '<li style="margin-bottom:6px;">Faça login com seu <strong>e-mail</strong> e sua <strong>senha cadastrada</strong>.</li>' +
       '<li style="margin-bottom:6px;">Na tela inicial (Minhas Solicitações), localize a solicitação <strong>' + _escHtml(monInfo.protocolo) + '</strong> identificada com <strong>"🤝 Indicação de Auxiliar"</strong>.</li>' +
       '<li>Clique em <strong>Aceitar</strong> para confirmar sua presença ou <strong>Recusar</strong> caso não possa participar.</li>' +
       '</ol>' +
-      '<p style="font-size:12px;color:#64748b;margin:10px 0 0;"><em>A solicitação fica aguardando o seu aceite para ser avaliada pela equipe administrativa.</em></p>' +
+      '<p style="font-size:12px;color:#64748b;margin:10px 0 0;"><em>A solicitação fica aguardando o seu aceite para ser avaliada pela Secretaria Municipal de Turismo.</em></p>' +
       '</div>';
       
     secaoOrientacoesTexto = 'Como confirmar ou recusar sua participação:\n' +
@@ -359,10 +359,10 @@ function _notificarMonitorAuxiliarEmail(auxRow, monInfo) {
       '3. Em "Minhas Solicitações", localize o protocolo ' + monInfo.protocolo + '.\n' +
       '4. Clique em Aceitar ou Recusar.';
   } else {
-    secaoOrientacoesHtml = '<div style="background-color:#fefce8;border:1px solid #fef08a;border-radius:6px;padding:14px 16px;margin:16px 0;">' +
+    secaoOrientacoesHtml = '<div style="background-color:#fefce8;border:1px solid #fef08a;border-radius:8px;padding:16px 18px;margin:18px 0;">' +
       '<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#854d0e;">💡 Este será o seu primeiro acesso ao sistema:</p>' +
-      '<p style="margin:0 0 10px;font-size:13px;color:#713f12;">Como você já é credenciado(a) junto à Fundação Florestal, siga o passo a passo abaixo para criar sua senha de acesso e responder à solicitação:</p>' +
-      '<ol style="margin:0;padding-left:20px;font-size:13px;color:#713f12;">' +
+      '<p style="margin:0 0 10px;font-size:13px;color:#713f12;">Como você já é credenciado(a) junto à Secretaria Municipal de Turismo de São Sebastião/SP, siga o passo a passo abaixo para criar sua senha de acesso e responder à solicitação:</p>' +
+      '<ol style="margin:0;padding-left:20px;font-size:13px;color:#713f12;line-height:1.7;">' +
       (portalUrl ? '<li style="margin-bottom:6px;">Acesse o portal: <a href="' + _escHtml(portalUrl) + '" style="color:#2d6a4f;font-weight:700;">' + _escHtml(portalUrl) + '</a></li>' : '<li style="margin-bottom:6px;">Acesse o portal do Espaço do Monitor.</li>') +
       '<li style="margin-bottom:6px;">Na tela inicial de login, clique na opção <strong>"Primeiro Acesso"</strong>.</li>' +
       '<li style="margin-bottom:6px;">Digite o seu e-mail cadastrado (o mesmo onde recebeu esta mensagem: <code>' + _escHtml(auxEmail) + '</code>).</li>' +
@@ -382,33 +382,45 @@ function _notificarMonitorAuxiliarEmail(auxRow, monInfo) {
   }
   
   var corpoHtml = '<p style="margin-top:0;">Olá, <strong>' + _escHtml(auxNome) + '</strong>,</p>' +
-    '<p>Você foi indicado(a) pelo monitor <strong>' + _escHtml(monInfo.quem) + '</strong> para atuar como <strong>Monitor(a) Auxiliar</strong> na solicitação de agendamento <strong>' + _escHtml(monInfo.protocolo) + '</strong>.</p>' +
-    '<div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #2d6a4f;border-radius:6px;padding:12px 16px;margin:16px 0;">' +
-    '<table style="width:100%;font-size:13px;border-collapse:collapse;line-height:1.8;">' +
+    '<p>Você foi indicado(a) pelo monitor <strong>' + _escHtml(monInfo.quem) + '</strong> para atuar como <strong>Monitor(a) Auxiliar</strong> na solicitação de visita agendada abaixo:</p>' +
+    '<div style="background-color:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:16px 18px;margin:18px 0;box-shadow:0 1px 3px rgba(0,0,0,0.04);">' +
+    '<div style="font-size:12px;font-weight:700;color:#13382c;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;border-bottom:1px solid #f1f5f9;padding-bottom:6px;">📋 Ficha Completa da Visita</div>' +
+    '<table style="width:100%;font-size:13px;border-collapse:collapse;line-height:1.9;">' +
     '<tr><td style="color:#64748b;width:38%;">Protocolo:</td><td style="font-weight:700;color:#1e293b;">' + _escHtml(monInfo.protocolo) + '</td></tr>' +
     '<tr><td style="color:#64748b;">Data da Visita:</td><td style="font-weight:700;color:#1e293b;">' + _escHtml(monInfo.data) + '</td></tr>' +
-    '<tr><td style="color:#64748b;">Horário:</td><td>' + _escHtml(monInfo.horario) + '</td></tr>' +
-    '<tr><td style="color:#64748b;">Monitor Responsável:</td><td>' + _escHtml(monInfo.quem) + ' (' + _escHtml(monInfo.telefone || monInfo.email || '—') + ')</td></tr>' +
-    '<tr><td style="color:#64748b;">Tamanho do Grupo:</td><td>' + _escHtml(String(monInfo.tamanho)) + ' pessoa(s)</td></tr>' +
-    '<tr><td style="color:#64748b;">Origem / Tipo:</td><td>' + _escHtml(monInfo.origem) + ' · ' + _escHtml(monInfo.tipoGrupo) + '</td></tr>' +
+    '<tr><td style="color:#64748b;">Horário / Período:</td><td>' + _escHtml(monInfo.horario) + '</td></tr>' +
+    '<tr><td style="color:#64748b;">Monitor Responsável:</td><td><strong>' + _escHtml(monInfo.quem) + '</strong></td></tr>' +
+    '<tr><td style="color:#64748b;">Contatos do Responsável:</td><td>' + _escHtml(monInfo.telefone || '—') + (monInfo.email ? (' · ' + _escHtml(monInfo.email)) : '') + '</td></tr>' +
+    '<tr><td style="color:#64748b;">Tamanho do Grupo:</td><td><strong>' + _escHtml(String(monInfo.tamanho)) + ' pessoa(s)</strong></td></tr>' +
+    '<tr><td style="color:#64748b;">Perfil do Grupo:</td><td>' + _escHtml(monInfo.tipoGrupo) + (monInfo.faixaEtaria ? (' · Faixa: ' + _escHtml(monInfo.faixaEtaria)) : '') + '</td></tr>' +
+    '<tr><td style="color:#64748b;">Origem dos Visitantes:</td><td>' + _escHtml(monInfo.origem) + '</td></tr>' +
+    (monInfo.agencia ? ('<tr><td style="color:#64748b;">Agência / Operadora:</td><td>' + _escHtml(monInfo.agencia) + '</td></tr>') : '') +
+    (monInfo.hospedagem ? ('<tr><td style="color:#64748b;">Hospedagem:</td><td>' + _escHtml(monInfo.hospedagem) + '</td></tr>') : '') +
+    (monInfo.diasSS ? ('<tr><td style="color:#64748b;">Permanência em São Sebastião:</td><td>' + _escHtml(monInfo.diasSS) + '</td></tr>') : '') +
+    (monInfo.outrosAuxiliares ? ('<tr><td style="color:#64748b;">Monitores Auxiliares:</td><td>' + _escHtml(monInfo.outrosAuxiliares) + '</td></tr>') : '') +
     '</table></div>' +
     secaoOrientacoesHtml +
-    '<div style="margin-top:18px;padding:10px 12px;background-color:#f0fdf4;border:1px solid #dcfce7;border-radius:6px;font-size:12px;color:#166534;">' +
-    '<strong>Em caso de dúvidas ou dificuldades com o sistema:</strong><br>' +
-    'Entre em contato diretamente com a Secretaria de Turismo de São Sebastião (SETUR).' +
+    '<div style="margin-top:18px;padding:12px 14px;background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#166534;line-height:1.5;">' +
+    '<strong>Secretaria Municipal de Turismo de São Sebastião/SP (SETUR)</strong><br>' +
+    'Em caso de dúvidas ou dificuldades com o sistema, entre em contato com nossa equipe de atendimento.' +
     '</div>';
     
   var corpoTexto = 'Olá, ' + auxNome + ',\n\n' +
     'Você foi indicado(a) pelo monitor ' + monInfo.quem + ' para atuar como Monitor(a) Auxiliar na solicitação de agendamento ' + monInfo.protocolo + '.\n\n' +
-    'DADOS DA SOLICITAÇÃO:\n' +
+    'FICHA COMPLETA DA VISITA:\n' +
     '- Protocolo: ' + monInfo.protocolo + '\n' +
     '- Data da Visita: ' + monInfo.data + '\n' +
-    '- Horário: ' + monInfo.horario + '\n' +
-    '- Monitor Responsável: ' + monInfo.quem + ' (' + (monInfo.telefone || monInfo.email || '—') + ')\n' +
+    '- Horário / Período: ' + monInfo.horario + '\n' +
+    '- Monitor Responsável: ' + monInfo.quem + ' (Tel: ' + (monInfo.telefone || '—') + ' | E-mail: ' + (monInfo.email || '—') + ')\n' +
     '- Tamanho do Grupo: ' + monInfo.tamanho + ' pessoa(s)\n' +
-    '- Origem / Tipo: ' + monInfo.origem + ' · ' + monInfo.tipoGrupo + '\n\n' +
+    '- Perfil do Grupo: ' + monInfo.tipoGrupo + (monInfo.faixaEtaria ? (' · ' + monInfo.faixaEtaria) : '') + '\n' +
+    '- Origem: ' + monInfo.origem + '\n' +
+    (monInfo.agencia ? ('- Agência: ' + monInfo.agencia + '\n') : '') +
+    (monInfo.hospedagem ? ('- Hospedagem: ' + monInfo.hospedagem + '\n') : '') +
+    (monInfo.diasSS ? ('- Permanência em São Sebastião: ' + monInfo.diasSS + '\n') : '') +
+    (monInfo.outrosAuxiliares ? ('- Monitores Auxiliares: ' + monInfo.outrosAuxiliares + '\n') : '') + '\n' +
     secaoOrientacoesTexto + '\n\n' +
-    'Em caso de dúvidas ou dificuldades com o sistema, entre em contato com a Secretaria de Turismo de São Sebastião (SETUR).';
+    'Secretaria Municipal de Turismo de São Sebastião/SP (SETUR)';
     
   return _enviarEmailPortal({
     to: auxEmail,
@@ -420,7 +432,7 @@ function _notificarMonitorAuxiliarEmail(auxRow, monInfo) {
 
 function _enviarCodigo(cpfOuEmail, email, finalidade) {
   var emailDestino = String(email || cpfOuEmail || '').trim().toLowerCase();
-  if (!/^[^s@]+@[^s@]+.[^s@]+$/.test(emailDestino)) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailDestino)) {
     return _err('Não há e-mail válido no cadastro. Solicite a atualização à SETUR.', 'EMAIL_REQUIRED');
   }
   var cache = CacheService.getScriptCache();
@@ -910,7 +922,22 @@ function _salvar(p) {
 
   // ── Notificar auxiliares ─────────────────────────────────────
   if (auxiliares.cpfs.length) {
-    var monInfo = { quem: _san(monRow[MC.NOME - 1]), email: _san(monRow[MC.EMAIL - 1]), telefone: _san(monRow[MC.TELEFONE - 1]), data: _san(v.dataVisita), horario: v.horario ? (_san(v.horario)+':00') : '—', tamanho: tamGrupo, origem: _san(origemPadronizada), tipoGrupo: _san(v.tipoGrupo), protocolo: protocolo };
+    var monInfo = {
+      quem: _san(monRow[MC.NOME - 1]),
+      email: _san(monRow[MC.EMAIL - 1]),
+      telefone: _san(monRow[MC.TELEFONE - 1]),
+      data: _dataBr(v.dataVisita),
+      horario: v.horario ? (_san(v.horario)+':00') : '—',
+      tamanho: tamGrupo,
+      origem: _san(origemPadronizada),
+      tipoGrupo: _san(v.tipoGrupo),
+      faixaEtaria: _san(v.faixaEtaria || '—'),
+      agencia: _san(v.nomeAgencia ? (v.nomeAgencia + (v.cnpjAgencia ? (' · CNPJ ' + v.cnpjAgencia) : '')) : ''),
+      hospedagem: _san(v.hospedagem || ''),
+      diasSS: v.diasSS ? (v.diasSS + ' dia(s)') : '',
+      outrosAuxiliares: auxiliares.nomes.length > 1 ? auxiliares.nomes.join(', ') : '',
+      protocolo: protocolo
+    };
     for (var n = 0; n < auxiliares.cpfs.length; n++) {
       var auxCpf = auxiliares.cpfs[n];
       var chave = 'NOTIF_' + auxCpf;
@@ -1772,6 +1799,12 @@ function _dataIsoAdmin(valor) {
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {var p=s.split('/');return p[2]+'-'+p[1]+'-'+p[0];}
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '';
 }
+function _dataBr(valor) {
+  var iso = _dataIsoAdmin(valor);
+  if (!iso) return String(valor || '');
+  var p = iso.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
 function _horaAdmin(valor) {
   var h=_parseHoraMinuto(valor);
   return ('0'+h.hora).slice(-2)+':'+('0'+h.minuto).slice(-2);
@@ -2244,15 +2277,22 @@ function _reenviarConviteAuxiliar(p) {
     try { aceites = JSON.parse(String(row[21] || '{}')); } catch(e) {}
     var auxCpfs = String(row[22] || '').split(',').map(function(c){ return _normCPF(c); }).filter(Boolean);
     
+    var agNome = _san(row[7] || '');
+    var agCnpj = _san(row[8] || '');
     var monInfo = {
       quem: _san(row[2] || ''),
       email: _san(row[1] || ''),
       telefone: _san(row[3] || ''),
-      data: _dataIsoAdmin(row[9]),
+      data: _dataBr(row[9]),
       horario: _horaAdmin(row[10]),
       tamanho: Number(row[4]) || 0,
       origem: _san(row[11] || ''),
       tipoGrupo: _san(row[12] || ''),
+      faixaEtaria: _san(row[13] || '—'),
+      hospedagem: _san(row[14] || ''),
+      diasSS: row[16] ? (row[16] + ' dia(s)') : '',
+      agencia: agNome ? (agNome + (agCnpj ? (' · CNPJ ' + agCnpj) : '')) : '',
+      outrosAuxiliares: _san(row[17] || ''),
       protocolo: protocolo
     };
     
@@ -2327,8 +2367,8 @@ function _adminSalvarConfigEmail(p) {
 function _adminTestarEmail(p) {
   var admin = _adminTem(p.token, 'decidir') || _adminTem(p.token, 'gerirAdmins') || _adminTem(p.token, 'verSolicitacoes');
   if (!admin) return _err('Sem permissão para testar e-mail.', 'FORBIDDEN');
-  var destino = admin.email;
-  if (!destino) return _err('Seu usuário administrador não possui e-mail cadastrado.', 'EMAIL_REQUIRED');
+  var destino = String(p.emailDestino || admin.email || '').trim().toLowerCase();
+  if (!destino) return _err('Informe o e-mail de destino para teste ou cadastre um e-mail no seu usuário administrador.', 'EMAIL_REQUIRED');
   
   var props = PropertiesService.getScriptProperties();
   var rodapeArteUrl = String(p.rodapeArteUrl !== undefined ? p.rodapeArteUrl : (props.getProperty('EMAIL_RODAPE_ARTE_URL') || '')).trim();
@@ -2337,8 +2377,8 @@ function _adminTestarEmail(p) {
   var resultado = _enviarEmailPortal({
     to: destino,
     subject: '[Teste] Assinatura e Notificação do Portal de Agendamento',
-    corpoTexto: 'Olá ' + admin.nome + ',\n\nEste é um e-mail de teste para verificar a visualização da arte de assinatura do rodapé e a formatação anti-spam do sistema.\n\nSecretaria de Turismo de São Sebastião / PESM',
-    corpoHtml: '<p>Olá <strong>' + _escHtml(admin.nome) + '</strong>,</p>' +
+    corpoTexto: 'Olá ' + (admin.nome || 'Administrador') + ',\n\nEste é um e-mail de teste para verificar a visualização da arte de assinatura do rodapé e a formatação anti-spam do sistema.\n\nSecretaria Municipal de Turismo de São Sebastião/SP',
+    corpoHtml: '<p>Olá <strong>' + _escHtml(admin.nome || 'Administrador') + '</strong>,</p>' +
       '<p>Este é um <strong>e-mail de teste</strong> enviado pelo painel administrativo para verificar a visualização da assinatura de rodapé, o layout institucional e a pontuação anti-spam na sua caixa de entrada.</p>' +
       '<p style="color:#2d6a4f;font-weight:600;">Se você está vendo esta mensagem com o rodapé e formatação corretos, a configuração está pronta e funcionando perfeitamente!</p>',
     rodapeArteUrl: rodapeArteUrl,
