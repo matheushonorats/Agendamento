@@ -1167,6 +1167,7 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
     <button type="button" id="admin-tab-datas" onclick="abrirAdminAba('datas')">Datas bloqueadas</button>
     <button type="button" id="admin-tab-monitores" onclick="abrirAdminAba('monitores')">Monitores</button>
     <button type="button" id="admin-tab-caixa" onclick="abrirAdminAba('caixa')">Mensagens</button>
+    <button type="button" id="admin-tab-emails" onclick="abrirAdminAba('emails')">E-mails e Assinatura</button>
     <button type="button" id="admin-tab-relatorios" onclick="abrirAdminAba('relatorios')">Relatórios</button>
     <button type="button" id="admin-tab-auditoria" onclick="abrirAdminAba('auditoria')">Auditoria</button>
     <button type="button" id="admin-tab-admins" onclick="abrirAdminAba('admins')" style="display:none;">Administradores</button>
@@ -1203,6 +1204,55 @@ html.is-embedded .modal-detalhe{max-height:min(680px, calc(100vh - 48px));}
       <button class="btn btn-p btn-sm" type="button" onclick="enviarNovaCaixa('admin')">Enviar mensagem</button>
     </div></details>
     <div class="mail-layout"><div id="caixa-lista-admin" class="mail-list"></div><div id="caixa-conversa-admin" class="mail-conversation"><p class="field-hint">Selecione uma conversa para ler e responder.</p></div></div>
+  </section>
+  <section id="admin-panel-emails" class="admin-panel">
+    <p class="field-hint" style="margin-bottom:14px;">Configure a assinatura de rodapé (arte institucional e contatos) e o link que acompanham todas as notificações automáticas por e-mail (códigos de acesso e convites para monitores auxiliares).</p>
+    <div class="admin-form" style="display:flex;flex-direction:column;gap:12px;max-width:760px;margin-bottom:18px;">
+      <label style="font-size:.84rem;font-weight:600;display:flex;flex-direction:column;gap:4px;">
+        URL da Imagem / Arte da Assinatura do Rodapé
+        <input id="email-cfg-arte" type="url" placeholder="https://exemplo.com/arte-assinatura.png" oninput="atualizarPreviaEmail()" />
+        <span class="field-hint">Link público de uma imagem hospedada (PNG ou JPG). Exemplos: banner da SETUR, brasão da Prefeitura ou logo da Fundação Florestal.</span>
+      </label>
+      <label style="font-size:.84rem;font-weight:600;display:flex;flex-direction:column;gap:4px;">
+        Texto Institucional do Rodapé
+        <textarea id="email-cfg-texto" rows="3" placeholder="Secretaria de Turismo de São Sebastião&#10;Telefone: (12) 3892-2620 · Atendimento das 9h às 17h&#10;Rua da Praia, Centro - São Sebastião/SP" oninput="atualizarPreviaEmail()"></textarea>
+        <span class="field-hint">Endereço, contatos oficiais ou orientações de atendimento que aparecem abaixo da imagem.</span>
+      </label>
+      <label style="font-size:.84rem;font-weight:600;display:flex;flex-direction:column;gap:4px;">
+        Link Direto do Portal Web (Opcional)
+        <input id="email-cfg-portal" type="url" placeholder="https://sites.google.com/..." oninput="atualizarPreviaEmail()" />
+        <span class="field-hint">Endereço público onde os monitores acessam o portal para constar nos passos dos e-mails.</span>
+      </label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+        <button class="btn btn-p btn-sm" type="button" style="width:auto;" onclick="salvarConfigEmailsAdmin()">Salvar Configurações</button>
+        <button class="btn btn-o btn-sm" type="button" style="width:auto;" onclick="testarEmailAdmin()">Enviar E-mail de Teste para Mim</button>
+      </div>
+      <div id="email-cfg-alert" class="alert" style="margin-top:8px;"></div>
+    </div>
+    
+    <h3 style="font-size:.95rem;margin:22px 0 10px;color:var(--c1);">Prévia Visual da Assinatura no E-mail</h3>
+    <p class="field-hint" style="margin-bottom:10px;">Veja em tempo real como o rodapé e a arte aparecerão na caixa de entrada dos monitores:</p>
+    <div style="max-width:600px;border:1px solid #cbd5e1;border-radius:8px;background:#ffffff;overflow:hidden;box-shadow:var(--sh-s);margin-bottom:24px;">
+      <div style="background:#13382c;padding:16px 20px;text-align:center;color:#ffffff;">
+        <div style="font-size:15px;font-weight:700;">Espaço do Monitor · São Sebastião</div>
+        <div style="font-size:11px;opacity:.85;margin-top:2px;">Parque Estadual da Serra do Mar · Fundação Florestal</div>
+      </div>
+      <div style="padding:18px 20px;font-size:13px;line-height:1.6;color:#334155;">
+        <p style="margin:0 0 10px;">Olá, <strong>Nome do Monitor</strong>,</p>
+        <p style="margin:0 0 10px;">Você foi indicado(a) como Monitor(a) Auxiliar na solicitação <strong>SS-2026-000001</strong>.</p>
+        <div style="background:#f8fafc;border-left:3px solid #2d6a4f;padding:8px 12px;border-radius:4px;font-size:12px;margin:10px 0;">
+          <strong>Data da Visita:</strong> 25/10/2026 às 09:00 · 15 pessoa(s)
+        </div>
+        <p style="font-size:12px;color:#64748b;margin:10px 0 0;">Instruções para confirmação do agendamento...</p>
+      </div>
+      <div id="email-previa-rodape" style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:16px 20px;text-align:center;">
+        <div id="email-previa-img-wrap" style="display:none;margin-bottom:10px;">
+          <img id="email-previa-img" src="" alt="Arte da Assinatura" style="max-width:100%;max-height:120px;height:auto;border:0;display:inline-block;" />
+        </div>
+        <div id="email-previa-texto" style="font-size:11.5px;color:#475569;line-height:1.5;">Secretaria de Turismo de São Sebastião · Fundação Florestal · PESM</div>
+        <p style="margin:8px 0 0;font-size:10px;color:#94a3b8;">Esta é uma mensagem automática institucional do sistema de agendamento de visitas.</p>
+      </div>
+    </div>
   </section>
   <section id="admin-panel-relatorios" class="admin-panel">
     <p class="field-hint">Consulte o perfil dos grupos e prepare um relatório para impressão ou PDF.</p>
@@ -2376,9 +2426,9 @@ function salvarNovaSenha(){
 var NOMES_PERMISSOES={verSolicitacoes:'Consultar solicitações',decidir:'Aprovar e negar',bloquearDatas:'Bloquear datas',verMonitores:'Consultar monitores',resetarSenha:'Redefinir acesso',agendarEmNome:'Agendar em nome de monitor',verRelatorios:'Ver relatórios',verAuditoria:'Ver auditoria',caixaPostal:'Mensagens dos monitores'};
 function podeAdmin(permissao){return S.adminPermissoes.indexOf(permissao)!==-1;}
 function configurarAdminPermissoes(){
-  var abas={solicitacoes:'verSolicitacoes',agenda:'verSolicitacoes',datas:'bloquearDatas',monitores:'verMonitores',caixa:'caixaPostal',relatorios:'verRelatorios',auditoria:'verAuditoria',admins:'gerirAdmins'};
+  var abas={solicitacoes:'verSolicitacoes',agenda:'verSolicitacoes',datas:'bloquearDatas',monitores:'verMonitores',caixa:'caixaPostal',emails:'decidir',relatorios:'verRelatorios',auditoria:'verAuditoria',admins:'gerirAdmins'};
   Object.keys(abas).forEach(function(a){
-    document.getElementById('admin-tab-'+a).style.display=(podeAdmin(abas[a])||((a==='solicitacoes'||a==='agenda')&&podeAdmin('decidir'))||(a==='monitores'&&(podeAdmin('agendarEmNome')||podeAdmin('resetarSenha')))||(a==='caixa'&&podeAdmin('gerirAdmins')))?'':'none';
+    document.getElementById('admin-tab-'+a).style.display=(podeAdmin(abas[a])||((a==='solicitacoes'||a==='agenda')&&podeAdmin('decidir'))||(a==='monitores'&&(podeAdmin('agendarEmNome')||podeAdmin('resetarSenha')))||(a==='caixa'&&podeAdmin('gerirAdmins'))||(a==='emails'&&podeAdmin('gerirAdmins')))?'':'none';
   });
   var primeira=Object.keys(abas).filter(function(a){return document.getElementById('admin-tab-'+a).style.display!=='none';})[0];
   if(primeira)abrirAdminAba(primeira);
@@ -2386,7 +2436,7 @@ function configurarAdminPermissoes(){
 }
 function abrirAdminAba(aba){
   if(document.getElementById('admin-tab-'+aba).style.display==='none')return;
-  ['solicitacoes','agenda','datas','monitores','caixa','relatorios','auditoria','admins'].forEach(function(a){
+  ['solicitacoes','agenda','datas','monitores','caixa','emails','relatorios','auditoria','admins'].forEach(function(a){
     document.getElementById('admin-tab-'+a).classList.toggle('active',a===aba);
     document.getElementById('admin-panel-'+a).classList.toggle('active',a===aba);
   });
@@ -2397,6 +2447,7 @@ function abrirAdminAba(aba){
   if(aba==='datas')carregarAdminDatas();
   if(aba==='monitores')carregarAdminMonitores();
   if(aba==='caixa'){carregarCaixa('admin');carregarDestinatariosCaixa();}
+  if(aba==='emails')carregarConfigEmailsAdmin();
   if(aba==='auditoria')carregarAdminLogs();
   if(aba==='admins')carregarAdminContas();
 }
@@ -2495,13 +2546,16 @@ function renderAdminSolicitacoes(){
   if(!itens.length){el.innerHTML=resumo+'<p class="aux-empty">Nenhuma solicitação encontrada neste filtro.</p>';if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();return;}
   el.innerHTML=resumo+itens.map(function(x){var a=x.v,i=x.i;
     var ativa=['Pendente','Confirmado','Aguardando Auxiliares'].indexOf(a.status)!==-1;
+    var isAuxPend = a.status === 'Aguardando Auxiliares';
+    var alertaAux = isAuxPend ? '<div style="background:#fffbe6;border:1px solid #ffe58f;border-left:4px solid #faad14;padding:8px 12px;border-radius:4px;font-size:.79rem;margin:8px 0;color:#874d00;">⚠️ <strong>Aguardando auxiliares:</strong> Monitores auxiliares não confirmaram a presença. Como administrador, você pode autorizar ou negar a visita.</div>' : '';
     var botoes=a.protocolo?'<div class="admin-actions"><button class="btn btn-o btn-sm" type="button" onclick="abrirDetalheAdmin('+i+')">Ver detalhes</button>'+(podeAdmin('decidir')?
-      (a.status==='Pendente'?'<button class="btn btn-p btn-sm" type="button" onclick="decidirAdmin('+i+',\'Confirmado\')">Aprovar</button><button class="btn btn-o btn-sm" type="button" onclick="decidirAdmin('+i+',\'Negado\')">Negar</button>':'')+
+      (a.status==='Pendente'?'<button class="btn btn-p btn-sm" type="button" onclick="decidirAdmin('+i+',\'Confirmado\')">Aprovar</button><button class="btn btn-o btn-sm" type="button" onclick="decidirAdmin('+i+',\'Negado\')">Negar</button>':
+       isAuxPend?'<button class="btn btn-p btn-sm" type="button" onclick="decidirAdmin('+i+',\'Confirmado\')">Aprovar (mesmo sem auxiliares)</button><button class="btn btn-o btn-sm" type="button" onclick="decidirAdmin('+i+',\'Negado\')">Negar</button><button class="btn btn-o btn-sm" type="button" onclick="reenviarConviteAdmin('+i+')">✉️ Reenviar e-mail</button>':'')+
       (ativa?'<button class="btn btn-danger btn-sm" type="button" onclick="decidirAdmin('+i+',\'Cancelado\')">Cancelar</button>':''):'')+'</div>':'';
-    return '<article class="admin-item'+(a.protocolo?' abrivel':'')+(a.status==='Pendente'?' pendente':'')+'"'+(a.protocolo?' tabindex="0" aria-label="Ver detalhes da solicitação '+esc(rotuloProtocolo(a.protocolo))+'" onclick="if(!event.target.closest(\'button\'))abrirDetalheAdmin('+i+')" onkeydown="if(event.target===this&&(event.key===\'Enter\'||event.key===\' \')){event.preventDefault();abrirDetalheAdmin('+i+')}"':'')+'><div class="admin-item-head"><h3>'+esc(dataBr(a.data))+' · '+esc(a.horario||'')+' · '+esc(a.monitor||'Monitor não informado')+'</h3><span class="badge'+(a.status==='Pendente'?' b-pendente':'')+'">'+esc(a.status||'Sem status')+'</span></div>'+
+    return '<article class="admin-item'+(a.protocolo?' abrivel':'')+(a.status==='Pendente'?' pendente':'')+(isAuxPend?' aux-pendente':'')+'"'+(a.protocolo?' tabindex="0" aria-label="Ver detalhes da solicitação '+esc(rotuloProtocolo(a.protocolo))+'" onclick="if(!event.target.closest(\'button\'))abrirDetalheAdmin('+i+')" onkeydown="if(event.target===this&&(event.key===\'Enter\'||event.key===\' \')){event.preventDefault();abrirDetalheAdmin('+i+')}"':'')+'><div class="admin-item-head"><h3>'+esc(dataBr(a.data))+' · '+esc(a.horario||'')+' · '+esc(a.monitor||'Monitor não informado')+'</h3><span class="badge'+(a.status==='Pendente'?' b-pendente':isAuxPend?' b-auxiliar':'')+'">'+esc(a.status||'Sem status')+'</span></div>'+
       '<p><strong>'+esc(rotuloProtocolo(a.protocolo))+'</strong> · '+esc(String(a.grupo))+' pessoas · '+esc(a.tipo||'')+' · '+esc(a.origem||'')+'</p>'+
       '<p>Contato: '+esc(a.telefone||'—')+' · '+esc(a.email||'—')+'</p>'+
-      (a.auxiliares?'<p>Auxiliares: '+esc(a.auxiliares)+'</p>':'')+(a.motivo?'<p>Motivo: '+esc(a.motivo)+'</p>':'')+botoes+'</article>';
+      (a.auxiliares?'<p>Auxiliares: '+esc(a.auxiliares)+'</p>':'')+(a.motivo?'<p>Motivo: '+esc(a.motivo)+'</p>':'')+alertaAux+botoes+'</article>';
   }).join('');
   if(typeof forcarRedimensionamento==='function'){forcarRedimensionamento();setTimeout(function(){forcarRedimensionamento(true);},80);}
 }
@@ -2509,9 +2563,40 @@ function abrirDetalheAdmin(indice){var a=S.adminSolicitacoes[indice];if(a&&a.pro
 function decidirAdmin(indice,decisao){
   var a=S.adminSolicitacoes[indice];if(!a||!a.protocolo)return;
   var motivo='';
-  if(decisao==='Negado'||decisao==='Cancelado'){motivo=prompt('Informe o motivo '+(decisao==='Negado'?'da negativa':'do cancelamento')+' para '+rotuloProtocolo(a.protocolo)+':')||'';if(!motivo.trim())return;}
-  else if(!confirm('Aprovar a solicitação '+rotuloProtocolo(a.protocolo)+'?'))return;
+  if(decisao==='Negado'||decisao==='Cancelado'){
+    motivo=prompt('Informe o motivo '+(decisao==='Negado'?'da negativa':'do cancelamento')+' para '+rotuloProtocolo(a.protocolo)+':')||'';
+    if(!motivo.trim())return;
+  } else if(a.status==='Aguardando Auxiliares'){
+    if(!confirm('ATENÇÃO: Os monitores auxiliares indicados NÃO confirmaram a solicitação '+rotuloProtocolo(a.protocolo)+'.\n\nDeseja autorizar e confirmar esta solicitação mesmo sem a confirmação dos auxiliares?'))return;
+  } else if(!confirm('Aprovar a solicitação '+rotuloProtocolo(a.protocolo)+'?'))return;
   gs('adminDecidir',{token:S.adminToken,protocolo:a.protocolo,decisao:decisao,motivo:motivo}).then(function(r){if(!r.ok)return adminErro(r);fecharDetalhe();alerta('admin-alert',esc(rotuloProtocolo(a.protocolo))+' atualizado para '+esc(r.status)+'.','ok');carregarAdminSolicitacoes();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+}
+function decidirAdminPorProtocolo(protocolo,decisao){
+  var indice=S.adminSolicitacoes.findIndex(function(a){return a.protocolo===protocolo;});
+  if(indice!==-1)return decidirAdmin(indice,decisao);
+  var motivo='';
+  if(decisao==='Negado'||decisao==='Cancelado'){
+    motivo=prompt('Informe o motivo '+(decisao==='Negado'?'da negativa':'do cancelamento')+' para '+rotuloProtocolo(protocolo)+':')||'';
+    if(!motivo.trim())return;
+  } else if(!confirm('Confirmar a solicitação '+rotuloProtocolo(protocolo)+'?'))return;
+  gs('adminDecidir',{token:S.adminToken,protocolo:protocolo,decisao:decisao,motivo:motivo}).then(function(r){
+    if(!r.ok)return alert(r.erro||'Erro ao decidir solicitação.');
+    fecharDetalhe();
+    alerta('admin-alert',esc(rotuloProtocolo(protocolo))+' atualizado para '+esc(r.status)+'.','ok');
+    carregarAdminSolicitacoes();
+  }).catch(function(){alert('Falha de comunicação com o servidor.');});
+}
+function reenviarConviteDetalhe(protocolo){
+  if(!confirm('Reenviar notificação por e-mail para os monitores auxiliares pendentes de '+rotuloProtocolo(protocolo)+'?'))return;
+  var token=S.papel==='admin'?S.adminToken:S.token;
+  gs('reenviarConviteAuxiliar',{token:token,protocolo:protocolo}).then(function(r){
+    if(!r.ok)return alert(r.erro||'Não foi possível reenviar o convite.');
+    alert(r.msg||'Convite reenviado com sucesso por e-mail!');
+  }).catch(function(){alert('Falha de comunicação ao reenviar convite.');});
+}
+function reenviarConviteAdmin(indice){
+  var a=S.adminSolicitacoes[indice];if(!a||!a.protocolo)return;
+  reenviarConviteDetalhe(a.protocolo);
 }
 function carregarAdminDatas(){
   gs('adminDatas',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);var e=document.getElementById('admin-datas');e.innerHTML=(r.lista||[]).length?(r.lista||[]).map(function(d,i){return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(d.data)+'</h3><button class="btn btn-o btn-sm" style="width:auto" type="button" onclick="desbloquearDataAdmin(\''+esc(d.data)+'\')">Desbloquear</button></div><p>'+esc(d.motivo||'Sem motivo')+'</p></article>';}).join(''):'<p class="aux-empty">Nenhuma data bloqueada.</p>';if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
@@ -2979,6 +3064,14 @@ function renderDetalhe(sol){
         '</div>';
     }
     aceitesHtml += '</div></div>';
+  }
+  if (sl === 'aguardandoauxiliares') {
+    aceitesHtml += '<div style="background:#fffbe6;border:1px solid #ffe58f;border-left:4px solid #faad14;padding:10px 14px;border-radius:6px;font-size:.82rem;margin:12px 0;color:#874d00;">' +
+      '<strong>Status: Aguardando confirmação de auxiliares</strong><br>' +
+      'Esta solicitação ainda depende do aceite do(s) monitor(es) auxiliar(es) para ser aprovada automaticamente.' +
+      ((sol.isPrincipal || S.papel === 'admin') ? '<div style="margin-top:8px;"><button class="btn btn-o btn-sm" type="button" onclick="reenviarConviteDetalhe(\''+esc(sol.protocolo)+'\')" style="width:auto;font-size:.76rem;">✉️ Reenviar e-mail aos auxiliares pendentes</button></div>' : '') +
+      ((S.papel === 'admin' && podeAdmin('decidir')) ? '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"><button class="btn btn-p btn-sm" type="button" onclick="decidirAdminPorProtocolo(\''+esc(sol.protocolo)+'\',\'Confirmado\')" style="width:auto;background:var(--ok);">Aprovar mesmo sem auxiliares</button><button class="btn btn-o btn-sm" type="button" onclick="decidirAdminPorProtocolo(\''+esc(sol.protocolo)+'\',\'Negado\')" style="width:auto;">Negar solicitação</button></div>' : '') +
+      '</div>';
   }
 
   // Botões de Aceite/Recusa pendente para auxiliar logado
@@ -3556,6 +3649,75 @@ document.getElementById('f-origem').addEventListener('input',function(){this.cla
     iniciarSessao(token,mon);
   }).catch(function(){});
 })();
+
+
+function carregarConfigEmailsAdmin() {
+  limpaAlerta('email-cfg-alert');
+  gs('adminObterConfigEmail', { token: S.adminToken }).then(function(r) {
+    if (!r.ok) return adminErro(r);
+    document.getElementById('email-cfg-arte').value = r.rodapeArteUrl || '';
+    document.getElementById('email-cfg-texto').value = r.rodapeTexto || '';
+    document.getElementById('email-cfg-portal').value = r.portalUrl || '';
+    atualizarPreviaEmail();
+    if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();
+  }).catch(function(){ adminErro({ erro: 'Falha ao carregar configurações de e-mail.' }); });
+}
+
+function atualizarPreviaEmail() {
+  var arte = document.getElementById('email-cfg-arte').value.trim();
+  var texto = document.getElementById('email-cfg-texto').value.trim();
+  var imgWrap = document.getElementById('email-previa-img-wrap');
+  var imgEl = document.getElementById('email-previa-img');
+  var txtEl = document.getElementById('email-previa-texto');
+  
+  if (arte) {
+    imgEl.src = arte;
+    imgWrap.style.display = 'block';
+  } else {
+    imgWrap.style.display = 'none';
+  }
+  
+  if (texto) {
+    txtEl.innerHTML = esc(texto).replace(/\n/g, '<br/>');
+  } else {
+    txtEl.innerHTML = 'Secretaria de Turismo de São Sebastião · Fundação Florestal · PESM';
+  }
+  if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();
+}
+
+function salvarConfigEmailsAdmin() {
+  limpaAlerta('email-cfg-alert');
+  var arte = document.getElementById('email-cfg-arte').value.trim();
+  var texto = document.getElementById('email-cfg-texto').value.trim();
+  var portal = document.getElementById('email-cfg-portal').value.trim();
+  
+  gs('adminSalvarConfigEmail', {
+    token: S.adminToken,
+    rodapeArteUrl: arte,
+    rodapeTexto: texto,
+    portalUrl: portal
+  }).then(function(r) {
+    if (!r.ok) return alerta('email-cfg-alert', r.erro, 'err');
+    alerta('email-cfg-alert', r.msg || 'Configurações de e-mail salvas com sucesso!', 'ok');
+    atualizarPreviaEmail();
+  }).catch(function(){ alerta('email-cfg-alert', 'Falha de comunicação.', 'err'); });
+}
+
+function testarEmailAdmin() {
+  limpaAlerta('email-cfg-alert');
+  var arte = document.getElementById('email-cfg-arte').value.trim();
+  var texto = document.getElementById('email-cfg-texto').value.trim();
+  
+  alerta('email-cfg-alert', 'Enviando e-mail de teste...', 'ok');
+  gs('adminTestarEmail', {
+    token: S.adminToken,
+    rodapeArteUrl: arte,
+    rodapeTexto: texto
+  }).then(function(r) {
+    if (!r.ok) return alerta('email-cfg-alert', r.erro, 'err');
+    alerta('email-cfg-alert', r.msg || 'E-mail de teste enviado com sucesso! Verifique sua caixa de entrada.', 'ok');
+  }).catch(function(){ alerta('email-cfg-alert', 'Falha ao enviar e-mail de teste.', 'err'); });
+}
 
 // ═══════════════════════════════════════════════════════════════
 // REDIMENSIONAMENTO AUTOMÁTICO DO IFRAME (ResizeObserver)

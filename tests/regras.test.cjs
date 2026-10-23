@@ -8,6 +8,7 @@ const crypto = require('node:crypto');
 function ambiente() {
   const code = fs.readFileSync(path.join(__dirname, '..', 'Código.gs'), 'utf8');
   const cache = new Map();
+  const props = new Map();
   const emails = [];
   const writes = [];
   const sheets = {
@@ -31,7 +32,7 @@ function ambiente() {
     CacheService: {getScriptCache: () => ({get: key => cache.get(key) || null, put: (key, val) => cache.set(key, val), remove: key => cache.delete(key)})},
     LockService: {getScriptLock: () => ({tryLock: () => true, releaseLock() {}})},
     MailApp: {sendEmail: (...args) => emails.push(args)},
-    PropertiesService: {getScriptProperties: () => ({getProperty: () => 'SIM'})},
+    PropertiesService: {getScriptProperties: () => ({getProperty: key => props.has(key) ? props.get(key) : (key === 'EMAIL_RODAPE_ARTE_URL' || key === 'EMAIL_RODAPE_TEXTO' || key === 'PORTAL_URL' ? '' : 'SIM'), setProperty: (key, val) => props.set(key, String(val)), deleteProperty: key => props.delete(key)})},
     Utilities: {
       getUuid: () => crypto.randomUUID(),
       DigestAlgorithm: {SHA_256: 'sha256'}, Charset: {UTF_8: 'utf8'},
@@ -440,4 +441,123 @@ test('gestor pode iniciar conversa e texto que parece fórmula é gravado como t
   assert.equal(a.ctx._caixaAbrir({token:a.token,conversa:envio.conversa}).mensagens[0].autor,'Administrador');
   assert.equal(a.ctx.dispatch('caixaEnviar',{token:a.token,conversa:envio.conversa,mensagem:'Mensagem recebida.'}).ok,true);
   assert.equal(a.ctx._caixaListar({token:gestor.token}).pendentes,1);
+});
+
+
+test('auxiliar sem cadastro anterior recebe orientação de primeiro acesso por email ao ser indicado', () => {
+  const a = ambiente();
+  const data = new Date(Date.now() + 5 * 86400000).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const v = visita(data);
+  v.tamanhoGrupo = 16;
+  v.monitoresAux = '98765432100';
+  const res = a.ctx.dispatch('salvar', { token: a.token, visita: v });
+  assert.equal(res.ok, true);
+  assert.equal(res.aguardandoAux, true);
+  assert.equal(a.emails.length, 1);
+  const emailEnvio = a.emails[0];
+  assert.equal(emailEnvio[0], 'bia@example.test');
+  assert.match(emailEnvio[1], /Indicação como Monitor Auxiliar/);
+  assert.match(emailEnvio[2], /primeiro acesso/i);
+  assert.match(emailEnvio[3].htmlBody, /primeiro acesso/i);
+  assert.match(emailEnvio[3].htmlBody, new RegExp(res.protocolo));
+});
+
+test('auxiliar que ja possui senha recebe orientacao direta de login para aceitar indicacao', () => {
+  const a = ambiente();
+  a.sheets['Monitores Credenciados'][2][8] = 'hash_existente_123';
+  const data = new Date(Date.now() + 5 * 86400000).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const v = visita(data);
+  v.tamanhoGrupo = 16;
+  v.monitoresAux = '98765432100';
+  const res = a.ctx.dispatch('salvar', { token: a.token, visita: v });
+  assert.equal(res.ok, true);
+  assert.equal(a.emails.length, 1);
+  const emailEnvio = a.emails[0];
+  assert.equal(emailEnvio[0], 'bia@example.test');
+  assert.match(emailEnvio[2], /Faça login com seu e-mail e senha/i);
+  assert.doesNotMatch(emailEnvio[2], /primeiro acesso/i);
+});
+
+test('administrador pode autorizar ou negar solicitacao que esta aguardando auxiliares', () => {
+  const a = ambiente();
+  const admin = incluirAdmin(a);
+  a.sheets['Respostas ao formulário 1'].push(linha({
+    status: 'Aguardando Auxiliares',
+    protocolo: 'SS-2026-100099',
+    auxCpfs: '98765432100'
+  }));
+
+  const conf = a.ctx._adminDecidir({ token: admin.token, protocolo: 'SS-2026-100099', decisao: 'Confirmado' });
+  assert.equal(conf.ok, true);
+  const row = a.sheets['Respostas ao formulário 1'][1];
+  assert.equal(row[18], 'Confirmado');
+  assert.match(row[19], /Autorizado pelo administrador com auxiliares pendentes/);
+
+  row[18] = 'Aguardando Auxiliares';
+  const neg = a.ctx._adminDecidir({ token: admin.token, protocolo: 'SS-2026-100099', decisao: 'Negado', motivo: 'Auxiliar não respondeu a tempo' });
+  assert.equal(neg.ok, true);
+  assert.equal(row[18], 'Negado');
+  assert.equal(row[19], 'Auxiliar não respondeu a tempo');
+});
+
+test('reenvio de convite para auxiliar despacha novo email e respeita permissoes', () => {
+  const a = ambiente();
+  const admin = incluirAdmin(a);
+  a.sheets['Respostas ao formulário 1'].push(linha({
+    status: 'Aguardando Auxiliares',
+    protocolo: 'SS-2026-100088',
+    cpf: '12345678909',
+    auxCpfs: '98765432100'
+  }));
+
+  const reenvio = a.ctx.dispatch('reenviarConviteAuxiliar', { token: a.token, protocolo: 'SS-2026-100088' });
+  assert.equal(reenvio.ok, true);
+  assert.equal(reenvio.enviados, 1);
+  assert.equal(a.emails.length, 1);
+  assert.equal(a.emails[0][0], 'bia@example.test');
+
+  const reenvioAdmin = a.ctx.dispatch('reenviarConviteAuxiliar', { token: admin.token, protocolo: 'SS-2026-100088' });
+  assert.equal(reenvioAdmin.ok, true);
+  assert.equal(a.emails.length, 2);
+
+  const outroToken = a.ctx._novoToken();
+  a.ctx.CacheService.getScriptCache().put('TK_' + outroToken, JSON.stringify({ cpf: '99999999999' }));
+  const proibido = a.ctx.dispatch('reenviarConviteAuxiliar', { token: outroToken, protocolo: 'SS-2026-100088' });
+  assert.equal(proibido.code, 'FORBIDDEN');
+});
+
+test('gestor configura assinatura com imagem institucional e dados de rodape', () => {
+  const a = ambiente();
+  const gestor = incluirAdmin(a);
+
+  const inicial = a.ctx._adminObterConfigEmail({ token: gestor.token });
+  assert.equal(inicial.ok, true);
+  assert.equal(inicial.rodapeArteUrl, '');
+
+  const salvou = a.ctx._adminSalvarConfigEmail({
+    token: gestor.token,
+    rodapeArteUrl: 'https://turismo.saosebastiao.sp.gov.br/assinatura.png',
+    rodapeTexto: 'Secretaria de Turismo de São Sebastião\nTelefone: (12) 3892-2620'
+  });
+  assert.equal(salvou.ok, true);
+
+  const atualizado = a.ctx._adminObterConfigEmail({ token: gestor.token });
+  assert.equal(atualizado.rodapeArteUrl, 'https://turismo.saosebastiao.sp.gov.br/assinatura.png');
+  assert.match(atualizado.rodapeTexto, /Secretaria de Turismo/);
+
+  const erroUrl = a.ctx._adminSalvarConfigEmail({
+    token: gestor.token,
+    rodapeArteUrl: 'javascript:alert(1)'
+  });
+  assert.equal(erroUrl.code, 'INVALID_URL');
+
+  const testeEnvio = a.ctx._adminTestarEmail({
+    token: gestor.token,
+    rodapeArteUrl: atualizado.rodapeArteUrl,
+    rodapeTexto: atualizado.rodapeTexto
+  });
+  assert.equal(testeEnvio.ok, true);
+  assert.equal(a.emails.length, 1);
+  assert.equal(a.emails[0][0], 'admin@example.test');
+  assert.match(a.emails[0][3].htmlBody, /https:\/\/turismo\.saosebastiao\.sp\.gov\.br\/assinatura\.png/);
 });

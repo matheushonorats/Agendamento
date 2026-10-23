@@ -96,6 +96,10 @@ function _dispatchInterno(acao, carga) {
       case 'caixaAbrir':         return _caixaAbrir(carga);
       case 'caixaEnviar':        return _caixaEnviar(carga);
       case 'caixaMonitores':     return _caixaMonitores(carga);
+      case 'adminObterConfigEmail': return _adminObterConfigEmail(carga);
+      case 'adminSalvarConfigEmail': return _adminSalvarConfigEmail(carga);
+      case 'adminTestarEmail':      return _adminTestarEmail(carga);
+      case 'reenviarConviteAuxiliar': return _reenviarConviteAuxiliar(carga);
       default:                    return _err('Ação desconhecida.');
     }
   } catch (e) {
@@ -252,9 +256,171 @@ function _verificarCPF(p) {
   return _err('Cadastro não encontrado na base de monitores credenciados da SETUR. Verifique se o e-mail digitado está correto.', 'NOT_FOUND');
 }
 
+function _escHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function _enviarEmailPortal(opcoes) {
+  var to = String(opcoes.to || '').trim().toLowerCase();
+  if (!/^[^s@]+@[^s@]+.[^s@]+$/.test(to)) return _err('E-mail destinatário inválido.', 'EMAIL_INVALID');
+  var subject = String(opcoes.subject || 'Notificação — Espaço do Monitor').trim();
+  var corpoTexto = String(opcoes.corpoTexto || '');
+  var corpoHtml = String(opcoes.corpoHtml || '');
+  
+  var props = PropertiesService.getScriptProperties();
+  var rodapeArteUrl = String(opcoes.rodapeArteUrl !== undefined ? opcoes.rodapeArteUrl : (props.getProperty('EMAIL_RODAPE_ARTE_URL') || '')).trim();
+  var rodapeTexto = String(opcoes.rodapeTexto !== undefined ? opcoes.rodapeTexto : (props.getProperty('EMAIL_RODAPE_TEXTO') || '')).trim();
+  
+  var rodapeImgHtml = '';
+  if (rodapeArteUrl) {
+    rodapeImgHtml = '<div style="margin:16px 0 10px;text-align:center;"><img src="' + _escHtml(rodapeArteUrl) + '" alt="Assinatura Institucional" style="max-width:100%;max-height:140px;height:auto;border:0;" /></div>';
+  }
+  
+  var rodapeTextoHtml = '';
+  if (rodapeTexto) {
+    rodapeTextoHtml = '<div style="font-size:12px;color:#4b5563;line-height:1.5;margin:8px 0;">' + _escHtml(rodapeTexto).replace(/\n/g, '<br/>') + '</div>';
+  } else {
+    rodapeTextoHtml = '<div style="font-size:12px;color:#4b5563;margin:6px 0;font-weight:600;">Secretaria de Turismo de São Sebastião · Fundação Florestal · PESM</div>';
+  }
+  
+  var htmlCompleto = '<!DOCTYPE html>' +
+    '<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>' +
+    '<body style="margin:0;padding:16px;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1e293b;-webkit-font-smoothing:antialiased;">' +
+    '<div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">' +
+    '<div style="background-color:#13382c;padding:20px 24px;text-align:center;">' +
+    '<h1 style="color:#ffffff;font-size:18px;margin:0;font-weight:700;letter-spacing:-0.01em;">Espaço do Monitor · São Sebastião</h1>' +
+    '<p style="color:rgba(255,255,255,0.85);font-size:12px;margin:5px 0 0;">Parque Estadual da Serra do Mar · Fundação Florestal</p>' +
+    '</div>' +
+    '<div style="padding:24px;font-size:14px;line-height:1.6;color:#334155;">' +
+    corpoHtml +
+    '</div>' +
+    '<div style="background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 24px;text-align:center;font-size:11px;color:#64748b;">' +
+    rodapeImgHtml +
+    rodapeTextoHtml +
+    '<p style="margin:10px 0 0;font-size:11px;color:#94a3b8;">Esta é uma mensagem automática institucional do sistema de agendamento de visitas.</p>' +
+    '</div></div></body></html>';
+    
+  var textoCompleto = corpoTexto;
+  if (rodapeTexto) {
+    textoCompleto += '\n\n---\n' + rodapeTexto;
+  } else {
+    textoCompleto += '\n\n---\nSecretaria de Turismo de São Sebastião · Fundação Florestal · PESM';
+  }
+  
+  var emailEnviado = false;
+  try {
+    MailApp.sendEmail(to, subject, textoCompleto, { htmlBody: htmlCompleto });
+    emailEnviado = true;
+  } catch (e1) {
+    Logger.log('MailApp falhou: ' + e1 + ' - tentando GmailApp...');
+    try {
+      GmailApp.sendEmail(to, subject, textoCompleto, { htmlBody: htmlCompleto });
+      emailEnviado = true;
+    } catch (e2) {
+      Logger.log('GmailApp falhou: ' + e2);
+    }
+  }
+  
+  if (!emailEnviado) {
+    return _err('Não foi possível enviar o e-mail no momento. Verifique as permissões de envio do Google Apps Script.', 'EMAIL_ERROR');
+  }
+  return { ok: true };
+}
+
+function _notificarMonitorAuxiliarEmail(auxRow, monInfo) {
+  var auxEmail = _san(String(auxRow[MC.EMAIL - 1] || '')).trim().toLowerCase();
+  if (!/^[^s@]+@[^s@]+.[^s@]+$/.test(auxEmail)) return false;
+  var auxNome = _san(String(auxRow[MC.NOME - 1] || 'Monitor(a)'));
+  var temAcesso = Boolean(auxRow[MC.SENHA_HASH - 1] && String(auxRow[MC.SENHA_HASH - 1]).trim());
+  
+  var props = PropertiesService.getScriptProperties();
+  var portalUrl = String(props.getProperty('PORTAL_URL') || '').trim();
+  
+  var assunto = '[Espaço do Monitor] Indicação como Monitor Auxiliar — Solicitação ' + monInfo.protocolo;
+  
+  var secaoOrientacoesHtml = '';
+  var secaoOrientacoesTexto = '';
+  
+  if (temAcesso) {
+    secaoOrientacoesHtml = '<div style="background-color:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:14px 16px;margin:16px 0;">' +
+      '<p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#1e293b;">Como confirmar ou recusar sua participação:</p>' +
+      '<ol style="margin:0;padding-left:20px;font-size:13px;color:#334155;">' +
+      (portalUrl ? '<li style="margin-bottom:6px;">Acesse o <strong>Espaço do Monitor</strong> pelo link: <a href="' + _escHtml(portalUrl) + '" style="color:#2d6a4f;font-weight:600;">' + _escHtml(portalUrl) + '</a></li>' : '<li style="margin-bottom:6px;">Acesse o <strong>Espaço do Monitor</strong>.</li>') +
+      '<li style="margin-bottom:6px;">Faça login com seu <strong>e-mail</strong> e sua <strong>senha cadastrada</strong>.</li>' +
+      '<li style="margin-bottom:6px;">Na tela inicial (Minhas Solicitações), localize a solicitação <strong>' + _escHtml(monInfo.protocolo) + '</strong> identificada com <strong>"🤝 Indicação de Auxiliar"</strong>.</li>' +
+      '<li>Clique em <strong>Aceitar</strong> para confirmar sua presença ou <strong>Recusar</strong> caso não possa participar.</li>' +
+      '</ol>' +
+      '<p style="font-size:12px;color:#64748b;margin:10px 0 0;"><em>A solicitação fica aguardando o seu aceite para ser avaliada pela equipe administrativa.</em></p>' +
+      '</div>';
+      
+    secaoOrientacoesTexto = 'Como confirmar ou recusar sua participação:\n' +
+      (portalUrl ? '1. Acesse o portal: ' + portalUrl + '\n' : '1. Acesse o Espaço do Monitor.\n') +
+      '2. Faça login com seu e-mail e senha.\n' +
+      '3. Em "Minhas Solicitações", localize o protocolo ' + monInfo.protocolo + '.\n' +
+      '4. Clique em Aceitar ou Recusar.';
+  } else {
+    secaoOrientacoesHtml = '<div style="background-color:#fefce8;border:1px solid #fef08a;border-radius:6px;padding:14px 16px;margin:16px 0;">' +
+      '<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#854d0e;">💡 Este será o seu primeiro acesso ao sistema:</p>' +
+      '<p style="margin:0 0 10px;font-size:13px;color:#713f12;">Como você já é credenciado(a) junto à Fundação Florestal, siga o passo a passo abaixo para criar sua senha de acesso e responder à solicitação:</p>' +
+      '<ol style="margin:0;padding-left:20px;font-size:13px;color:#713f12;">' +
+      (portalUrl ? '<li style="margin-bottom:6px;">Acesse o portal: <a href="' + _escHtml(portalUrl) + '" style="color:#2d6a4f;font-weight:700;">' + _escHtml(portalUrl) + '</a></li>' : '<li style="margin-bottom:6px;">Acesse o portal do Espaço do Monitor.</li>') +
+      '<li style="margin-bottom:6px;">Na tela inicial de login, clique na opção <strong>"Primeiro Acesso"</strong>.</li>' +
+      '<li style="margin-bottom:6px;">Digite o seu e-mail cadastrado (o mesmo onde recebeu esta mensagem: <code>' + _escHtml(auxEmail) + '</code>).</li>' +
+      '<li style="margin-bottom:6px;">Você receberá um código de 6 dígitos no seu e-mail para validar sua identidade.</li>' +
+      '<li style="margin-bottom:6px;">Crie uma senha pessoal segura e confirme.</li>' +
+      '<li>Pronto! Ao entrar, você verá a solicitação com o botão para <strong>Aceitar</strong> ou <strong>Recusar</strong>.</li>' +
+      '</ol>' +
+      '</div>';
+      
+    secaoOrientacoesTexto = 'Como realizar seu Primeiro Acesso e confirmar a visita:\n' +
+      (portalUrl ? '1. Acesse o portal: ' + portalUrl + '\n' : '1. Acesse o Espaço do Monitor.\n') +
+      '2. Clique em "Primeiro Acesso".\n' +
+      '3. Digite seu e-mail cadastrado: ' + auxEmail + '\n' +
+      '4. Digite o código de 6 dígitos que chegará no seu e-mail.\n' +
+      '5. Crie sua senha de acesso.\n' +
+      '6. Na tela inicial, clique em Aceitar ou Recusar a indicação como auxiliar.';
+  }
+  
+  var corpoHtml = '<p style="margin-top:0;">Olá, <strong>' + _escHtml(auxNome) + '</strong>,</p>' +
+    '<p>Você foi indicado(a) pelo monitor <strong>' + _escHtml(monInfo.quem) + '</strong> para atuar como <strong>Monitor(a) Auxiliar</strong> na solicitação de agendamento <strong>' + _escHtml(monInfo.protocolo) + '</strong>.</p>' +
+    '<div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #2d6a4f;border-radius:6px;padding:12px 16px;margin:16px 0;">' +
+    '<table style="width:100%;font-size:13px;border-collapse:collapse;line-height:1.8;">' +
+    '<tr><td style="color:#64748b;width:38%;">Protocolo:</td><td style="font-weight:700;color:#1e293b;">' + _escHtml(monInfo.protocolo) + '</td></tr>' +
+    '<tr><td style="color:#64748b;">Data da Visita:</td><td style="font-weight:700;color:#1e293b;">' + _escHtml(monInfo.data) + '</td></tr>' +
+    '<tr><td style="color:#64748b;">Horário:</td><td>' + _escHtml(monInfo.horario) + '</td></tr>' +
+    '<tr><td style="color:#64748b;">Monitor Responsável:</td><td>' + _escHtml(monInfo.quem) + ' (' + _escHtml(monInfo.telefone || monInfo.email || '—') + ')</td></tr>' +
+    '<tr><td style="color:#64748b;">Tamanho do Grupo:</td><td>' + _escHtml(String(monInfo.tamanho)) + ' pessoa(s)</td></tr>' +
+    '<tr><td style="color:#64748b;">Origem / Tipo:</td><td>' + _escHtml(monInfo.origem) + ' · ' + _escHtml(monInfo.tipoGrupo) + '</td></tr>' +
+    '</table></div>' +
+    secaoOrientacoesHtml +
+    '<div style="margin-top:18px;padding:10px 12px;background-color:#f0fdf4;border:1px solid #dcfce7;border-radius:6px;font-size:12px;color:#166534;">' +
+    '<strong>Em caso de dúvidas ou dificuldades com o sistema:</strong><br>' +
+    'Entre em contato diretamente com a Secretaria de Turismo de São Sebastião (SETUR).' +
+    '</div>';
+    
+  var corpoTexto = 'Olá, ' + auxNome + ',\n\n' +
+    'Você foi indicado(a) pelo monitor ' + monInfo.quem + ' para atuar como Monitor(a) Auxiliar na solicitação de agendamento ' + monInfo.protocolo + '.\n\n' +
+    'DADOS DA SOLICITAÇÃO:\n' +
+    '- Protocolo: ' + monInfo.protocolo + '\n' +
+    '- Data da Visita: ' + monInfo.data + '\n' +
+    '- Horário: ' + monInfo.horario + '\n' +
+    '- Monitor Responsável: ' + monInfo.quem + ' (' + (monInfo.telefone || monInfo.email || '—') + ')\n' +
+    '- Tamanho do Grupo: ' + monInfo.tamanho + ' pessoa(s)\n' +
+    '- Origem / Tipo: ' + monInfo.origem + ' · ' + monInfo.tipoGrupo + '\n\n' +
+    secaoOrientacoesTexto + '\n\n' +
+    'Em caso de dúvidas ou dificuldades com o sistema, entre em contato com a Secretaria de Turismo de São Sebastião (SETUR).';
+    
+  return _enviarEmailPortal({
+    to: auxEmail,
+    subject: assunto,
+    corpoTexto: corpoTexto,
+    corpoHtml: corpoHtml
+  });
+}
+
 function _enviarCodigo(cpfOuEmail, email, finalidade) {
   var emailDestino = String(email || cpfOuEmail || '').trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailDestino)) {
+  if (!/^[^s@]+@[^s@]+.[^s@]+$/.test(emailDestino)) {
     return _err('Não há e-mail válido no cadastro. Solicite a atualização à SETUR.', 'EMAIL_REQUIRED');
   }
   var cache = CacheService.getScriptCache();
@@ -266,25 +432,27 @@ function _enviarCodigo(cpfOuEmail, email, finalidade) {
   var codigo = String(100000 + Math.floor(Math.random() * 900000));
   cache.put(chave, JSON.stringify({ hash: _hashSenha(idChave, finalidade + '|' + codigo), tentativas: 0 }), CFG.CODIGO_MINUTOS * 60);
   
-  var emailEnviado = false;
-  try {
-    MailApp.sendEmail(emailDestino, 'Código de acesso — Portal do Monitor',
-      'Seu código de confirmação é ' + codigo + '. Ele vale por ' + CFG.CODIGO_MINUTOS +
-      ' minutos. Se você não solicitou este código, ignore esta mensagem.');
-    emailEnviado = true;
-  } catch (e1) {
-    Logger.log('MailApp falhou: ' + e1 + ' - tentando GmailApp...');
-    try {
-      GmailApp.sendEmail(emailDestino, 'Código de acesso — Portal do Monitor',
-        'Seu código de confirmação é ' + codigo + '. Ele vale por ' + CFG.CODIGO_MINUTOS +
-        ' minutos. Se você não solicitou este código, ignore esta mensagem.');
-      emailEnviado = true;
-    } catch (e2) {
-      Logger.log('GmailApp falhou: ' + e2);
-    }
-  }
+  var finalidadeTexto = finalidade === 'primeiro' ? 'para o seu primeiro acesso' : finalidade === 'recuperar' ? 'para redefinição da sua senha' : 'para confirmação do seu perfil';
+  
+  var corpoTexto = 'Seu código de confirmação é ' + codigo + '. Ele vale por ' + CFG.CODIGO_MINUTOS + ' minutos. Se você não solicitou este código, ignore esta mensagem.';
+  var corpoHtml = '<p style="margin-top:0;">Olá,</p>' +
+    '<p>Seu código de confirmação ' + finalidadeTexto + ' no <strong>Espaço do Monitor</strong> é:</p>' +
+    '<div style="text-align:center;margin:22px 0;">' +
+    '<span style="font-size:32px;font-weight:800;letter-spacing:6px;color:#13382c;background:#eef5f0;padding:10px 24px;border-radius:8px;border:1px solid #c2dec9;display:inline-block;">' + codigo + '</span>' +
+    '</div>' +
+    '<p style="font-size:13px;color:#64748b;">Este código de verificação é válido por <strong>' + CFG.CODIGO_MINUTOS + ' minutos</strong>. Se você não solicitou este código, por favor desconsidere este e-mail com segurança.</p>' +
+    '<div style="margin-top:16px;padding:10px 12px;background:#f0fdf4;border:1px solid #dcfce7;border-radius:6px;font-size:12px;color:#166534;">' +
+    'Em caso de dúvidas ou problemas, contate a Secretaria de Turismo de São Sebastião (SETUR).' +
+    '</div>';
+    
+  var envio = _enviarEmailPortal({
+    to: emailDestino,
+    subject: 'Código de acesso — Portal do Monitor',
+    corpoTexto: corpoTexto,
+    corpoHtml: corpoHtml
+  });
 
-  if (!emailEnviado) {
+  if (!envio.ok) {
     cache.remove(chave);
     return _err('Não foi possível enviar o código por e-mail no momento. Verifique as permissões de envio do Google Apps Script ou contate o administrador.', 'EMAIL_ERROR');
   }
@@ -744,11 +912,18 @@ function _salvar(p) {
   if (auxiliares.cpfs.length) {
     var monInfo = { quem: _san(monRow[MC.NOME - 1]), email: _san(monRow[MC.EMAIL - 1]), telefone: _san(monRow[MC.TELEFONE - 1]), data: _san(v.dataVisita), horario: v.horario ? (_san(v.horario)+':00') : '—', tamanho: tamGrupo, origem: _san(origemPadronizada), tipoGrupo: _san(v.tipoGrupo), protocolo: protocolo };
     for (var n = 0; n < auxiliares.cpfs.length; n++) {
-      var chave = 'NOTIF_' + auxiliares.cpfs[n];
+      var auxCpf = auxiliares.cpfs[n];
+      var chave = 'NOTIF_' + auxCpf;
       var existentes = [];
       try { existentes = JSON.parse(CacheService.getScriptCache().get(chave) || '[]'); } catch(e2){}
       existentes.push(monInfo);
       CacheService.getScriptCache().put(chave, JSON.stringify(existentes.slice(-10)), 21600);
+      for (var mm = 1; mm < monRows.length; mm++) {
+        if (_normCPF(String(monRows[mm][MC.CPF - 1])) === auxCpf) {
+          try { _notificarMonitorAuxiliarEmail(monRows[mm], monInfo); } catch(eMail) { Logger.log('Falha ao enviar e-mail auxiliar: ' + eMail); }
+          break;
+        }
+      }
     }
   }
   return { ok: true, protocolo: protocolo, aguardandoAux: aguardandoAux };
@@ -1635,9 +1810,16 @@ function _adminDecidir(p) {
       var status=String(rows[i][18]||'').trim().toLowerCase();
       if (p.decisao==='Cancelado') {
         if (['pendente','confirmado','aguardando auxiliares'].indexOf(status)===-1) return _err('Esta solicitação já foi encerrada e não pode ser cancelada.', 'INVALID_STATUS');
-      } else if (status!=='pendente') return _err('Somente solicitações pendentes podem receber esta decisão.', 'INVALID_STATUS');
+      } else if (['pendente','aguardando auxiliares'].indexOf(status)===-1) {
+        return _err('Somente solicitações pendentes ou aguardando auxiliares podem receber esta decisão.', 'INVALID_STATUS');
+      }
+      var pendenciaAux = (status === 'aguardando auxiliares');
       sheet.getRange(i+1,19).setValue(p.decisao);
-      sheet.getRange(i+1,20).setValue(p.decisao==='Confirmado'?'':_textoSeguroPlanilha(_san(motivo)));
+      var textoMotivo = _san(motivo);
+      if (p.decisao === 'Confirmado' && pendenciaAux && !textoMotivo) {
+        textoMotivo = 'Autorizado pelo administrador com auxiliares pendentes';
+      }
+      sheet.getRange(i+1,20).setValue(p.decisao==='Confirmado'&&!pendenciaAux?'':_textoSeguroPlanilha(textoMotivo));
       return {ok:true,status:p.decisao};
     }
     return _err('Protocolo não encontrado. Verifique a migração dos protocolos antigos.', 'NOT_FOUND');
@@ -2027,4 +2209,142 @@ function _atualizarPerfil(p) {
       bairro: bairro
     }
   };
+}
+
+function _reenviarConviteAuxiliar(p) {
+  var monitor = _validaToken(p.token);
+  var admin = _adminTem(p.token, 'verSolicitacoes') || _adminTem(p.token, 'decidir');
+  if (!monitor && !admin) return _err('Não autorizado.', 'UNAUTHORIZED');
+  var protocolo = String(p.protocolo || '').trim();
+  if (!protocolo) return _err('Protocolo não informado.', 'PROTOCOL_REQUIRED');
+  
+  var protocoloConsulta = _resolverProtocoloConsulta(protocolo);
+  var sheet = _aba(CFG.ABA_RESPOSTAS);
+  var rows = sheet.getDataRange().getValues();
+  var monSheet = _aba(CFG.ABA_MONITORES);
+  var monRows = monSheet.getDataRange().getValues();
+  
+  for (var i = 1; i < rows.length; i++) {
+    if (_referenciaSolicitacao(rows[i], i) !== protocoloConsulta) continue;
+    var row = rows[i];
+    var cpfPrincipal = _normCPF(String(row[RF.CPF - 1] || ''));
+    var emailPrincipal = String(row[1] || '').trim().toLowerCase();
+    
+    if (!admin) {
+      var isPrincipal = (monitor.cpf && monitor.cpf === cpfPrincipal) || (monitor.email && monitor.email.toLowerCase() === emailPrincipal);
+      if (!isPrincipal) return _err('Apenas o monitor responsável ou a administração podem reenviar convites.', 'FORBIDDEN');
+    }
+    
+    var status = String(row[18] || '').trim();
+    if (status !== 'Aguardando Auxiliares') {
+      return _err('Esta solicitação não está mais aguardando auxiliares (status: ' + status + ').', 'INVALID_STATUS');
+    }
+    
+    var aceites = {};
+    try { aceites = JSON.parse(String(row[21] || '{}')); } catch(e) {}
+    var auxCpfs = String(row[22] || '').split(',').map(function(c){ return _normCPF(c); }).filter(Boolean);
+    
+    var monInfo = {
+      quem: _san(row[2] || ''),
+      email: _san(row[1] || ''),
+      telefone: _san(row[3] || ''),
+      data: _dataIsoAdmin(row[9]),
+      horario: _horaAdmin(row[10]),
+      tamanho: Number(row[4]) || 0,
+      origem: _san(row[11] || ''),
+      tipoGrupo: _san(row[12] || ''),
+      protocolo: protocolo
+    };
+    
+    var enviados = 0;
+    for (var m = 1; m < monRows.length; m++) {
+      var mCpf = _normCPF(String(monRows[m][MC.CPF - 1] || ''));
+      var mNome = String(monRows[m][MC.NOME - 1] || '').trim();
+      var estaNoAgendamento = (auxCpfs.indexOf(mCpf) !== -1) || (aceites[mNome] !== undefined);
+      if (!estaNoAgendamento) continue;
+      
+      if (p.cpfAuxiliar && _normCPF(p.cpfAuxiliar) !== mCpf) continue;
+      
+      var statusAceite = aceites[mNome] || 'Pendente';
+      if (statusAceite === 'Pendente') {
+        _notificarMonitorAuxiliarEmail(monRows[m], monInfo);
+        enviados++;
+      }
+    }
+    
+    if (enviados === 0) {
+      return _err('Nenhum monitor auxiliar pendente para receber o convite.', 'NO_PENDING_AUX');
+    }
+    
+    _registrarAuditoria('reenviarConviteAuxiliar', { protocolo: protocolo, enviados: enviados }, { ok: true }, { papel: admin ? 'admin' : 'monitor' });
+    return { ok: true, enviados: enviados, msg: 'Convite reenviado com sucesso por e-mail para ' + enviados + ' monitor(es) auxiliar(es).' };
+  }
+  return _err('Solicitação não encontrada.', 'NOT_FOUND');
+}
+
+function _adminObterConfigEmail(p) {
+  if (!_adminTem(p.token, 'verSolicitacoes') && !_adminTem(p.token, 'decidir') && !_adminTem(p.token, 'gerirAdmins')) {
+    return _err('Sem permissão para consultar configurações de e-mail.', 'FORBIDDEN');
+  }
+  var props = PropertiesService.getScriptProperties();
+  return {
+    ok: true,
+    rodapeArteUrl: String(props.getProperty('EMAIL_RODAPE_ARTE_URL') || ''),
+    rodapeTexto: String(props.getProperty('EMAIL_RODAPE_TEXTO') || ''),
+    portalUrl: String(props.getProperty('PORTAL_URL') || '')
+  };
+}
+
+function _adminSalvarConfigEmail(p) {
+  if (!_adminTem(p.token, 'decidir') && !_adminTem(p.token, 'gerirAdmins')) {
+    return _err('Sem permissão para alterar configurações de e-mail.', 'FORBIDDEN');
+  }
+  var props = PropertiesService.getScriptProperties();
+  var arteUrl = String(p.rodapeArteUrl || '').trim();
+  var texto = String(p.rodapeTexto || '').trim();
+  var portal = String(p.portalUrl || '').trim();
+  
+  if (arteUrl && !/^https?:\/\//i.test(arteUrl)) {
+    return _err('A URL da arte deve começar com http:// ou https://', 'INVALID_URL');
+  }
+  if (portal && !/^https?:\/\//i.test(portal)) {
+    return _err('A URL do portal deve começar com http:// ou https://', 'INVALID_URL');
+  }
+  
+  if (arteUrl) props.setProperty('EMAIL_RODAPE_ARTE_URL', arteUrl);
+  else props.deleteProperty('EMAIL_RODAPE_ARTE_URL');
+  
+  if (texto) props.setProperty('EMAIL_RODAPE_TEXTO', texto);
+  else props.deleteProperty('EMAIL_RODAPE_TEXTO');
+  
+  if (portal) props.setProperty('PORTAL_URL', portal);
+  else props.deleteProperty('PORTAL_URL');
+  
+  _registrarAuditoria('adminSalvarConfigEmail', { arteUrl: arteUrl ? 'Sim' : 'Não', texto: texto ? 'Sim' : 'Não' }, { ok: true }, { papel: 'admin' });
+  return { ok: true, msg: 'Configurações de e-mail e assinatura salvas com sucesso!' };
+}
+
+function _adminTestarEmail(p) {
+  var admin = _adminTem(p.token, 'decidir') || _adminTem(p.token, 'gerirAdmins') || _adminTem(p.token, 'verSolicitacoes');
+  if (!admin) return _err('Sem permissão para testar e-mail.', 'FORBIDDEN');
+  var destino = admin.email;
+  if (!destino) return _err('Seu usuário administrador não possui e-mail cadastrado.', 'EMAIL_REQUIRED');
+  
+  var props = PropertiesService.getScriptProperties();
+  var rodapeArteUrl = String(p.rodapeArteUrl !== undefined ? p.rodapeArteUrl : (props.getProperty('EMAIL_RODAPE_ARTE_URL') || '')).trim();
+  var rodapeTexto = String(p.rodapeTexto !== undefined ? p.rodapeTexto : (props.getProperty('EMAIL_RODAPE_TEXTO') || '')).trim();
+  
+  var resultado = _enviarEmailPortal({
+    to: destino,
+    subject: '[Teste] Assinatura e Notificação do Portal de Agendamento',
+    corpoTexto: 'Olá ' + admin.nome + ',\n\nEste é um e-mail de teste para verificar a visualização da arte de assinatura do rodapé e a formatação anti-spam do sistema.\n\nSecretaria de Turismo de São Sebastião / PESM',
+    corpoHtml: '<p>Olá <strong>' + _escHtml(admin.nome) + '</strong>,</p>' +
+      '<p>Este é um <strong>e-mail de teste</strong> enviado pelo painel administrativo para verificar a visualização da assinatura de rodapé, o layout institucional e a pontuação anti-spam na sua caixa de entrada.</p>' +
+      '<p style="color:#2d6a4f;font-weight:600;">Se você está vendo esta mensagem com o rodapé e formatação corretos, a configuração está pronta e funcionando perfeitamente!</p>',
+    rodapeArteUrl: rodapeArteUrl,
+    rodapeTexto: rodapeTexto
+  });
+  
+  if (!resultado.ok) return resultado;
+  return { ok: true, msg: 'E-mail de teste enviado com sucesso para ' + destino + '!' };
 }
