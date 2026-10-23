@@ -1962,7 +1962,7 @@ function avisarPaginaHospedeira(dados){
   try{if(window.top!==window)window.top.postMessage(dados,'*');}catch(e){}
   try{if(window.parent!==window&&window.parent!==window.top)window.parent.postMessage(dados,'*');}catch(e){}
 }
-function tela(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});document.getElementById('s-'+id).classList.add('on');document.getElementById('btnLogout').style.display=id==='login'?'none':'';avisarPaginaHospedeira({type:'scrollToTop'});try{setTimeout(forcarRedimensionamento,100);}catch(e){}}
+function tela(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});document.getElementById('s-'+id).classList.add('on');document.getElementById('btnLogout').style.display=id==='login'?'none':'';avisarPaginaHospedeira({type:'scrollToTop'});if(typeof ultimoAlturaEnviada!=='undefined')ultimoAlturaEnviada=0;try{if(typeof forcarRedimensionamento==='function'){forcarRedimensionamento(true);setTimeout(function(){forcarRedimensionamento(true);},80);setTimeout(function(){forcarRedimensionamento(true);},250);}}catch(e){}}
 function alerta(id,txt,tipo){var el=document.getElementById(id);el.className='alert alert-'+(tipo||'err')+' show';el.innerHTML=txt;setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'nearest'});},50);}
 function limpaAlerta(id){var el=document.getElementById(id);el.className='alert';el.textContent='';}
 function carregando(id,on){var b=document.getElementById(id);if(!b)return;b.disabled=on;on?b.classList.add('loading'):b.classList.remove('loading');}
@@ -2390,6 +2390,8 @@ function abrirAdminAba(aba){
     document.getElementById('admin-tab-'+a).classList.toggle('active',a===aba);
     document.getElementById('admin-panel-'+a).classList.toggle('active',a===aba);
   });
+  if(typeof ultimoAlturaEnviada!=='undefined')ultimoAlturaEnviada=0;
+  if(typeof forcarRedimensionamento==='function')forcarRedimensionamento(true);
   if(aba==='solicitacoes')carregarAdminSolicitacoes();
   if(aba==='agenda')carregarAgendaAdmin();
   if(aba==='datas')carregarAdminDatas();
@@ -2441,11 +2443,12 @@ function filtrarDestinatariosCaixa(){var q=normalizarBusca(document.getElementBy
 function selecionarDestinatarioCaixa(i){var m=S.caixaDestinatarios[i];if(!m)return;S.caixaDestinatario=m;document.getElementById('caixa-destinatario-selecionado').textContent='Para: '+m.nome;document.getElementById('caixa-destinatarios').innerHTML='';document.getElementById('caixa-busca-monitor').value=m.nome;}
 function carregarAdminLogs(){
   var el=document.getElementById('admin-logs');el.textContent='Carregando auditoria…';
-  gs('adminLogs',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);el.innerHTML=(r.lista||[]).length?r.lista.map(function(x){return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(x.acao)+' · '+esc(x.resultado)+'</h3><span class="report-meta">'+esc(x.data)+'</span></div><p>'+esc(x.papel)+' · '+esc(x.ator)+' · '+esc(x.alvo||'—')+'</p>'+(x.detalhes?'<p>'+esc(x.detalhes)+'</p>':'')+'</article>';}).join(''):'<p class="aux-empty">Nenhum evento registrado.</p>';}).catch(function(){adminErro({erro:'Falha ao carregar auditoria.'});});
+  gs('adminLogs',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);el.innerHTML=(r.lista||[]).length?r.lista.map(function(x){return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(x.acao)+' · '+esc(x.resultado)+'</h3><span class="report-meta">'+esc(x.data)+'</span></div><p>'+esc(x.papel)+' · '+esc(x.ator)+' · '+esc(x.alvo||'—')+'</p>'+(x.detalhes?'<p>'+esc(x.detalhes)+'</p>':'')+'</article>';}).join(''):'<p class="aux-empty">Nenhum evento registrado.</p>';if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();}).catch(function(){adminErro({erro:'Falha ao carregar auditoria.'});});
 }
 function carregarAdminSolicitacoes(){
   document.getElementById('admin-solicitacoes').textContent='Carregando solicitações…';
-  gs('adminSolicitacoes',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);S.adminSolicitacoes=r.lista||[];renderAdminSolicitacoes();renderAgendaAdmin();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+  if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();
+  gs('adminSolicitacoes',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);S.adminSolicitacoes=r.lista||[];renderAdminSolicitacoes();renderAgendaAdmin();if(typeof forcarRedimensionamento==='function'){forcarRedimensionamento(true);setTimeout(function(){forcarRedimensionamento(true);},80);}}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
 }
 function chaveDataAgenda(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function carregarAgendaAdmin(){
@@ -2473,6 +2476,7 @@ function renderAgendaAdmin(){
   document.getElementById('agenda-grade').innerHTML=html;
   var el=document.getElementById('agenda-dia-lista');if(!S.agendaDia){el.innerHTML='<p class="field-hint">Selecione um dia para ver as reservas.</p>';return;}
   var lista=porDia[S.agendaDia]||[];el.innerHTML='<h3>'+esc(dataBr(S.agendaDia))+' · '+lista.length+' '+(lista.length===1?'solicitação':'solicitações')+'</h3>'+(lista.length?lista.sort(function(x,y){return String(x.a.horario).localeCompare(String(y.a.horario));}).map(function(x){var a=x.a;return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(a.horario||'Horário não informado')+' · '+esc(a.monitor||'Monitor não informado')+'</h3><span class="badge'+(a.status==='Pendente'?' b-pendente':'')+'">'+esc(a.status||'Sem status')+'</span></div><p>'+esc(rotuloProtocolo(a.protocolo))+' · '+esc(a.grupo)+' pessoas · '+esc(a.tipo||'')+' · '+esc(a.origem||'')+'</p><button class="btn btn-o btn-sm" type="button" onclick="abrirDetalheAdmin('+x.i+')">Ver detalhes</button></article>';}).join(''):'<p class="aux-empty">Não há solicitações para esta data.</p>');
+  if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();
 }
 function renderAdminSolicitacoes(){
   var q=normalizarBusca(document.getElementById('admin-busca').value),f=document.getElementById('admin-filtro').value;
@@ -2488,7 +2492,7 @@ function renderAdminSolicitacoes(){
   });
   var el=document.getElementById('admin-solicitacoes');
   var resumo='<div class="admin-pending-summary">'+totalPendentes+' '+(totalPendentes===1?'solicitação pendente':'solicitações pendentes')+' de decisão</div>';
-  if(!itens.length){el.innerHTML=resumo+'<p class="aux-empty">Nenhuma solicitação encontrada neste filtro.</p>';return;}
+  if(!itens.length){el.innerHTML=resumo+'<p class="aux-empty">Nenhuma solicitação encontrada neste filtro.</p>';if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();return;}
   el.innerHTML=resumo+itens.map(function(x){var a=x.v,i=x.i;
     var ativa=['Pendente','Confirmado','Aguardando Auxiliares'].indexOf(a.status)!==-1;
     var botoes=a.protocolo?'<div class="admin-actions"><button class="btn btn-o btn-sm" type="button" onclick="abrirDetalheAdmin('+i+')">Ver detalhes</button>'+(podeAdmin('decidir')?
@@ -2499,6 +2503,7 @@ function renderAdminSolicitacoes(){
       '<p>Contato: '+esc(a.telefone||'—')+' · '+esc(a.email||'—')+'</p>'+
       (a.auxiliares?'<p>Auxiliares: '+esc(a.auxiliares)+'</p>':'')+(a.motivo?'<p>Motivo: '+esc(a.motivo)+'</p>':'')+botoes+'</article>';
   }).join('');
+  if(typeof forcarRedimensionamento==='function'){forcarRedimensionamento();setTimeout(function(){forcarRedimensionamento(true);},80);}
 }
 function abrirDetalheAdmin(indice){var a=S.adminSolicitacoes[indice];if(a&&a.protocolo)abrirDetalhe(a.protocolo);}
 function decidirAdmin(indice,decisao){
@@ -2509,7 +2514,7 @@ function decidirAdmin(indice,decisao){
   gs('adminDecidir',{token:S.adminToken,protocolo:a.protocolo,decisao:decisao,motivo:motivo}).then(function(r){if(!r.ok)return adminErro(r);fecharDetalhe();alerta('admin-alert',esc(rotuloProtocolo(a.protocolo))+' atualizado para '+esc(r.status)+'.','ok');carregarAdminSolicitacoes();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
 }
 function carregarAdminDatas(){
-  gs('adminDatas',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);var e=document.getElementById('admin-datas');e.innerHTML=(r.lista||[]).length?(r.lista||[]).map(function(d,i){return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(d.data)+'</h3><button class="btn btn-o btn-sm" style="width:auto" type="button" onclick="desbloquearDataAdmin(\''+esc(d.data)+'\')">Desbloquear</button></div><p>'+esc(d.motivo||'Sem motivo')+'</p></article>';}).join(''):'<p class="aux-empty">Nenhuma data bloqueada.</p>';}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
+  gs('adminDatas',{token:S.adminToken}).then(function(r){if(!r.ok)return adminErro(r);var e=document.getElementById('admin-datas');e.innerHTML=(r.lista||[]).length?(r.lista||[]).map(function(d,i){return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(d.data)+'</h3><button class="btn btn-o btn-sm" style="width:auto" type="button" onclick="desbloquearDataAdmin(\''+esc(d.data)+'\')">Desbloquear</button></div><p>'+esc(d.motivo||'Sem motivo')+'</p></article>';}).join(''):'<p class="aux-empty">Nenhuma data bloqueada.</p>';if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();}).catch(function(){adminErro({erro:'Falha de comunicação.'});});
 }
 function bloquearDataAdmin(){
   var data=document.getElementById('admin-data').value,motivo=document.getElementById('admin-motivo').value.trim();
@@ -2531,6 +2536,7 @@ function renderAdminMonitores(){
       (podeAdmin('agendarEmNome')?'<button class="btn btn-p btn-sm" type="button" onclick="acessarMonitorAdmin('+i+')">Agendar em nome deste monitor</button>':'')+
       (podeAdmin('resetarSenha')?'<button class="btn btn-o btn-sm" type="button" onclick="resetarSenhaMonitorAdmin('+i+')">Redefinir acesso</button>':'')+'</div></article>';
   }).join(''):'<p class="aux-empty">Nenhum monitor encontrado.</p>';
+  if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();
 }
 function acessarMonitorAdmin(indice){
   var m=S.adminMonitores[indice];if(!m)return;
@@ -2554,6 +2560,7 @@ function renderAdminContas(){
     return '<article class="admin-item"><div class="admin-item-head"><h3>'+esc(a.nome)+'</h3><span class="badge">'+(a.ativo?'Ativo':'Inativo')+(gestor?' · Gestor de acessos':'')+'</span></div><p>'+esc(a.cpf)+' · '+esc(a.email)+'</p>'+
       (gestor?'':'<div class="admin-form" style="margin-top:12px;"><label>Nome<input id="admin-nome-'+i+'" type="text" value="'+esc(a.nome)+'" autocomplete="off"/></label><label>E-mail<input id="admin-email-'+i+'" type="email" value="'+esc(a.email)+'" autocomplete="off"/></label></div><div class="admin-perms">'+permissoesAdminHtml('admin-perm-'+i,a.permissoes)+'</div><div class="admin-actions"><button class="btn btn-p btn-sm" type="button" onclick="atualizarAdmin('+i+')">Salvar alterações</button>'+(a.ativo?'<button class="btn btn-o btn-sm" type="button" onclick="desativarAdmin('+i+')">Remover acesso</button>':'<button class="btn btn-o btn-sm" type="button" onclick="reativarAdmin('+i+')">Reativar acesso</button>')+'</div>')+'</article>';
   }).join('');
+  if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();
 }
 function criarAdmin(){
   var nome=document.getElementById('novo-admin-nome').value.trim(),cpf=document.getElementById('novo-admin-cpf').value.trim(),email=document.getElementById('novo-admin-email').value.trim();
@@ -2660,6 +2667,7 @@ function renderPaginaHistorico() {
   } else {
     ctrl.style.display = 'none';
   }
+  if(typeof forcarRedimensionamento==='function')forcarRedimensionamento();
 }
 
 function mudarPagina(delta) {
@@ -2934,7 +2942,7 @@ function abrirDetalhe(protocolo){
     renderDetalhe(r.solicitacao);
   }).catch(function(){body.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);">Falha de comunicação.</div>';});
 }
-function fecharDetalhe(e){if(e&&e.target!==document.getElementById('modal-detalhe'))return;document.getElementById('modal-detalhe').classList.remove('open');}
+function fecharDetalhe(e){if(e&&e.target!==document.getElementById('modal-detalhe'))return;document.getElementById('modal-detalhe').classList.remove('open');try{if(typeof forcarRedimensionamento==='function')forcarRedimensionamento(true);}catch(e){}}
 function renderDetalhe(sol){
   var sl=(sol.status||'pendente').toLowerCase().replace(/\s/g,'');
   var papelBadge=sol.isAdmin?'':sol.isAuxiliar?'<span class="badge b-auxiliar">🤝 Você foi auxiliar</span>':'<span class="badge b-principal">📋 Você foi o principal</span>';
@@ -3555,32 +3563,80 @@ document.getElementById('f-origem').addEventListener('input',function(){this.cla
 
 var ultimoAlturaEnviada = 0;
 var redimensionamentoPendente = false;
-function forcarRedimensionamento() {
-  if (window.top === window || redimensionamentoPendente) return;
-  redimensionamentoPendente = true;
-  requestAnimationFrame(function() {
+function emIframe() {
+  try {
+    return window.self !== window.top;
+  } catch(e) {
+    return true;
+  }
+}
+function calcularAlturaDocumento() {
+  var ativo = document.querySelector('.screen.on');
+  var ativoH = 0;
+  if (ativo) {
+    ativoH = ativo.scrollHeight;
+    var painelAtivo = ativo.querySelector('.admin-panel.active');
+    if (painelAtivo) {
+      ativoH = Math.max(ativoH, painelAtivo.offsetTop + painelAtivo.scrollHeight);
+    }
+    var listas = ativo.querySelectorAll('.admin-list, .agenda-day-list, #monitores-lista, #admin-datas, #admin-logs, #admin-admins-lista');
+    listas.forEach(function(l) {
+      if (l.offsetParent !== null) {
+        ativoH = Math.max(ativoH, l.offsetTop + l.scrollHeight);
+      }
+    });
+  }
+  var header = document.querySelector('.appbar');
+  var headerH = (header && header.offsetHeight) ? header.offsetHeight : 64;
+  var bodyScrollH = document.body ? document.body.scrollHeight : 0;
+  var docScrollH = document.documentElement ? document.documentElement.scrollHeight : 0;
+  var bodyOffsetH = document.body ? document.body.offsetHeight : 0;
+  var docOffsetH = document.documentElement ? document.documentElement.offsetHeight : 0;
+  var total = Math.max(ativoH + headerH + 32, bodyScrollH, docScrollH, bodyOffsetH, docOffsetH, 450);
+  return Math.ceil(total) + 16;
+}
+function forcarRedimensionamento(imediato) {
+  if (!emIframe()) return;
+  function executar() {
     redimensionamentoPendente = false;
-    var h = Math.ceil(document.body.scrollHeight) + 8;
-    if (h > 0 && h !== ultimoAlturaEnviada) {
+    var h = calcularAlturaDocumento();
+    if (h > 0 && (imediato || Math.abs(h - ultimoAlturaEnviada) >= 4)) {
       ultimoAlturaEnviada = h;
       avisarPaginaHospedeira({type:'resize',height:h});
     }
-  });
+  }
+  if (imediato) {
+    executar();
+    return;
+  }
+  if (redimensionamentoPendente) return;
+  redimensionamentoPendente = true;
+  requestAnimationFrame(executar);
 }
 if (typeof ResizeObserver !== 'undefined') {
-  var observadorAltura = new ResizeObserver(forcarRedimensionamento);
-  observadorAltura.observe(document.body);
-  document.querySelectorAll('.screen').forEach(function(screen){observadorAltura.observe(screen);});
+  var observadorAltura = new ResizeObserver(function(){ forcarRedimensionamento(); });
+  if (document.body) observadorAltura.observe(document.body);
+  document.querySelectorAll('.screen, .admin-panel, .admin-list').forEach(function(el){
+    try { observadorAltura.observe(el); } catch(e){}
+  });
+}
+if (typeof MutationObserver !== 'undefined') {
+  var mutObserver = new MutationObserver(function() {
+    forcarRedimensionamento();
+  });
+  try {
+    mutObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+  } catch(e){}
 }
 window.addEventListener('message',function(event){
   if((event.source===window.parent||event.source===window.top)&&event.data&&event.data.type==='requestResize'){
     ultimoAlturaEnviada=0;
-    forcarRedimensionamento();
+    forcarRedimensionamento(true);
   }
 });
-window.addEventListener('load', forcarRedimensionamento);
-window.addEventListener('resize', forcarRedimensionamento);
-forcarRedimensionamento();
+window.addEventListener('load', function(){ forcarRedimensionamento(true); });
+window.addEventListener('resize', function(){ forcarRedimensionamento(); });
+forcarRedimensionamento(true);
 </script>
 </body>
 </html>
